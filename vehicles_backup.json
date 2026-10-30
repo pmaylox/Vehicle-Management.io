@@ -1,0 +1,98 @@
+[
+    {
+        "name": "Toyota Tacoma",
+        "year": 2026,
+        "mileage": 6881,
+        "starting_mileage": 5000,
+        "last_service_mileage": 6731,
+        "service_interval": 5500,
+        "service_history": [
+            {
+                "date": "2026-10-28",
+                "mileage": 6000,
+                "description": "oil change",
+                "cost_cents": 2550
+            },
+            {
+                "date": "2026-10-28",
+                "mileage": 6000,
+                "description": "oil changed"
+            },
+            {
+                "date": "2026-10-28",
+                "mileage": 6000,
+                "description": "wiper blades"
+            },
+            {
+                "date": "2026-10-28",
+                "mileage": 6000,
+                "description": "tire rotation"
+            },
+            {
+                "date": "2026-10-28",
+                "mileage": 6000,
+                "description": "oil change",
+                "oil_reset": true,
+                "tire_reset": false
+            },
+            {
+                "date": "2026-10-29",
+                "mileage": 6000,
+                "description": "oil",
+                "cost_cents": 5995,
+                "oil_reset": false,
+                "tire_reset": false
+            }
+        ],
+        "tire_rotation_interval": 10000,
+        "last_tire_rotation_mileage": 6731,
+        "fuel_history": [
+            {
+                "date": "2026-10-29",
+                "mileage": 6000,
+                "gallons": "15",
+                "cost_cents": 396,
+                "full_tank": true
+            },
+            {
+                "date": "2026-10-29",
+                "mileage": 6731,
+                "gallons": "14",
+                "cost_cents": 350,
+                "full_tank": true
+            },
+            {
+                "date": "2026-10-29",
+                "mileage": 6881,
+                "gallons": "14",
+                "cost_cents": 454,
+                "full_tank": true
+            }
+        ]
+    },
+    {
+        "name": "Ford Explorer",
+        "year": 2025,
+        "mileage": 13145,
+        "starting_mileage": 12000,
+        "last_service_mileage": 12645,
+        "service_interval": 5000,
+        "service_history": [
+            {
+                "date": "2026-10-28",
+                "mileage": 12645,
+                "description": "oil change, tire rotation, wipers"
+            },
+            {
+                "date": "2026-10-28",
+                "mileage": 12645,
+                "description": "oil",
+                "oil_reset": true,
+                "tire_reset": false
+            }
+        ],
+        "tire_rotation_interval": 5000,
+        "last_tire_rotation_mileage": null,
+        "fuel_history": []
+    }
+]
