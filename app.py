@@ -3,7 +3,8 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from storage import load_vehicles, save_vehicles
-from formatting import format_mileage, format_date
+from formatting import format_mileage, format_date, cents_to_dollars
+from validation import parse_cost_cents
 from Vehicle_Manager import Vehicle
 from excel_export import export_vehicle_excel
 
