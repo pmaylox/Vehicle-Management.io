@@ -7,9 +7,6 @@ from formatting import format_mileage, format_date
 from Vehicle_Manager import Vehicle
 from excel_export import export_vehicle_excel
 
-
-
-
 # Main function
 def main():
     window = tk.Tk()
