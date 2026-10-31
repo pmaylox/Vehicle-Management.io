@@ -1649,7 +1649,7 @@ def main():
         )
 
         ttk.Label(
-            form, text=f"Fill-up date: {record['date']}"
+           form, text=f"Fill-up date: {date.fromisoformat(record['date']):%m/%d/%Y}"
         ).grid(
             row=1, column=0, columnspan=2,
             sticky="w", pady=(0, 12)
