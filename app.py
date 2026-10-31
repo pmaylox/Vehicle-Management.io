@@ -55,6 +55,7 @@ def format_mileage(mileage):
     return f"{mileage:,} miles"
 
 
+# Main function
 def main():
     window = tk.Tk()
     window.title("Vehicle Manager")
@@ -310,7 +311,7 @@ def main():
 
         for record in vehicle.service_history:
             service_table.insert("", tk.END, values=(
-                record["date"],
+                date.fromisoformat(record["date"]).strftime("%m/%d/%Y"),
                 f"{record['mileage']:,}",
                 record["description"],
                 vehicle.format_service_cost(record)
@@ -356,7 +357,7 @@ def main():
                     mpg_text = "Waiting for full tank"
 
             fuel_table.insert("", tk.END, values=(
-                record["date"],
+                date.fromisoformat(record["date"]).strftime("%m/%d/%Y"),
                 format_mileage(record["mileage"]),
                 record["gallons"],
                 vehicle.format_service_cost(record),
@@ -1136,7 +1137,7 @@ def main():
         ttk.Label(
             form,
             text=(
-                f"{record['date']} | "
+                f"Service date: {date.fromisoformat(record['date']):%m/%d/%Y}\n"
                 f"{record['mileage']:,} miles"
             )
         ).grid(
@@ -1321,7 +1322,7 @@ def main():
         confirmed = messagebox.askyesno(
             "Delete service record",
             f"{vehicle.year} {vehicle.name}\n\n"
-            f"Date: {record['date']}\n"
+            f"Delete service date: {date.fromisoformat(record['date']):%m/%d/%Y}\n"
             f"Mileage: {record['mileage']:,}\n"
             f"Service: {record['description']}\n"
             f"Cost ($): {vehicle.format_service_cost(record)}\n\n"
@@ -1857,12 +1858,12 @@ def main():
         confirmed = messagebox.askyesno(
             "Delete fuel record",
             f"{vehicle.year} {vehicle.name}\n\n"
-            f"Date: {record['date']}\n"
+            f"Delete fuel date: {date.fromisoformat(record['date']):%m/%d/%Y}\n"
+            f"Mileage: {record['mileage']:,}\n"
             f"Odometer: {record['mileage']:,} miles\n"
             f"US gallons: {record['gallons']}\n"
             f"Total paid: ${cost:.2f}\n"
-            f"Full tank: "
-            f"{'Yes' if record['full_tank'] else 'No'}\n\n"
+            f"Full tank: {'Yes' if record['full_tank'] else 'No'}\n\n"
             "Removing a fill-up can make MPG inaccurate "
             "because its gallons will no longer be included.\n"
             "The current odometer will remain unchanged.\n\n"
