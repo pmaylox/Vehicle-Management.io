@@ -1859,7 +1859,6 @@ def main():
             "Delete fuel record",
             f"{vehicle.year} {vehicle.name}\n\n"
             f"Delete fuel date: {date.fromisoformat(record['date']):%m/%d/%Y}\n"
-            f"Mileage: {record['mileage']:,}\n"
             f"Odometer: {record['mileage']:,} miles\n"
             f"US gallons: {record['gallons']}\n"
             f"Total paid: ${cost:.2f}\n"
