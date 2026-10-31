@@ -1427,7 +1427,8 @@ def main():
                     
                 mileage = int(mileage_var.get().strip())
                 gallons = Decimal(gallons_var.get().strip())
-                cost = Decimal(cost_var.get().strip())
+                cost_cents = parse_cost_cents(cost_var.get().strip())
+                cost = cents_to_dollars(cost_cents)
 
                 if mileage < vehicle.mileage:
                     messagebox.showerror(
@@ -1440,16 +1441,6 @@ def main():
 
                 if not gallons.is_finite() or gallons <= 0:
                     raise ValueError
-
-                if not cost.is_finite() or cost < 0:
-                    raise ValueError
-
-                cents = cost * 100
-
-                if cents != cents.to_integral_value():
-                    raise ValueError
-
-                cost_cents = int(cents)
 
             except (ValueError, InvalidOperation):
                 messagebox.showerror(
