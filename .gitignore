@@ -1,4 +1,2 @@
-git rm -r --cached __pycache__
-git add .gitignore
-git commit -m "Add .gitignore and stop tracking __pycache__"
-git push
+__pycache__/
+vehicles.tmp
