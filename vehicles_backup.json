@@ -67,13 +67,6 @@
                 "gallons": "14",
                 "cost_cents": 454,
                 "full_tank": true
-            },
-            {
-                "date": "2026-10-31",
-                "mileage": 6881,
-                "gallons": "12",
-                "cost_cents": 5045,
-                "full_tank": true
             }
         ]
     },

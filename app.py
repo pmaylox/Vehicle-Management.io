@@ -3,13 +3,11 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from storage import load_vehicles, save_vehicles
+from formatting import format_mileage, format_date
 from Vehicle_Manager import Vehicle
 from excel_export import export_vehicle_excel
 
-def format_mileage(mileage):
-    if mileage is None:
-        return "Not recorded"
-    return f"{mileage:,} miles"
+
 
 
 # Main function
@@ -268,7 +266,7 @@ def main():
 
         for record in vehicle.service_history:
             service_table.insert("", tk.END, values=(
-                date.fromisoformat(record["date"]).strftime("%m/%d/%Y"),
+                format_date(record["date"]),
                 f"{record['mileage']:,}",
                 record["description"],
                 vehicle.format_service_cost(record)
@@ -314,7 +312,7 @@ def main():
                     mpg_text = "Waiting for full tank"
 
             fuel_table.insert("", tk.END, values=(
-                date.fromisoformat(record["date"]).strftime("%m/%d/%Y"),
+                format_date(record["date"]),
                 format_mileage(record["mileage"]),
                 record["gallons"],
                 vehicle.format_service_cost(record),
