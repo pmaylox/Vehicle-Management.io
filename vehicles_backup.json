@@ -93,6 +93,14 @@
         ],
         "tire_rotation_interval": 5000,
         "last_tire_rotation_mileage": null,
-        "fuel_history": []
+        "fuel_history": [
+            {
+                "date": "2026-10-31",
+                "mileage": 13145,
+                "gallons": "17",
+                "cost_cents": 7545,
+                "full_tank": true
+            }
+        ]
     }
 ]

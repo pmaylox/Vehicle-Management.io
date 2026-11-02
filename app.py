@@ -1630,20 +1630,21 @@ def main():
             try:
                 mileage = int(mileage_var.get().strip())
                 gallons = Decimal(gallons_var.get().strip())
-                cost = Decimal(cost_var.get().strip())
+                cost_cents = parse_cost_cents(cost_var.get().strip())
+                cost = cents_to_dollars(cost_cents)
 
-                if not gallons.is_finite() or gallons <= 0:
-                    raise ValueError
+                if not gallons.is_finite() or gallons <= 0:     # keep
+                    raise ValueError                            # keep
 
-                if not cost.is_finite() or cost < 0:
-                    raise ValueError
-
-                cents = cost * 100
-
-                if cents != cents.to_integral_value():
-                    raise ValueError
-
-                cost_cents = int(cents)
+                if not cost.is_finite() or cost < 0:            # ← DELETE
+                    raise ValueError                            # ← DELETE
+                                                                # ← DELETE
+                cents = cost * 100                              # ← DELETE
+                                                                # ← DELETE
+                if cents != cents.to_integral_value():          # ← DELETE
+                    raise ValueError                            # ← DELETE
+                                                                # ← DELETE
+                cost_cents = int(cents)                         # ← DELETE
 
             except (ValueError, InvalidOperation):
                 messagebox.showerror(
