@@ -1636,16 +1636,6 @@ def main():
                 if not gallons.is_finite() or gallons <= 0:     # keep
                     raise ValueError                            # keep
 
-                if not cost.is_finite() or cost < 0:            # ← DELETE
-                    raise ValueError                            # ← DELETE
-                                                                # ← DELETE
-                cents = cost * 100                              # ← DELETE
-                                                                # ← DELETE
-                if cents != cents.to_integral_value():          # ← DELETE
-                    raise ValueError                            # ← DELETE
-                                                                # ← DELETE
-                cost_cents = int(cents)                         # ← DELETE
-
             except (ValueError, InvalidOperation):
                 messagebox.showerror(
                     "Invalid entry",
