@@ -2,8 +2,6 @@ import json
 from pathlib import Path
 from Vehicle_Manager import Vehicle
 import csv
-import shutil
-import time
 import os
 from decimal import Decimal
 from excel_export import export_vehicle_excel
