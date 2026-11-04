@@ -7,6 +7,7 @@ import time
 import os
 from decimal import Decimal
 from excel_export import export_vehicle_excel
+from storage import save_vehicles, load_vehicles
 
 
 DATA_FILE = Path(__file__).with_name("vehicles.json")
@@ -34,10 +35,10 @@ def select_vehicle(vehicles):
 
     return None
 
-def save_vehicles(vehicles):
-    vehicle_data = [vehicle.to_dict() for vehicle in vehicles]
-    backup_file = DATA_FILE.with_name("vehicles_backup.json")
-    temp_file = DATA_FILE.with_name("vehicles.tmp")
+# def save_vehicles(vehicles):
+#     vehicle_data = [vehicle.to_dict() for vehicle in vehicles]
+#     backup_file = DATA_FILE.with_name("vehicles_backup.json")
+#     temp_file = DATA_FILE.with_name("vehicles.tmp")
 
     for attempt in range(3):
         try:
