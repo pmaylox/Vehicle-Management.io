@@ -1,9 +1,5 @@
-import json
 from pathlib import Path
 from Vehicle_Manager import Vehicle
-import csv
-import os
-from decimal import Decimal
 from excel_export import export_vehicle_excel
 from storage import save_vehicles, load_vehicles
 
