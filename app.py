@@ -1133,18 +1133,7 @@ def main():
 
             if cost_input:
                 try:
-                    cost = Decimal(cost_input)
-
-                    if not cost.is_finite() or cost < 0:
-                        raise ValueError
-
-                    cents = cost * 100
-
-                    if cents != cents.to_integral_value():
-                        raise ValueError
-
-                    cost_cents = int(cents)
-
+                    cost_cents = parse_cost_cents(cost_input)
                 except (InvalidOperation, ValueError):
                     messagebox.showerror(
                         "Invalid cost",
