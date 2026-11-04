@@ -177,12 +177,21 @@ def export_fuel_history(vehicle):
 def main():
     print("Vehicle Manager is starting")
 
-  
+    try:
+        vehicles = load_vehicles()
+
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        print("\nCould not load saved vehicles.")
+        print(f"File: {DATA_FILE}")
+        print(f"Reason: {error}")
+        print("Your saved file has not been changed.")
+        print("Restore a working backup before trying again.")
+        return
 
     print("Saved vehicles loaded successfully!")
 
-   
-    vehicles = [
+    if not vehicles:
+        vehicles = [
             Vehicle("Toyota Tacoma", 2026, 5000),
             Vehicle("Ford Explorer", 2025, 12000)
         ]
