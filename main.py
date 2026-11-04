@@ -177,33 +177,12 @@ def export_fuel_history(vehicle):
 def main():
     print("Vehicle Manager is starting")
 
-    if DATA_FILE.exists():
-        try:
-            with open(DATA_FILE, "r") as file:
-                loaded_vehicles = json.load(file)
+  
 
-            if not isinstance(loaded_vehicles, list):
-                raise ValueError(
-                    "Saved vehicle data must be a list."
-                )
+    print("Saved vehicles loaded successfully!")
 
-            vehicles = [
-                Vehicle.from_dict(data)
-                for data in loaded_vehicles
-            ]
-
-        except (OSError, ValueError, KeyError, TypeError) as error:
-            print("\nCould not load saved vehicles.")
-            print(f"File: {DATA_FILE}")
-            print(f"Reason: {error}")
-            print("Your saved file has not been changed.")
-            print("Restore a working backup before trying again.")
-            return
-
-        print("Saved vehicles loaded successfully!")
-
-    else:
-        vehicles = [
+   
+    vehicles = [
             Vehicle("Toyota Tacoma", 2026, 5000),
             Vehicle("Ford Explorer", 2025, 12000)
         ]
