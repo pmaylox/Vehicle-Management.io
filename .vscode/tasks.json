@@ -1,22 +1,32 @@
 {
-    // See https://go.microsoft.com/fwlink/?LinkId=733558
-    // for the documentation about the tasks.json format
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "build",
-            "type": "shell",
-            "command": "msbuild",
-            "args": [
-                "/property:GenerateFullPaths=true",
-                "/t:build",
-                "/consoleloggerparameters:NoSummary"
-            ],
-            "group": "build",
-            "presentation": {
-                "reveal": "silent"
-            },
-            "problemMatcher": "$msCompile"
-        }
-    ]
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "echo",
+      "type": "shell",
+      "command": "echo Hello"
+    },
+    {
+      "label": "Back Up Practice Vehicle",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-Command",
+        "$ErrorActionPreference = 'Stop'; $source = 'C:\\Users\\pmart\\Python Project\\Vehicle-Management.io\\Vehicle-Management.io\\Vehicle-Management.io\\vehicle-restore-practice\\vehicles.json'; $stamp = Get-Date -Format 'yyyy-MM-dd_HH-mm-ss-fff'; $destination = Join-Path 'D:\\vehicle Manager Backup Lab' ('Practice-' + $stamp); New-Item -ItemType Directory -Path $destination | Out-Null; $copy = Join-Path $destination 'vehicles.json'; Copy-Item -LiteralPath $source -Destination $copy; if ((Get-FileHash -LiteralPath $source).Hash -ne (Get-FileHash -LiteralPath $copy).Hash) { throw 'Backup verification failed.' }; Write-Output ('Verified backup: ' + $copy)"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Back Up Vehicle Manager Project",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-Command",
+        "$ErrorActionPreference = 'Stop'; $source = 'C:\\Users\\pmart\\Python Project\\Vehicle-Management.io\\Vehicle-Management.io'; $drive = [IO.DriveInfo]::new('D:'); if (!$drive.IsReady -or $drive.VolumeLabel -ne 'kosbees') { throw 'Connect the kosbees backup drive as D:.' }; $destination = Join-Path 'D:\\vehicle Manager Backup Lab' ('Project-' + (Get-Date -Format 'yyyy-MM-dd_HH-mm-ss-fff')); New-Item -ItemType Directory -Path $destination | Out-Null; & robocopy.exe $source $destination /E /XJ /R:1 /W:1 /NFL /NDL /NP; if ($LASTEXITCODE -ge 8) { throw ('Robocopy failed with exit code ' + $LASTEXITCODE) }; foreach ($name in @('vehicles.json', 'app.py', 'main.py', 'storage.py')) { if ((Get-FileHash -LiteralPath (Join-Path $source $name)).Hash -ne (Get-FileHash -LiteralPath (Join-Path $destination $name)).Hash) { throw ('Backup verification failed for ' + $name) } }; Write-Output ('Project backup complete: ' + $destination); exit 0"
+      ],
+      "problemMatcher": []
+    }
+  ]
 }
