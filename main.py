@@ -2,12 +2,12 @@ import csv
 from pathlib import Path
 from Vehicle_Manager import Vehicle
 from excel_export import export_vehicle_excel
-from storage import save_vehicles, load_vehicles
+from storage import DATA_FILE, save_vehicles, load_vehicles
+from formatting import format_mileage
 
-
-DATA_FILE = Path(__file__).with_name("vehicles.json")
 
 print("Python has opened main.py")
+
 
 def select_vehicle(vehicles):
     if not vehicles:
@@ -455,7 +455,7 @@ def main():
                 continue
             for vehicle in vehicles:
                 print(f"\n{vehicle.year} {vehicle.name}")
-                print(f"Current mileage: {vehicle.mileage:,}")
+                print(f"Current mileage: {format_mileage(vehicle.mileage)}")
 
                 oil_remaining = (
                     vehicle.next_service() - vehicle.mileage
