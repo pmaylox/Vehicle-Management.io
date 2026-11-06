@@ -456,6 +456,7 @@ def main():
             overdue_oil_count = 0
             due_now_oil_remaining = 0
             due_now_oil_count = 0
+            overdue_tire_count = 0
             for vehicle in vehicles:
                 print(f"\n{vehicle.year} {vehicle.name}")
                 print(f"Current mileage: {format_mileage(vehicle.mileage)}")
@@ -489,6 +490,8 @@ def main():
                           - vehicle.mileage
                         )
                     if tire_remaining < 0:
+                        overdue_tire_count += 1
+
                         print(
                             f"Tire rotation: OVERDUE by "
                             f"{abs(tire_remaining):,} miles"
@@ -502,6 +505,7 @@ def main():
                         )
             print(f"\nTotal vehicles with overdue oil changes: {overdue_oil_count}")
             print(f"Total vehicles with oil changes due now: {due_now_oil_count}")
+            print(f"Total vehicles with overdue tire rotations: {overdue_tire_count}")
 
             
         

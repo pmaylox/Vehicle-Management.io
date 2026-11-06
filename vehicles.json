@@ -109,5 +109,34 @@
                 "full_tank": true
             }
         ]
+    },
+    {
+        "name": "nidde",
+        "year": 2009,
+        "mileage": 25000,
+        "starting_mileage": 20000,
+        "last_service_mileage": 20000,
+        "service_interval": 5000,
+        "service_history": [
+            {
+                "date": "2026-11-06",
+                "mileage": 20000,
+                "description": "tire rotation",
+                "cost_cents": null,
+                "oil_reset": false,
+                "tire_reset": false
+            },
+            {
+                "date": "2026-11-06",
+                "mileage": 25000,
+                "description": "tire rotation",
+                "cost_cents": null,
+                "oil_reset": false,
+                "tire_reset": false
+            }
+        ],
+        "tire_rotation_interval": 5000,
+        "last_tire_rotation_mileage": null,
+        "fuel_history": []
     }
 ]
