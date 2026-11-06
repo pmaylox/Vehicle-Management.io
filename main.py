@@ -454,6 +454,8 @@ def main():
                 print("No vehicles added yet.")
                 continue
             overdue_oil_count = 0
+            due_now_oil_remaining = 0
+            due_now_oil_count = 0
             for vehicle in vehicles:
                 print(f"\n{vehicle.year} {vehicle.name}")
                 print(f"Current mileage: {format_mileage(vehicle.mileage)}")
@@ -469,6 +471,8 @@ def main():
                         f"{abs(oil_remaining):,} miles"
                     )
                 elif oil_remaining == 0:
+                    due_now_oil_remaining += 1
+                    due_now_oil_count += 1
                     print(" Oil change: DUE NOW!")
 
                 else:
@@ -497,6 +501,7 @@ def main():
                             f"{tire_remaining:,} miles remaining"
                         )
             print(f"\nTotal vehicles with overdue oil changes: {overdue_oil_count}")
+            print(f"Total vehicles with oil changes due now: {due_now_oil_count}")
 
             
         
