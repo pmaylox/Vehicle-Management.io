@@ -471,7 +471,7 @@ def main():
                 else:
                     print(
                         f"Oil change: "
-                        f"{oil_remaining:,} miles remaining"
+                        f"{format_mileage(oil_remaining)} remaining"
                     )
                 if vehicle.last_tire_rotation_mileage is None:
                    print("Tire rotation: last service unknown")
