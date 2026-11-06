@@ -457,6 +457,7 @@ def main():
             due_now_oil_remaining = 0
             due_now_oil_count = 0
             overdue_tire_count = 0
+            unknown_tire_vehicles = []
             for vehicle in vehicles:
                 print(f"\n{vehicle.year} {vehicle.name}")
                 print(f"Current mileage: {format_mileage(vehicle.mileage)}")
@@ -481,8 +482,12 @@ def main():
                         f"Oil change: "
                         f"{format_mileage(oil_remaining)} remaining"
                     )
+               
+
                 if vehicle.last_tire_rotation_mileage is None:
+                   unknown_tire_vehicles.append(f"{vehicle.year} {vehicle.name}")
                    print("Tire rotation: last service unknown")
+                   
                 else:
                     tire_remaining = (
                         vehicle.last_tire_rotation_mileage 
@@ -503,9 +508,14 @@ def main():
                             f"Tire rotation: "
                             f"{tire_remaining:,} miles remaining"
                         )
+                        print(f"Total vehicles with overdue tire rotations: {overdue_tire_count}")
+                if unknown_tire_vehicles:
+                    print("Unknown tire rotation history: " + ", ".join(unknown_tire_vehicles))
+                    print(f"Total vehicles with unknown tire rotation history: {len(unknown_tire_vehicles)}")
             print(f"\nTotal vehicles with overdue oil changes: {overdue_oil_count}")
             print(f"Total vehicles with oil changes due now: {due_now_oil_count}")
             print(f"Total vehicles with overdue tire rotations: {overdue_tire_count}")
+            
 
             
         
