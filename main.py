@@ -453,6 +453,7 @@ def main():
             if not vehicles:
                 print("No vehicles added yet.")
                 continue
+            overdue_oil_count = 0
             for vehicle in vehicles:
                 print(f"\n{vehicle.year} {vehicle.name}")
                 print(f"Current mileage: {format_mileage(vehicle.mileage)}")
@@ -460,7 +461,9 @@ def main():
                 oil_remaining = (
                     vehicle.next_service() - vehicle.mileage
                 )
+                
                 if oil_remaining < 0:
+                    overdue_oil_count += 1
                     print(
                         f"Oil change: OVERDUE by "
                         f"{abs(oil_remaining):,} miles"
@@ -493,6 +496,9 @@ def main():
                             f"Tire rotation: "
                             f"{tire_remaining:,} miles remaining"
                         )
+            print(f"\nTotal vehicles with overdue oil changes: {overdue_oil_count}")
+
+            
         
             # ===== OPTION 12: EXPORT SERVICE HISTORY =====
         elif choice == "12":
