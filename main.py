@@ -454,7 +454,6 @@ def main():
                 print("No vehicles added yet.")
                 continue
             overdue_oil_count = 0
-            due_now_oil_remaining = 0
             due_now_oil_count = 0
             overdue_tire_count = 0
             due_now_tire_count = 0
@@ -474,9 +473,8 @@ def main():
                         f"{abs(oil_remaining):,} miles"
                     )
                 elif oil_remaining == 0:
-                    due_now_oil_remaining += 1
                     due_now_oil_count += 1
-                    print(" Oil change: DUE NOW!")
+                    print("Oil change: DUE NOW!")
 
                 else:
                     print(
