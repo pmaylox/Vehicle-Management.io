@@ -11,7 +11,7 @@ class Vehicle:
         self.service_interval = service_interval
         self.service_history = []  # Initialize an empty service history list
         self.fuel_history = []  # Initialize an empty fuel history list
-        self.tire_rotation_interval = 5000  # Default tire rotation interval
+        self.tire_rotation_interval = 10000 # Default tire rotation interval
         self.last_tire_rotation_mileage = None
 
     def drive(self, miles):
@@ -682,7 +682,7 @@ class Vehicle:
         vehicle.fuel_history = data.get("fuel_history", [])
 
         vehicle.tire_rotation_interval = data.get(
-            "tire_rotation_interval", 5000
+            "tire_rotation_interval", 10000
         )
         vehicle.last_tire_rotation_mileage = data.get(
             "last_tire_rotation_mileage"
