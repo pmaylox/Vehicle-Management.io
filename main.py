@@ -457,6 +457,7 @@ def main():
             due_now_oil_remaining = 0
             due_now_oil_count = 0
             overdue_tire_count = 0
+            due_now_tire_count = 0
             unknown_tire_vehicles = []
             for vehicle in vehicles:
                 print(f"\n{vehicle.year} {vehicle.name}")
@@ -502,6 +503,7 @@ def main():
                             f"{abs(tire_remaining):,} miles"
                         )
                     elif tire_remaining == 0:
+                        due_now_tire_count += 1
                         print("Tire rotation: DUE NOW!")
                     else:
                         print(
@@ -511,6 +513,7 @@ def main():
             print(f"\nTotal vehicles with overdue oil changes: {overdue_oil_count}")
             print(f"Total vehicles with oil changes due now: {due_now_oil_count}")
             print(f"Total vehicles with overdue tire rotations: {overdue_tire_count}")
+            print(f"Total vehicles with tire rotations due now: {due_now_tire_count}")
             if unknown_tire_vehicles:
                 print("Unknown tire rotation history: " + ", ".join(unknown_tire_vehicles))
                 print(f"Total vehicles with unknown tire rotation history: {len(unknown_tire_vehicles)}")
