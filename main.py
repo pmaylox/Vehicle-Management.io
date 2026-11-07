@@ -508,14 +508,12 @@ def main():
                             f"Tire rotation: "
                             f"{tire_remaining:,} miles remaining"
                         )
-                        print(f"Total vehicles with overdue tire rotations: {overdue_tire_count}")
-                if unknown_tire_vehicles:
-                    print("Unknown tire rotation history: " + ", ".join(unknown_tire_vehicles))
-                    print(f"Total vehicles with unknown tire rotation history: {len(unknown_tire_vehicles)}")
             print(f"\nTotal vehicles with overdue oil changes: {overdue_oil_count}")
             print(f"Total vehicles with oil changes due now: {due_now_oil_count}")
             print(f"Total vehicles with overdue tire rotations: {overdue_tire_count}")
-            
+            if unknown_tire_vehicles:
+                print("Unknown tire rotation history: " + ", ".join(unknown_tire_vehicles))
+                print(f"Total vehicles with unknown tire rotation history: {len(unknown_tire_vehicles)}")
 
             
         
