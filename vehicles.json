@@ -77,10 +77,10 @@
             }
         ],
         "tire_pressures": {
-            "driver_front": null,
-            "driver_rear": null,
-            "passenger_front": null,
-            "passenger_rear": null
+            "driver_front": 35.0,
+            "driver_rear": 34.0,
+            "passenger_front": 31.0,
+            "passenger_rear": 35.0
         }
     },
     {

@@ -252,7 +252,7 @@ def main():
             f"MAINTENANCE\n"
             f"Oil change: {oil_status}\n"
             f"Tire rotation: {tire_status}\n\n"
-            f"CURRENT TIRE PRESSURE\n"
+            f"CURRENT TIRE PRESSURE (calculated PSI)\n"
             f"Driver's front: {pressure_text('driver_front')}\n"
             f"Driver's rear: {pressure_text('driver_rear')}\n"
             f"Passenger front: {pressure_text('passenger_front')}\n"
@@ -410,128 +410,92 @@ def main():
 
     def update_tire_pressure():
         selection = vehicle_list.curselection()
-
         if not selection:
-            messagebox.showinfo(
-            "Select a vehicle",
-            "Choose a vehicle first.",
-            parent=window
-        )
+            messagebox.showinfo("Select a vehicle", "Choose a vehicle first.", parent=window)
             return
-
         vehicle = vehicles[selection[0]]
-
         dialog = tk.Toplevel(window)
-        dialog.title("Update Tire Pressure")
+        dialog.title("Tire Pressure — Starting PSI and Air Added")
         dialog.resizable(False, False)
         dialog.transient(window)
-
         form = ttk.Frame(dialog, padding=20)
         form.pack(fill="both", expand=True)
-
-        pressure_vars = {}
-
         positions = [
-        ("driver_front", "Driver's front:"),
-        ("driver_rear", "Driver's rear:"),
-        ("passenger_front", "Passenger front:"),
-        ("passenger_rear", "Passenger rear:")
-    ]
-
-        for row, (key, label) in enumerate(positions):
+            ("driver_front", "Driver's front"),
+            ("driver_rear", "Driver's rear"),
+            ("passenger_front", "Passenger front"),
+            ("passenger_rear", "Passenger rear")
+        ]
+        for column, title in enumerate(("Tire", "Starting PSI", "Add PSI", "Current PSI")):
+            ttk.Label(form, text=title).grid(row=0, column=column, padx=8, pady=6, sticky="w")
+        starting_vars, added_vars = {}, {}
+        for row, (key, label) in enumerate(positions, start=1):
+            baseline = vehicle.starting_tire_pressures[key]
             current = vehicle.tire_pressures[key]
-            variable = tk.StringVar(
-                value="" if current is None else f"{current:g}"
-            )
-            pressure_vars[key] = variable
+            starting_vars[key] = tk.StringVar(value="" if baseline is None else f"{baseline:g}")
+            added_vars[key] = tk.StringVar(value="0")
+            ttk.Label(form, text=label).grid(row=row, column=0, sticky="w", pady=6)
+            ttk.Entry(form, textvariable=starting_vars[key], width=12).grid(row=row, column=1, padx=8)
+            ttk.Entry(form, textvariable=added_vars[key], width=12).grid(row=row, column=2, padx=8)
+            ttk.Label(form, text="Not recorded" if current is None else f"{current:g}").grid(row=row, column=3, padx=8, sticky="w")
+        ttk.Label(form, text="Add PSI is the increase, not the final gauge reading. 0 adds no air.\n"
+                  "Changing Starting PSI resets that tire's calculated pressure.\n"
+                  "Blank starting fields keep existing values. Verify with a tire gauge.").grid(
+                      row=5, column=0, columnspan=4, sticky="w", pady=12)
 
-            ttk.Label(
-                form, text=f"{label} PSI"
-            ).grid(row=row, column=0, sticky="w", pady=6)
-
-            ttk.Entry(
-                form, textvariable=variable, width=12
-            ).grid(row=row, column=1, padx=(12, 0), pady=6)
+        reset_starting = tk.BooleanVar(value=False)
+        ttk.Checkbutton(form, text="Use starting PSI as fresh measured readings", variable=reset_starting).grid(
+            row=6, column=0, columnspan=4, sticky="w")
 
         def save_pressures():
-            new_pressures = {}
-
-            for key, label in positions:
-                text = pressure_vars[key].get().strip()
-
-                if not text:
-                    new_pressures[key] = None
-                    continue
-
-                try:
-                    pressure = Decimal(text)
-                except InvalidOperation:
-                    messagebox.showerror(
-                        "Invalid pressure",
-                        f"Enter a number for {label}",
-                        parent=dialog
-                    )
-                    return
-
-                if not pressure.is_finite() or pressure < 0:
-                    messagebox.showerror(
-                        "Invalid pressure",
-                        f"{label} Enter a finite number of 0 or more.",
-                        parent=dialog
-                    )
-                    return
-
-                value = float(pressure)
-
-                if value == float("inf"):
-                    messagebox.showerror(
-                        "Invalid pressure",
-                        f"{label} That number is too large.",
-                        parent=dialog
-                    )
-                    return
-
-                if value == 0:
-                    new_pressures[key] = vehicle.tire_pressures[key]
-                else:
-                    new_pressures[key] = value
-
-            old_pressures = vehicle.tire_pressures.copy()
-            vehicle.tire_pressures = new_pressures
-
+            old_current = vehicle.tire_pressures.copy()
+            old_starting = vehicle.starting_tire_pressures.copy()
+            old_history = list(vehicle.tire_pressure_history)
             try:
-                save_vehicles(vehicles)
-            except (OSError, TypeError, ValueError) as error:
-                vehicle.tire_pressures = old_pressures
-                messagebox.showerror(
-                    "Could not save",
-                    f"Tire pressure update was canceled.\n\n{error}",
-                    parent=dialog
+                changed = vehicle.record_tire_pressure(
+                    {key: var.get().strip() for key, var in starting_vars.items()},
+                    {key: var.get().strip() for key, var in added_vars.items()},
+                    reset_starting=reset_starting.get()
                 )
+            except ValueError as error:
+                messagebox.showerror("Invalid pressure", str(error), parent=dialog)
                 return
-
+            if changed:
+                try:
+                    save_vehicles(vehicles)
+                except (OSError, TypeError, ValueError) as error:
+                    vehicle.tire_pressures = old_current
+                    vehicle.starting_tire_pressures = old_starting
+                    vehicle.tire_pressure_history = old_history
+                    messagebox.showerror("Could not save", f"Update canceled.\n\n{error}", parent=dialog)
+                    return
             show_vehicle()
             dialog.destroy()
 
-        ttk.Label(
-            form,
-            text="Enter 0 to keep a reading. Leave blank if unknown."
-        ).grid(row=4, column=0, columnspan=2, pady=(8, 12))
-
+        ttk.Label(form, text="Pressure history (newest first)").grid(row=7, column=0, columnspan=4, sticky="w", pady=(8, 4))
+        history_frame = ttk.Frame(form)
+        history_frame.grid(row=8, column=0, columnspan=4, sticky="ew")
+        history = ttk.Treeview(history_frame, columns=("date", "tire", "before", "added", "after"), show="headings", height=5)
+        for key, label, width in (("date", "Recorded", 155), ("tire", "Tire", 125), ("before", "Previous PSI", 90), ("added", "Added PSI", 75), ("after", "Current PSI", 90)):
+            history.heading(key, text=label)
+            history.column(key, width=width, stretch=False)
+        history.pack(side="left", fill="both", expand=True)
+        scrollbar = ttk.Scrollbar(history_frame, orient="vertical", command=history.yview)
+        scrollbar.pack(side="right", fill="y")
+        history.configure(yscrollcommand=scrollbar.set)
+        def display(value):
+            return "Unknown" if value is None else f"{value:g}"
+        for event in reversed(vehicle.tire_pressure_history):
+            for key, label in positions:
+                before = event["before"][key]
+                after = event["current"][key]
+                added = event["added_psi"][key]
+                if before != after or added:
+                    history.insert("", "end", values=(event["recorded_at"][:19].replace("T", " "), label, display(before), display(added), display(after)))
         buttons = ttk.Frame(form)
-        buttons.grid(row=5, column=0, columnspan=2, sticky="e")
-
-        ttk.Button(
-            buttons,
-            text="Cancel",
-            command=dialog.destroy
-        ).pack(side="left", padx=(0, 8))
-
-        ttk.Button(
-            buttons,
-            text="Save Pressures",
-            command=save_pressures
-        ).pack(side="left")
+        buttons.grid(row=9, column=0, columnspan=4, sticky="e", pady=(14, 0))
+        ttk.Button(buttons, text="Cancel", command=dialog.destroy).pack(side="left", padx=(0, 8))
+        ttk.Button(buttons, text="Save Pressures", command=save_pressures).pack(side="left")
 
     ttk.Button(
         overview_tab,

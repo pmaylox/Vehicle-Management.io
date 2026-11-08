@@ -1,5 +1,5 @@
 from cmath import cos
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 class Vehicle:
     def __init__(self, name, year, mileage, service_interval=5000):
@@ -9,6 +9,8 @@ class Vehicle:
             "passenger_front": None,
             "passenger_rear": None
         }
+        self.starting_tire_pressures = self.tire_pressures.copy()
+        self.tire_pressure_history = []
         self.name = name
         self.year = year
         self.mileage = mileage
@@ -19,6 +21,52 @@ class Vehicle:
         self.fuel_history = []  # Initialize an empty fuel history list
         self.tire_rotation_interval = 10000  # Default tire rotation interval
         self.last_tire_rotation_mileage = None
+
+    def record_tire_pressure(self, starting, added, reset_starting=False):
+        """Record measured baselines and PSI increases, preserving earlier events."""
+        import math
+
+        def number(value, label):
+            try:
+                value = Decimal(str(value))
+                result = float(value)
+            except (InvalidOperation, ValueError, OverflowError):
+                raise ValueError(f"{label}: enter a number.") from None
+            if not value.is_finite() or value < 0 or not math.isfinite(result):
+                raise ValueError(f"{label}: enter a finite number of 0 or more.")
+            return result
+
+        before = self.tire_pressures.copy()
+        baselines = self.starting_tire_pressures.copy()
+        current = before.copy()
+        increases = {}
+        for key in current:
+            raw = starting.get(key)
+            baseline = baselines[key] if raw is None or str(raw).strip() == "" else number(raw, key)
+            increase = number(added.get(key) or 0, key)
+            if baseline != baselines[key] or (reset_starting and raw is not None and str(raw).strip() != ""):
+                current[key] = baseline
+            baselines[key] = baseline
+            if increase and current[key] is None:
+                raise ValueError(f"{key}: enter a starting pressure before adding air.")
+            if current[key] is not None:
+                total = Decimal(str(current[key])) + Decimal(str(increase))
+                current[key] = number(total, key)
+            increases[key] = increase
+        if current == before and baselines == self.starting_tire_pressures and not any(increases.values()):
+            return False
+        event = {
+            "recorded_at": datetime.now().astimezone().isoformat(timespec="seconds"),
+            "mileage": self.mileage,
+            "before": before,
+            "starting": baselines.copy(),
+            "added_psi": increases,
+            "current": current.copy()
+        }
+        self.starting_tire_pressures = baselines
+        self.tire_pressures = current
+        self.tire_pressure_history.append(event)
+        return True
 
     def drive(self, miles):
         self.mileage += miles
@@ -672,7 +720,9 @@ class Vehicle:
             "tire_rotation_interval": self.tire_rotation_interval,
             "last_tire_rotation_mileage": self.last_tire_rotation_mileage,
             "fuel_history": self.fuel_history,
-            "tire_pressures": self.tire_pressures
+            "tire_pressures": self.tire_pressures,
+            "starting_tire_pressures": self.starting_tire_pressures,
+            "tire_pressure_history": self.tire_pressure_history
         }
     @classmethod
     def from_dict(cls, data):
@@ -697,6 +747,11 @@ class Vehicle:
         )
         vehicle.tire_pressures.update(data.get("tire_pressures", {})
         )
+
+        vehicle.starting_tire_pressures.update(
+            data.get("starting_tire_pressures", vehicle.tire_pressures)
+        )
+        vehicle.tire_pressure_history = data.get("tire_pressure_history", [])
 
         return vehicle
 
