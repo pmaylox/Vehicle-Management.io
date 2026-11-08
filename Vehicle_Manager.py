@@ -3,6 +3,12 @@ from datetime import date
 from decimal import Decimal, InvalidOperation
 class Vehicle:
     def __init__(self, name, year, mileage, service_interval=5000):
+        self.tire_pressures = {
+            "driver_front": None,
+            "driver_rear": None,
+            "passenger_front": None,
+            "passenger_rear": None
+        }
         self.name = name
         self.year = year
         self.mileage = mileage
@@ -665,7 +671,8 @@ class Vehicle:
             "service_history": self.service_history,
             "tire_rotation_interval": self.tire_rotation_interval,
             "last_tire_rotation_mileage": self.last_tire_rotation_mileage,
-            "fuel_history": self.fuel_history
+            "fuel_history": self.fuel_history,
+            "tire_pressures": self.tire_pressures
         }
     @classmethod
     def from_dict(cls, data):
@@ -674,6 +681,7 @@ class Vehicle:
             data["year"],
             data["starting_mileage"],
             data["service_interval"]
+
         )
 
         vehicle.mileage = data["mileage"]
@@ -686,6 +694,8 @@ class Vehicle:
         )
         vehicle.last_tire_rotation_mileage = data.get(
             "last_tire_rotation_mileage"
+        )
+        vehicle.tire_pressures.update(data.get("tire_pressures", {})
         )
 
         return vehicle
