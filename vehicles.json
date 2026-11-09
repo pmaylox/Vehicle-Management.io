@@ -78,10 +78,46 @@
         ],
         "tire_pressures": {
             "driver_front": 35.0,
+            "driver_rear": 35.0,
+            "passenger_front": 37.0,
+            "passenger_rear": 35.0
+        },
+        "starting_tire_pressures": {
+            "driver_front": 35.0,
             "driver_rear": 34.0,
             "passenger_front": 31.0,
             "passenger_rear": 35.0
-        }
+        },
+        "tire_pressure_history": [
+            {
+                "recorded_at": "2026-11-07T18:57:30-06:00",
+                "mileage": 6881,
+                "before": {
+                    "driver_front": 35.0,
+                    "driver_rear": 34.0,
+                    "passenger_front": 31.0,
+                    "passenger_rear": 35.0
+                },
+                "starting": {
+                    "driver_front": 35.0,
+                    "driver_rear": 34.0,
+                    "passenger_front": 31.0,
+                    "passenger_rear": 35.0
+                },
+                "added_psi": {
+                    "driver_front": 0.0,
+                    "driver_rear": 1.0,
+                    "passenger_front": 6.0,
+                    "passenger_rear": 0.0
+                },
+                "current": {
+                    "driver_front": 35.0,
+                    "driver_rear": 35.0,
+                    "passenger_front": 37.0,
+                    "passenger_rear": 35.0
+                }
+            }
+        ]
     },
     {
         "name": "Ford Explorer",
@@ -120,6 +156,13 @@
             "driver_rear": null,
             "passenger_front": null,
             "passenger_rear": null
-        }
+        },
+        "starting_tire_pressures": {
+            "driver_front": null,
+            "driver_rear": null,
+            "passenger_front": null,
+            "passenger_rear": null
+        },
+        "tire_pressure_history": []
     }
 ]

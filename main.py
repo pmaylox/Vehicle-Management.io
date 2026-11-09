@@ -225,7 +225,7 @@ def main():
 
         print("\nEXPORTS")
         print("12. Export service history")
-        print("20. Export Excel workbook (service and fuel)")
+        print("20. Export Excel workbook (overview, service and fuel)")
 
         print("\nSAVE AND EXIT")
         print("5. Save and exit")
@@ -266,8 +266,14 @@ def main():
                 save_vehicles(vehicles)
 
         elif choice == "5":
-            save_vehicles(vehicles)
-            print("Saving vehicles and exiting...")
+            try:
+                save_vehicles(vehicles)
+            except (OSError, TypeError, ValueError) as error:
+                print(f"Could not save vehicles: {error}")
+                print("The app will stay open so you can try again.")
+                continue
+
+            print("Vehicles saved. Exiting...")
             break
        
         elif choice == "6":
