@@ -1,9 +1,44 @@
 """Calendar-based battery tracking derived from saved service records."""
 import calendar
+import re
 from datetime import date
+from decimal import Decimal, InvalidOperation
 
 
-def battery_details(installed, months, term, today=None):
+def battery_term_text(months):
+    """Display stored months as years, retaining any extra months exactly."""
+    years, extra = divmod(months, 12)
+    parts = []
+    if years:
+        parts.append(f"{years} {'year' if years == 1 else 'years'}")
+    if extra or not parts:
+        parts.append(f"{extra} {'month' if extra == 1 else 'months'}")
+    return ", ".join(parts)
+
+
+def battery_years_to_months(text):
+    """Accept years or an existing years/months label; store whole months."""
+    text = str(text).strip().casefold()
+    mixed = re.fullmatch(r"(\d+) years?,?\s+(\d+) months?", text)
+    if mixed:
+        months = int(mixed[1]) * 12 + int(mixed[2])
+    elif re.fullmatch(r"\d+ months?", text):
+        months = int(text.split()[0])
+    else:
+        try:
+            years = Decimal(re.sub(r"\s*years?$", "", text))
+            value = years * 12
+            if not value.is_finite() or value <= 0 or value != value.to_integral_value():
+                raise ValueError
+            months = int(value)
+        except (InvalidOperation, ValueError, OverflowError):
+            raise ValueError("Choose a term in years, or enter a positive value such as 5 or 2.5 years (whole months only).") from None
+    if months <= 0 or months > 119987:
+        raise ValueError("Choose a positive battery term within the calendar's date range.")
+    return months
+
+
+def battery_details(installed, months, term, today=None, maker=""):
     today = today or date.today()
     installed = date.fromisoformat(installed)
     if installed > today:
@@ -41,7 +76,8 @@ def battery_summary(vehicle, today=None):
     except (ValueError, TypeError, KeyError):
         return "Battery details need correction in Edit Service."
     return (f"Battery last replaced: {details['installed']:%B %Y}\n"
-            f"{details['term']}: {details['months']} months\n"
+            f"Battery maker: {record['battery'].get('maker') or 'Not recorded'}\n"
+            f"{details['term']}: {battery_term_text(details['months'])}\n"
             f"{details['label']}: {details['target']:%m/%d/%Y}\n"
             f"{details['countdown']}")
 

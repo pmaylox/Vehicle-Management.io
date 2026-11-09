@@ -1,4 +1,4 @@
-from battery import battery_summary
+from battery import battery_summary, battery_term_text
 from service_fields import service_entry, battery_fields
 from datetime import date
 from decimal import Decimal, InvalidOperation
@@ -1084,7 +1084,7 @@ def main():
                 f"Mileage: {vehicle.mileage:,}\n"
                 f"Service: {description}\n"
                 f"Cost ($): {cost_text}\n"
-                + (f"Battery installed: {battery['installed']} — {battery['months']} months ({battery['term']})\n" if battery else "")
+                + (f"Battery installed: {battery['installed']} — {battery_term_text(battery['months'])} ({battery['term']})\n" if battery else "")
                 + f"\nReset oil: {'Yes' if oil_var.get() else 'No'}\n"
                 f"Reset tires: {'Yes' if tire_var.get() else 'No'}\n\n"
                 "Save this service?",
@@ -1307,7 +1307,7 @@ def main():
                 "Confirm service changes",
                 f"Service: {description}\n"
                 f"Cost ($): {cost_text}\n"
-                + (f"Battery installed: {battery['installed']} — {battery['months']} months ({battery['term']})\n" if battery else "")
+                + (f"Battery installed: {battery['installed']} — {battery_term_text(battery['months'])} ({battery['term']})\n" if battery else "")
                 + "\nSave these changes?",
                 parent=dialog
             )

@@ -8,12 +8,21 @@ from tkinter import ttk
 import unittest
 from unittest.mock import patch
 
-from battery import battery_details, battery_summary, service_suggestions
+from battery import battery_details, battery_summary, service_suggestions, battery_years_to_months, battery_term_text
 from Vehicle_Manager import Vehicle
 from service_fields import battery_fields
 
 
 class BatteryTests(unittest.TestCase):
+    def test_year_terms_and_legacy_roundtrip(self):
+        for text, expected in [("5", 60), ("5 year", 60), ("5 years", 60), ("2.5 years", 30)]:
+            self.assertEqual(battery_years_to_months(text), expected)
+        for months in (1, 6, 12, 30, 37, 60):
+            self.assertEqual(battery_years_to_months(battery_term_text(months)), months)
+        for text in ("", "0", "-2", "NaN", "Infinity", "five years", "1.1", "999999999999999999999999"):
+            with self.subTest(text=text), self.assertRaises(ValueError):
+                battery_years_to_months(text)
+
     def test_calendar_and_countdown(self):
         details = battery_details("2024-02-29", 12, "Expected life", date(2025, 2, 28))
         self.assertEqual(details["target"], date(2025, 2, 28))
@@ -37,8 +46,10 @@ class BatteryTests(unittest.TestCase):
             return {"date": installed, "mileage": 100, "description": "Battery replaced",
                     "cost_cents": 0, "battery": {"installed": installed, "months": 36, "term": "Warranty"}}
         vehicle.service_history = [record("2025-02-01"), record("2024-01-01")]
+        vehicle.service_history[0]["battery"]["maker"] = "Interstate"
         loaded = Vehicle.from_dict(json.loads(json.dumps(vehicle.to_dict())))
         self.assertIn("February 2025", battery_summary(loaded, date(2026, 1, 1)))
+        self.assertIn("Battery maker: Interstate", battery_summary(loaded, date(2026, 1, 1)))
         loaded.service_history.pop(0)
         self.assertIn("January 2024", battery_summary(loaded, date(2026, 1, 1)))
         loaded.service_history[0]["battery"]["months"] = 48
@@ -50,7 +61,7 @@ class BatteryTests(unittest.TestCase):
 
     def test_terminal_battery_service(self):
         vehicle = Vehicle("Practice", 2020, 100)
-        with patch("builtins.input", side_effect=["bat", "4", "100", "2024-01-01", "48", "2"]), patch("builtins.print"):
+        with patch("builtins.input", side_effect=["bat", "4", "100", "2024-01-01", "4", "2"]), patch("builtins.print"):
             vehicle.service()
         self.assertEqual(vehicle.service_history[0]["battery"],
                          {"installed": "2024-01-01", "months": 48, "term": "Warranty"})
@@ -68,9 +79,13 @@ class BatteryTests(unittest.TestCase):
                                        {"installed": "2024-01-01", "months": 36, "term": "Warranty"})
             self.assertEqual(get_value()["months"], 36)
             frame = form.winfo_children()[0]
+            maker_entry = [w for w in frame.winfo_children() if isinstance(w, ttk.Combobox)][-1]
+            maker_entry.set("Custom Battery Brand")
+            self.assertEqual(get_value()["maker"], "Custom Battery Brand")
             entries = [widget for widget in frame.winfo_children() if type(widget) is ttk.Entry]
-            entries[1].delete(0, "end")
-            entries[1].insert(0, "1.5")
+            term_entry = next(w for w in frame.winfo_children() if isinstance(w, ttk.Combobox))
+            self.assertEqual(term_entry.get(), "3 years")
+            term_entry.set("1.1 years")
             with self.assertRaises(ValueError):
                 get_value()
         finally:
@@ -117,7 +132,7 @@ class BatteryTests(unittest.TestCase):
             description.set("Battery replaced")
             battery_frame = next(w for w in descendants(dialog) if isinstance(w, ttk.LabelFrame))
             entries = [w for w in battery_frame.winfo_children() if type(w) is ttk.Entry]
-            entries[1].insert(0, "48")
+            next(w for w in battery_frame.winfo_children() if isinstance(w, ttk.Combobox)).set("4 years")
             with patch.object(app, "save_vehicles", side_effect=PermissionError("Practice locked file")):
                 button(dialog, "Save Service").invoke()
             self.assertEqual(vehicle.service_history, [])

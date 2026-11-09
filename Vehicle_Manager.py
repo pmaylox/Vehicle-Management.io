@@ -1,4 +1,4 @@
-from battery import battery_details, battery_summary, service_suggestions
+from battery import battery_details, battery_summary, service_suggestions, battery_years_to_months
 from cmath import cos
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
@@ -134,7 +134,7 @@ class Vehicle:
         if description.casefold() == "battery replaced":
             try:
                 installed = input("Battery installed (YYYY-MM-DD, Enter for today): ").strip() or date.today().isoformat()
-                months = int(input("Listed battery term in months: ").strip())
+                months = battery_years_to_months(input("Listed battery term in years (example: 5 or 2.5 years): "))
                 kind = input("Term type: 1. Expected life  2. Warranty: ").strip()
                 if kind not in ("1", "2"):
                     raise ValueError("Choose 1 for Expected life or 2 for Warranty.")
