@@ -1,3 +1,4 @@
+from battery import battery_summary
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -201,7 +202,10 @@ def build_overview(sheet, vehicle, service_cost, missing_costs, fuel_cost, gallo
     metric(30, "Total spending", fuel_cost, '\"$\"#,##0.00')
     metric(31, "Average price per gallon", fuel_cost / gallons if gallons > 0 else "Not available", '\"$\"0.000')
     sheet.freeze_panes = "A5"
-    sheet.print_area = "A1:D31"
+    section(33, "BATTERY")
+    note(34, battery_summary(vehicle))
+    sheet.row_dimensions[34].height = 62
+    sheet.print_area = "A1:D34"
     sheet.print_options.horizontalCentered = True
     sheet.sheet_properties.pageSetUpPr.fitToPage = True
     sheet.page_setup.orientation = "portrait"
@@ -341,9 +345,12 @@ def export_vehicle_excel(vehicle, output_file=None):
     )
     
     service_with_cost = len(service_rows) - missing_service_cost
-    average_service_cost = total_service_cost / service_with_cost if service_with_cost > 0 else None
 
-
+    if service_with_cost > 0:
+        average_service_cost = total_service_cost / service_with_cost
+    else:
+        average_service_cost = None
+ 
     service_summary_row = service_sheet.max_row + 2
     service_sheet.cell(service_summary_row, 3, "Total recorded service spending")
     service_sheet.cell(service_summary_row, 4, total_service_cost)

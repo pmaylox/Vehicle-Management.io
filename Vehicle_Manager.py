@@ -1,3 +1,4 @@
+from battery import battery_details, battery_summary, service_suggestions
 from cmath import cos
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
@@ -76,6 +77,10 @@ class Vehicle:
 
     def service(self):
         description = input("Service performed: ").strip()
+        matches = service_suggestions(description)
+        if description and len(matches) == 1 and matches[0] == "Battery replaced":
+            description = matches[0]
+            print(f"Service: {description}")
 
         if not description:
             print("Service description cannot be empty.")
@@ -126,6 +131,22 @@ class Vehicle:
             "tire_reset": reset_choice in ("2", "3")
         }
 
+        if description.casefold() == "battery replaced":
+            try:
+                installed = input("Battery installed (YYYY-MM-DD, Enter for today): ").strip() or date.today().isoformat()
+                months = int(input("Listed battery term in months: ").strip())
+                kind = input("Term type: 1. Expected life  2. Warranty: ").strip()
+                if kind not in ("1", "2"):
+                    raise ValueError("Choose 1 for Expected life or 2 for Warranty.")
+                battery = {"installed": installed, "months": months,
+                           "term": "Warranty" if kind == "2" else "Expected life"}
+                details = battery_details(**battery)
+                battery["installed"] = details["installed"].isoformat()
+                record["battery"] = battery
+            except ValueError as error:
+                print(f"Service was not recorded: {error}")
+                return
+
         self.service_history.append(record)
 
         if reset_choice in ("1", "3"):
@@ -140,6 +161,7 @@ class Vehicle:
         print(f"\nMaintenance Information: {self.year} {self.name}")
         print(f"Current mileage: {self.mileage:,} miles")
         print(f"Total miles driven: {self.miles_driven():,} miles")
+        print(battery_summary(self))
 
         print("\nOil change")
         print(f"Interval: {self.service_interval:,} miles")

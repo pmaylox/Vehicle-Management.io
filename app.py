@@ -1,3 +1,5 @@
+from battery import battery_summary
+from service_fields import service_entry, battery_fields
 from datetime import date
 from decimal import Decimal, InvalidOperation
 import tkinter as tk
@@ -82,13 +84,22 @@ def main():
         value="Select a vehicle to view its details."
     )
 
-    ttk.Label(
-        overview_tab,
-        textvariable=details_text,
-        font=("Segoe UI", 12),
-        justify="left",
-        anchor="nw"
-    ).pack(fill="both", expand=True)
+    overview_scroll = ttk.Scrollbar(overview_tab, orient="vertical")
+    overview_scroll.pack(side="right", fill="y")
+    overview_text = tk.Text(overview_tab, font=("Segoe UI", 12), wrap="word",
+                            width=1, height=1, relief="flat", state="disabled",
+                            yscrollcommand=overview_scroll.set)
+    overview_text.pack(fill="both", expand=True)
+    overview_scroll.configure(command=overview_text.yview)
+
+    def refresh_overview(*args):
+        overview_text.configure(state="normal")
+        overview_text.delete("1.0", "end")
+        overview_text.insert("1.0", details_text.get())
+        overview_text.configure(state="disabled")
+
+    details_text.trace_add("write", refresh_overview)
+    refresh_overview()
 
     # ===== SHARED TABLE BUILDER =====
     def make_table(parent, columns):
@@ -252,6 +263,7 @@ def main():
             f"MAINTENANCE\n"
             f"Oil change: {oil_status}\n"
             f"Tire rotation: {tire_status}\n\n"
+            f"BATTERY\n{battery_summary(vehicle)}\n\n"
             f"CURRENT TIRE PRESSURE (calculated PSI)\n"
             f"Driver's front: {pressure_text('driver_front')}\n"
             f"Driver's rear: {pressure_text('driver_rear')}\n"
@@ -945,9 +957,7 @@ def main():
             form, text="Service performed:"
         ).grid(row=2, column=0, sticky="w", pady=6)
 
-        description_entry = ttk.Entry(
-            form, textvariable=description_var, width=40
-        )
+        description_entry = service_entry(form, description_var, vehicle.service_history)
         description_entry.grid(
             row=2, column=1, padx=(12, 0), pady=6
         )
@@ -998,6 +1008,8 @@ def main():
             row=7, column=1, sticky="w",
             padx=(12, 0), pady=(12, 6)
         )
+
+        get_battery = battery_fields(form, 8, description_var, lambda: date_var.get().strip())
 
         def save_service():
             try:
@@ -1055,6 +1067,14 @@ def main():
                 "tire_reset": tire_var.get()
             }
 
+            try:
+                battery = get_battery()
+            except ValueError as error:
+                messagebox.showerror("Invalid battery details", str(error), parent=dialog)
+                return
+            if battery:
+                record["battery"] = battery
+
             cost_text = vehicle.format_service_cost(record)
 
             confirmed = messagebox.askyesno(
@@ -1063,8 +1083,9 @@ def main():
                 f"Service date: {service_date:%m/%d/%Y}\n"
                 f"Mileage: {vehicle.mileage:,}\n"
                 f"Service: {description}\n"
-                f"Cost ($): {cost_text}\n\n"
-                f"Reset oil: {'Yes' if oil_var.get() else 'No'}\n"
+                f"Cost ($): {cost_text}\n"
+                + (f"Battery installed: {battery['installed']} — {battery['months']} months ({battery['term']})\n" if battery else "")
+                + f"\nReset oil: {'Yes' if oil_var.get() else 'No'}\n"
                 f"Reset tires: {'Yes' if tire_var.get() else 'No'}\n\n"
                 "Save this service?",
                 parent=dialog
@@ -1111,7 +1132,7 @@ def main():
 
         buttons = ttk.Frame(form)
         buttons.grid(
-            row=8, column=0, columnspan=2,
+            row=9, column=0, columnspan=2,
             sticky="e", pady=(20, 0)
         )
 
@@ -1200,9 +1221,7 @@ def main():
             form, text="Service performed:"
         ).grid(row=2, column=0, sticky="w", pady=6)
 
-        description_entry = ttk.Entry(
-            form, textvariable=description_var, width=40
-        )
+        description_entry = service_entry(form, description_var, vehicle.service_history)
         description_entry.grid(
             row=2, column=1, padx=(12, 0), pady=6
         )
@@ -1225,6 +1244,8 @@ def main():
             row=4, column=0, columnspan=2,
             sticky="w", pady=(4, 0)
         )
+
+        get_battery = battery_fields(form, 5, description_var, lambda: record["date"], record.get("battery"))
 
         def save_service_changes():
             description = description_var.get().strip()
@@ -1253,9 +1274,16 @@ def main():
                     )
                     return
 
+            try:
+                battery = get_battery()
+            except ValueError as error:
+                messagebox.showerror("Invalid battery details", str(error), parent=dialog)
+                return
+
             if (
                 description == record["description"]
                 and cost_cents == current_cents
+                and battery == record.get("battery")
             ):
                 messagebox.showinfo(
                     "No changes",
@@ -1267,6 +1295,9 @@ def main():
             updated_record = record.copy()
             updated_record["description"] = description
             updated_record["cost_cents"] = cost_cents
+            updated_record.pop("battery", None)
+            if battery:
+                updated_record["battery"] = battery
 
             cost_text = vehicle.format_service_cost(
                 updated_record
@@ -1275,8 +1306,9 @@ def main():
             confirmed = messagebox.askyesno(
                 "Confirm service changes",
                 f"Service: {description}\n"
-                f"Cost ($): {cost_text}\n\n"
-                "Save these changes?",
+                f"Cost ($): {cost_text}\n"
+                + (f"Battery installed: {battery['installed']} — {battery['months']} months ({battery['term']})\n" if battery else "")
+                + "\nSave these changes?",
                 parent=dialog
             )
 
@@ -1315,7 +1347,7 @@ def main():
 
         buttons = ttk.Frame(form)
         buttons.grid(
-            row=5, column=0, columnspan=2,
+            row=6, column=0, columnspan=2,
             sticky="e", pady=(20, 0)
         )
 

@@ -1,3 +1,4 @@
+from battery import battery_summary
 import csv
 from pathlib import Path
 from Vehicle_Manager import Vehicle
@@ -467,6 +468,7 @@ def main():
             for vehicle in vehicles:
                 print(f"\n{vehicle.year} {vehicle.name}")
                 print(f"Current mileage: {format_mileage(vehicle.mileage)}")
+                print(battery_summary(vehicle))
 
                 oil_remaining = (
                     vehicle.next_service() - vehicle.mileage
@@ -604,14 +606,17 @@ def main():
                 save_vehicles(vehicles)
 
         # ===== OPTION 20: EXPORT FUEL HISTORY =====
-               # ===== OPTION 20: EXPORT EXCEL WORKBOOK =====
+               # ===== OPTION 20: EXPORT EXCEL WORKBOOK ====
+
         elif choice == "20":
-            selected_vehicle = select_vehicle(vehicles)
+             selected_vehicle = select_vehicle(vehicles)
 
-            if selected_vehicle is None:
+             if selected_vehicle is None:
                 continue
+             saved_path = export_vehicle_excel(selected_vehicle)
 
-            export_vehicle_excel(selected_vehicle)
+             if saved_path is not None:
+                print("Your Excel workbook is ready.")
        
         elif choice == "21":
             selected_vehicle = select_vehicle(vehicles)
@@ -620,7 +625,6 @@ def main():
                 continue
 
             selected_vehicle.display_fuel_summary()
-
 
         else:
             print("Invalid choice. Please enter a number between 1 and 21" ".")
