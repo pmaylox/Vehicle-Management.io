@@ -55,18 +55,55 @@ def main():
         font=("Segoe UI", 14, "bold")
     ).pack(anchor="w", pady=(0, 10))
 
+    search_var = tk.StringVar()
+    ttk.Label(list_panel, text="Search by name or year:").pack(anchor="w")
+    search_row = ttk.Frame(list_panel)
+    search_row.pack(fill="x", pady=(4, 8))
+    search_entry = ttk.Entry(search_row, textvariable=search_var)
+    search_entry.pack(side="left", fill="x", expand=True)
+    ttk.Button(search_row, text="Clear", command=lambda: search_var.set("")).pack(
+        side="left", padx=(6, 0))
+    sort_var = tk.StringVar(value="Name")
+    ttk.Label(list_panel, text="Sort by:").pack(anchor="w")
+    ttk.Combobox(
+        list_panel,
+        textvariable=sort_var,
+        values=["Name", "Year", "Mileage"],
+        state="readonly"
+    ).pack(anchor="w", pady=(4, 8))
+    visible_vehicles = []
+
     vehicle_list = tk.Listbox(
         list_panel,
         font=("Segoe UI", 12),
         exportselection=False
     )
     vehicle_list.pack(fill="both", expand=True)
+    vehicle_count = tk.StringVar()
+    ttk.Label(
+        list_panel, textvariable=vehicle_count
+    ).pack(anchor="w", pady=(6,0))
 
-    for vehicle in vehicles:
-        vehicle_list.insert(
-            tk.END,
-            f"{vehicle.year} {vehicle.name}"
-        )
+    def refresh_vehicle_list(preferred=None):
+        selection = vehicle_list.curselection()
+        if preferred is None and selection and selection[0] < len(visible_vehicles):
+            preferred = visible_vehicles[selection[0]]
+        query = search_var.get().strip().casefold()
+        visible_vehicles[:] = [
+            vehicle for vehicle in vehicles
+            if query in f"{vehicle.year} {vehicle.name} {vehicle.mileage}".casefold()
+        ]
+        visible_vehicles.sort(key=lambda v: (v.year, v.name))
+        vehicle_count.set(f"Total vehicles: {len(visible_vehicles)}")
+        vehicle_list.delete(0, tk.END)
+        for vehicle in visible_vehicles:
+            vehicle_list.insert(tk.END, f"{vehicle.year} {vehicle.name}")
+        if visible_vehicles:
+            index = next((i for i, vehicle in enumerate(visible_vehicles)
+                          if vehicle is preferred), 0)
+            vehicle_list.selection_set(index)
+            vehicle_list.see(index)
+        show_vehicle()
 
     # ===== TABS =====
     notebook = ttk.Notebook(details_panel)
@@ -183,8 +220,9 @@ def main():
 
         if not selection:
             details_text.set(
-                "No vehicle selected.\n"
-                "Use Add Vehicle to create a vehicle."
+                "No matching vehicles. Try another search or click Clear."
+                if search_var.get().strip() and vehicles
+                else "No vehicle selected. Use Add Vehicle to create a vehicle."
             )
 
             for table in (service_table, fuel_table):
@@ -195,7 +233,7 @@ def main():
             fuel_status.set("No vehicle selected")
             return
 
-        vehicle = vehicles[selection[0]]
+        vehicle = visible_vehicles[selection[0]]
 
         # ===== MAINTENANCE STATUS =====
         def maintenance_status(remaining):
@@ -365,7 +403,7 @@ def main():
             )
             return
 
-        vehicle = vehicles[selection[0]]
+        vehicle = visible_vehicles[selection[0]]
 
         miles = simpledialog.askinteger(
             "Update mileage",
@@ -425,7 +463,7 @@ def main():
         if not selection:
             messagebox.showinfo("Select a vehicle", "Choose a vehicle first.", parent=window)
             return
-        vehicle = vehicles[selection[0]]
+        vehicle = visible_vehicles[selection[0]]
         dialog = tk.Toplevel(window)
         dialog.title("Tire Pressure — Starting PSI and Air Added")
         dialog.resizable(False, False)
@@ -605,13 +643,8 @@ def main():
                 )
                 return
 
-            vehicle_list.insert(
-                tk.END, f"{year} {name}"
-            )
-            vehicle_list.selection_clear(0, tk.END)
-            vehicle_list.selection_set(len(vehicles) - 1)
-            vehicle_list.see(tk.END)
-            show_vehicle()
+            search_var.set("")
+            refresh_vehicle_list(new_vehicle)
 
             dialog.destroy()
 
@@ -662,8 +695,8 @@ def main():
             )
             return
 
-        index = selection[0]
-        vehicle = vehicles[index]
+        vehicle = visible_vehicles[selection[0]]
+        index = vehicles.index(vehicle)
 
         dialog = tk.Toplevel(window)
         dialog.title("Edit Vehicle")
@@ -799,11 +832,7 @@ def main():
                 )
                 return
 
-            vehicle_list.delete(index)
-            vehicle_list.insert(index, f"{year} {name}")
-            vehicle_list.selection_set(index)
-            vehicle_list.see(index)
-            show_vehicle()
+            refresh_vehicle_list(vehicle)
 
             dialog.destroy()
 
@@ -853,8 +882,8 @@ def main():
             )
             return
 
-        index = selection[0]
-        vehicle = vehicles[index]
+        vehicle = visible_vehicles[selection[0]]
+        index = vehicles.index(vehicle)
 
         confirmed = messagebox.askyesno(
             "Remove vehicle",
@@ -885,15 +914,7 @@ def main():
             )
             return
 
-        vehicle_list.delete(index)
-        vehicle_list.selection_clear(0, tk.END)
-
-        if vehicles:
-            next_index = min(index, len(vehicles) - 1)
-            vehicle_list.selection_set(next_index)
-            vehicle_list.see(next_index)
-
-        show_vehicle()
+        refresh_vehicle_list()
 
         messagebox.showinfo(
             "Vehicle removed",
@@ -920,7 +941,7 @@ def main():
             )
             return
 
-        vehicle = vehicles[selection[0]]
+        vehicle = visible_vehicles[selection[0]]
 
         dialog = tk.Toplevel(window)
         dialog.title("Record Service")
@@ -1172,7 +1193,7 @@ def main():
             )
             return
 
-        vehicle = vehicles[vehicle_selection[0]]
+        vehicle = visible_vehicles[vehicle_selection[0]]
         index = service_table.index(record_selection[0])
         record = vehicle.service_history[index]
 
@@ -1387,7 +1408,7 @@ def main():
             )
             return
 
-        vehicle = vehicles[vehicle_selection[0]]
+        vehicle = visible_vehicles[vehicle_selection[0]]
         index = service_table.index(record_selection[0])
         record = vehicle.service_history[index]
 
@@ -1455,7 +1476,7 @@ def main():
             )
             return
 
-        vehicle = vehicles[selection[0]]
+        vehicle = visible_vehicles[selection[0]]
 
         dialog = tk.Toplevel(window)
         dialog.title("Record Fuel")
@@ -1678,7 +1699,7 @@ def main():
             )
             return
 
-        vehicle = vehicles[vehicle_selection[0]]
+        vehicle = visible_vehicles[vehicle_selection[0]]
         index = fuel_table.index(record_selection[0])
         record = vehicle.fuel_history[index]
 
@@ -1903,7 +1924,7 @@ def main():
             )
             return
 
-        vehicle = vehicles[vehicle_selection[0]]
+        vehicle = visible_vehicles[vehicle_selection[0]]
         index = fuel_table.index(record_selection[0])
         record = vehicle.fuel_history[index]
         cost = Decimal(record["cost_cents"]) / 100
@@ -1975,7 +1996,7 @@ def main():
             )
             return
 
-        vehicle = vehicles[selection[0]]
+        vehicle = visible_vehicles[selection[0]]
 
         safe_name = "".join(
             character if character.isalnum() else "_"
@@ -2034,14 +2055,8 @@ def main():
     # ===== STARTUP SELECTION =====
     vehicle_list.bind("<<ListboxSelect>>", show_vehicle)
 
-    if vehicles:
-        vehicle_list.selection_set(0)
-        show_vehicle()
-    else:
-        details_text.set(
-            "No vehicles saved yet.\n"
-            "Add a vehicle through the terminal app."
-        )
+    search_var.trace_add("write", lambda *args: refresh_vehicle_list())
+    refresh_vehicle_list()
 
     ttk.Label(
         container,

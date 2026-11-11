@@ -75,7 +75,9 @@ def battery_summary(vehicle, today=None):
         details = battery_details(**record["battery"], today=today)
     except (ValueError, TypeError, KeyError):
         return "Battery details need correction in Edit Service."
+    age_days = ((today or date.today()) - details["installed"]).days
     return (f"Battery last replaced: {details['installed']:%B %Y}\n"
+            f"Battery age (days): {age_days}\n"
             f"Battery maker: {record['battery'].get('maker') or 'Not recorded'}\n"
             f"{details['term']}: {battery_term_text(details['months'])}\n"
             f"{details['label']}: {details['target']:%m/%d/%Y}\n"

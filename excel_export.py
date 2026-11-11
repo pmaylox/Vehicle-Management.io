@@ -204,7 +204,8 @@ def build_overview(sheet, vehicle, service_cost, missing_costs, fuel_cost, gallo
     sheet.freeze_panes = "A5"
     section(33, "BATTERY")
     note(34, battery_summary(vehicle))
-    sheet.row_dimensions[34].height = 80
+    sheet["A34"].font = Font(name="Calibri", size=11)
+    sheet.row_dimensions[34].height = 96
     sheet.print_area = "A1:D34"
     sheet.print_options.horizontalCentered = True
     sheet.sheet_properties.pageSetUpPr.fitToPage = True
