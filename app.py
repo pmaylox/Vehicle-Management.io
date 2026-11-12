@@ -1,3 +1,6 @@
+import json
+from pathlib import Path
+
 from battery import battery_summary, battery_term_text
 from service_fields import service_entry, battery_fields
 from datetime import date
@@ -17,7 +20,28 @@ def main():
     window.title("Vehicle Manager")
     window.geometry("1100x650")
     window.minsize(800, 500)
+    preferences_file = Path(__file__).with_name("preferences.json")
+    preferences = {}
 
+    try:
+        preferences = json.loads(
+            preferences_file.read_text(encoding="utf-8")
+        )
+        if not isinstance(preferences, dict):
+            preferences = {}
+    except (OSError, ValueError):
+        pass
+
+    saved_sort = preferences.get("sort", "Name")
+    if saved_sort not in ("Name", "Year", "Mileage"):
+        saved_sort = "Name"
+
+    width = preferences.get("width", 1100)
+    height = preferences.get("height", 650)
+
+    if type(width) is int and type(height) is int:
+        if width >= 800 and height >= 500:
+            window.geometry(f"{width}x{height}")
     try:
         vehicles = load_vehicles()
     except (OSError, ValueError, KeyError, TypeError) as error:
@@ -61,9 +85,16 @@ def main():
     search_row.pack(fill="x", pady=(4, 8))
     search_entry = ttk.Entry(search_row, textvariable=search_var)
     search_entry.pack(side="left", fill="x", expand=True)
+    def focus_search(event=None):
+        search_entry.focus_set()
+        search_entry.selection_range(0, tk.END)
+        return "break"
+
+    window.bind("<Control-f>", focus_search)
+    search_entry.bind("<Escape>", lambda event: search_var.set(""))   
     ttk.Button(search_row, text="Clear", command=lambda: search_var.set("")).pack(
         side="left", padx=(6, 0))
-    sort_var = tk.StringVar(value="Name")
+    sort_var = tk.StringVar(value=saved_sort)
     ttk.Label(list_panel, text="Sort by:").pack(anchor="w")
     ttk.Combobox(
         list_panel,
@@ -71,6 +102,16 @@ def main():
         values=["Name", "Year", "Mileage"],
         state="readonly"
     ).pack(anchor="w", pady=(4, 8))
+
+    reverse_var = tk.BooleanVar(
+        value=preferences.get("reverse") is True
+    )
+    ttk.Checkbutton(
+        list_panel,
+        text="Reverse order",
+        variable=reverse_var
+    ).pack(anchor="w", pady=(0, 8))
+
     visible_vehicles = []
 
     vehicle_list = tk.Listbox(
@@ -93,7 +134,14 @@ def main():
             vehicle for vehicle in vehicles
             if query in f"{vehicle.year} {vehicle.name} {vehicle.mileage}".casefold()
         ]
-        visible_vehicles.sort(key=lambda v: (v.year, v.name))
+        if sort_var.get() == "Year":
+            visible_vehicles.sort(key=lambda v: (v.year, v.name.casefold()))
+        elif sort_var.get() == "Mileage":
+            visible_vehicles.sort(key=lambda v: (v.mileage, v.name.casefold()))
+        else:
+            visible_vehicles.sort(key=lambda v: v.name.casefold())
+        if reverse_var.get():
+            visible_vehicles.reverse()
         vehicle_count.set(f"Total vehicles: {len(visible_vehicles)}")
         vehicle_list.delete(0, tk.END)
         for vehicle in visible_vehicles:
@@ -2056,6 +2104,8 @@ def main():
     vehicle_list.bind("<<ListboxSelect>>", show_vehicle)
 
     search_var.trace_add("write", lambda *args: refresh_vehicle_list())
+    sort_var.trace_add("write", lambda *args: refresh_vehicle_list())
+    reverse_var.trace_add("write", lambda *args: refresh_vehicle_list())
     refresh_vehicle_list()
 
     ttk.Label(
@@ -2063,6 +2113,30 @@ def main():
         text="Vehicle Manager — mileage updates save automatically",
         foreground="#666666"
     ).pack(anchor="w", pady=(12, 0))
+
+    def close_app():
+        preferences = {
+            "sort": sort_var.get(),
+            "reverse": reverse_var.get(),
+            "width": window.winfo_width(),
+            "height": window.winfo_height()
+        }
+        try:
+            preferences_file.write_text(
+                json.dumps(preferences, indent=4),
+                encoding="utf-8"
+            )
+        except OSError as error:
+            messagebox.showerror(
+                "Could not save preferences",
+                str(error),
+                parent=window
+            )
+            return
+
+        window.destroy()
+
+    window.protocol("WM_DELETE_WINDOW", close_app)
 
     window.mainloop()
 
