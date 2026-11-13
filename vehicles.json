@@ -91,44 +91,44 @@
             }
         ],
         "tire_pressures": {
-            "driver_front": 35.0,
-            "driver_rear": 35.0,
-            "passenger_front": 37.0,
-            "passenger_rear": 35.0
+            "driver_front": 35,
+            "driver_rear": 35,
+            "passenger_front": 35,
+            "passenger_rear": 35
         },
         "starting_tire_pressures": {
-            "driver_front": 35.0,
-            "driver_rear": 34.0,
-            "passenger_front": 31.0,
-            "passenger_rear": 35.0
+            "driver_front": 35,
+            "driver_rear": 34,
+            "passenger_front": 31,
+            "passenger_rear": 35
         },
         "tire_pressure_history": [
             {
                 "recorded_at": "2026-11-07T18:57:30-06:00",
                 "mileage": 6881,
                 "before": {
-                    "driver_front": 35.0,
-                    "driver_rear": 34.0,
-                    "passenger_front": 31.0,
-                    "passenger_rear": 35.0
+                    "driver_front": 35,
+                    "driver_rear": 34,
+                    "passenger_front": 31,
+                    "passenger_rear": 35
                 },
                 "starting": {
-                    "driver_front": 35.0,
-                    "driver_rear": 34.0,
-                    "passenger_front": 31.0,
-                    "passenger_rear": 35.0
+                    "driver_front": 35,
+                    "driver_rear": 34,
+                    "passenger_front": 31,
+                    "passenger_rear": 35
                 },
                 "added_psi": {
-                    "driver_front": 0.0,
-                    "driver_rear": 1.0,
-                    "passenger_front": 6.0,
-                    "passenger_rear": 0.0
+                    "driver_front": 0,
+                    "driver_rear": 1,
+                    "passenger_front": 6,
+                    "passenger_rear": 0
                 },
                 "current": {
-                    "driver_front": 35.0,
-                    "driver_rear": 35.0,
-                    "passenger_front": 37.0,
-                    "passenger_rear": 35.0
+                    "driver_front": 35,
+                    "driver_rear": 35,
+                    "passenger_front": 37,
+                    "passenger_rear": 35
                 }
             }
         ]
