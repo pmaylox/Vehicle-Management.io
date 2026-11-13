@@ -70,3 +70,13 @@ For each test: record local date/time, device/build, steps, expected result, act
 - **Workaround:** In the mobile HTML, use `Data & backup → Import from GitHub` and **confirm replacement**. If network import fails, download the reset JSON and use `Choose JSON file` within the app. Do not merely open the JSON in a browser. Preserve a full mobile backup first if previous local tests need archiving.
 - **Status:** Open — awaiting user verification that phone shows 0 miles and 0 records; not yet marked passed.
 - **Follow-up product improvement:** Clearly distinguish Import versus Export/Backup; add a dedicated `Reset test data` control for alpha testing with confirmation, and clearer indication of the browser's local data/sync state.
+
+
+## 2026-11-13 — Alpha 1.1 Android local HTML link broke
+- **Observed:** At approximately 08:20 local time, opening the previously used local MileSage browser tab shows Chrome `ERR_FILE_NOT_FOUND` for `content://media/external/file/1928`.
+- **Expected:** MileSage dashboard should open and display retained vehicle data.
+- **Assessment:** Android's `content://` URI is a reference to a local document; it is not a stable hosted app URL. The underlying file or Chrome's access to it appears to have disappeared. This does **not** demonstrate that the app repository or reset data was deleted.
+- **Workaround:** Reopen the actual MileSage HTML file from Samsung **My Files → Downloads**, or download a fresh `mobile/MileSage_Mobile_Auto_Refresh.html` from GitHub and open the saved HTML file with Chrome. Do not keep using the broken tab or its old `content://` address.
+- **Follow-on validation:** Once MileSage launches, use **Data & backup → Import from GitHub** and confirm replacement to restore Alpha 1.1's two zero-mile vehicle profiles. Verify 0 service/fuel records; keep the test marked open until confirmed on device.
+- **Product action:** Prioritize a durable HTTPS-hosted mobile preview or actual packaged APK; local content URIs are not suitable as permanent launch shortcuts. Avoid clearing browser storage before exporting anything worth saving.
+- **Status:** Open — device-level retest required.
