@@ -80,3 +80,9 @@ For each test: record local date/time, device/build, steps, expected result, act
 - **Follow-on validation:** Once MileSage launches, use **Data & backup → Import from GitHub** and confirm replacement to restore Alpha 1.1's two zero-mile vehicle profiles. Verify 0 service/fuel records; keep the test marked open until confirmed on device.
 - **Product action:** Prioritize a durable HTTPS-hosted mobile preview or actual packaged APK; local content URIs are not suitable as permanent launch shortcuts. Avoid clearing browser storage before exporting anything worth saving.
 - **Status:** Open — device-level retest required.
+
+## 2026-11-13 — Downloaded mobile HTML not located in visible Downloads list
+- **Observed:** Samsung My Files screenshot at approximately 09:35 local time shows Downloads with seven items, including `READ_ME_FIRST.txt` describing MileSage Mobile installation notes, but no visibly listed `MileSage_Mobile_Auto_Refresh.html`. An overlay at the bottom shows the name `MileSage_Mobile_Auto_Refresh` without confirming a stored HTML file.
+- **Likely issue:** The browser's prior `content://` file address is inaccessible, and the required mobile HTML might be absent, stored elsewhere, or not visible in the current list. Not yet proven deleted.
+- **Steps advised:** Read `READ_ME_FIRST.txt`, obtain the HTML via GitHub's Download raw file control if necessary, open the saved `.html` via Samsung My Files, and import the fresh GitHub JSON inside MileSage.
+- **Status:** Open — wait for actual mobile launch and baseline verification; do not mark a pass.
