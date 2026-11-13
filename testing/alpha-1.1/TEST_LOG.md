@@ -61,3 +61,12 @@ The reset changes the application's **tracked test odometers**, not the physical
 
 ## Future entries
 For each test: record local date/time, device/build, steps, expected result, actual result, pass/fail, issue ID, fix commit, and retest result.
+
+## 2026-11-13 — Phone retained old records after GitHub reset
+- **Observed:** Android browser screenshot at approximately 08:10 local time shows Tacoma **6,881 mi** and Explorer **13,145 mi**; Tacoma showed **7 service records** and **4 fuel fill-ups**.
+- **Expected:** Both vehicles display **0 mi** with empty service, fuel, and tire-pressure histories, and zero recorded spending.
+- **Repository verification:** The GitHub `main/vehicles.json` file was fetched again and confirmed to have zero mileage and empty histories for both vehicles.
+- **Likely cause:** The browser opened the mobile HTML from a `content://media/...` local address, and retained `localStorage` data. Auto-refresh intentionally does not overwrite local changes. The user may have used a backup/export action rather than confirming manual import; exact click sequence not verified.
+- **Workaround:** In the mobile HTML, use `Data & backup → Import from GitHub` and **confirm replacement**. If network import fails, download the reset JSON and use `Choose JSON file` within the app. Do not merely open the JSON in a browser. Preserve a full mobile backup first if previous local tests need archiving.
+- **Status:** Open — awaiting user verification that phone shows 0 miles and 0 records; not yet marked passed.
+- **Follow-up product improvement:** Clearly distinguish Import versus Export/Backup; add a dedicated `Reset test data` control for alpha testing with confirmation, and clearer indication of the browser's local data/sync state.
