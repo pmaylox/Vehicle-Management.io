@@ -86,3 +86,11 @@ For each test: record local date/time, device/build, steps, expected result, act
 - **Likely issue:** The browser's prior `content://` file address is inaccessible, and the required mobile HTML might be absent, stored elsewhere, or not visible in the current list. Not yet proven deleted.
 - **Steps advised:** Read `READ_ME_FIRST.txt`, obtain the HTML via GitHub's Download raw file control if necessary, open the saved `.html` via Samsung My Files, and import the fresh GitHub JSON inside MileSage.
 - **Status:** Open — wait for actual mobile launch and baseline verification; do not mark a pass.
+
+
+## 2026-11-13 — Wrong archive opened on phone; corrected package published
+- **Observed:** Samsung My Files screenshot at approximately 09:40 local time shows extracted `Vehicle_Manager_Project_Transfer` with `assets/`, `README_FIRST.md`, and `Vehicle_Manager_..._2026-11-06.md`; these are project history/visual references, not the mobile application.
+- **Correction:** Published a separate 44,334-byte ZIP at `mobile/MileSage_Alpha_1_1_Mobile_Phone.zip`, containing the actual GitHub mobile HTML preview renamed `MileSage_Mobile.html`, verified fresh-reset `Alpha_1_1_Reset_vehicles.json`, and `READ_ME_FIRST.txt`.
+- **Source commit:** `2f048d4362ee9fa544da1eb84c3ac7c40cc6fdd7`.
+- **Expected phone steps:** Download that ZIP, extract it, open `MileSage_Mobile.html` in a browser, and manually import from GitHub or choose the included JSON. Confirm Tacoma and Explorer both have zero miles and empty histories.
+- **Status:** Package created on GitHub; phone end-to-end launch and import are pending verification.
