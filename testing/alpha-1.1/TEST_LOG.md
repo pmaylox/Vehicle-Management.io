@@ -55,7 +55,7 @@ The reset changes the application's **tracked test odometers**, not the physical
 ## Findings & issues
 | Date | Test area | Observation | Status |
 |---|---|---|---|
-| 2026-11-13 | Clean start | Baseline `vehicles.json` reset on GitHub, with archival snapshot | Saved, re-read verification pending |
+| 2026-11-13 | Clean start | Baseline `vehicles.json` reset on GitHub, with archival snapshot | Saved and verified by re-reading GitHub JSON (2 vehicles, 0 miles, 0 service/fuel/pressure records) |
 | 2026-11-13 | Mobile synchronization | Existing browser data may need manual confirmed import | Open |
 | 2026-11-13 | Android installation | APK not yet verified as installed; previous link showed source code | Open |
 
