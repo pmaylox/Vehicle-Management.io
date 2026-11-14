@@ -169,9 +169,28 @@ def main():
     service_notebook = ttk.Notebook(service_tab)
     service_notebook.pack(fill="both", expand=True)
     service_records_tab = ttk.Frame(service_notebook, padding=8)
-    fluids_tab = ttk.Frame(service_notebook, padding=12)
+    fluids_tab = ttk.Frame(service_notebook)
     service_notebook.add(service_records_tab, text="Service Records")
     service_notebook.add(fluids_tab, text="Fluids & Filters")
+
+    # Scrollable controls keep all four maintenance actions accessible on phones
+    # sized desktops and smaller laptop windows.
+    fluid_canvas = tk.Canvas(fluids_tab, highlightthickness=0)
+    fluid_scroll = ttk.Scrollbar(fluids_tab, orient="vertical",
+                                 command=fluid_canvas.yview)
+    fluid_canvas.configure(yscrollcommand=fluid_scroll.set)
+    fluid_scroll.pack(side="right", fill="y")
+    fluid_canvas.pack(side="left", fill="both", expand=True)
+    fluid_content = ttk.Frame(fluid_canvas, padding=12)
+    fluid_window = fluid_canvas.create_window((0, 0), window=fluid_content, anchor="nw")
+    fluid_content.bind(
+        "<Configure>",
+        lambda event: fluid_canvas.configure(scrollregion=fluid_canvas.bbox("all"))
+    )
+    fluid_canvas.bind(
+        "<Configure>",
+        lambda event: fluid_canvas.itemconfigure(fluid_window, width=event.width)
+    )
 
     details_text = tk.StringVar(
         value="Select a vehicle to view its details."
@@ -196,7 +215,7 @@ def main():
 
     # ===== INDEPENDENT FLUID CHECK REMINDERS =====
     ttk.Label(
-        fluids_tab,
+        fluid_content,
         text=f"Check both fluids every {FLUID_CHECK_INTERVAL:,} miles. "
              "Buttons work at any odometer reading.",
         wraplength=590,
@@ -261,14 +280,14 @@ def main():
         show_vehicle()
 
     for fluid, label in FLUID_NAMES.items():
-        section = ttk.LabelFrame(fluids_tab, text=label, padding=12)
+        section = ttk.LabelFrame(fluid_content, text=label, padding=12)
         section.pack(fill="x", pady=(5, 10))
         ttk.Label(section, textvariable=fluid_status_vars[fluid],
                   justify="left", wraplength=540).pack(anchor="w", pady=(0, 8))
         ttk.Button(section, text="Reset to Full",
                    command=lambda key=fluid: mark_fluid_full(key)).pack(anchor="w")
     ttk.Label(
-        fluids_tab,
+        fluid_content,
         text="Manually confirmed levels only; MileSage does not measure fluids. "
              "Follow each vehicle's owner manual for proper levels and fluid types.",
         wraplength=590,
@@ -276,10 +295,10 @@ def main():
 
     # ===== AIR FILTER REPLACEMENT RECORDS =====
     ttk.Separator(fluids_tab).pack(fill="x", pady=(10, 8))
-    ttk.Label(fluids_tab, text="Air Filter Replacement History",
+    ttk.Label(fluid_content, text="Air Filter Replacement History",
               font=("Segoe UI", 12, "bold")).pack(anchor="w", pady=(0, 5))
     ttk.Label(
-        fluids_tab,
+        fluid_content,
         text="Record a replacement date separately for each filter. "
              "These records are included in the Excel export.",
         wraplength=590,
@@ -336,7 +355,7 @@ def main():
         show_vehicle()
 
     for kind, label in filter_labels.items():
-        section = ttk.LabelFrame(fluids_tab, text=label, padding=9)
+        section = ttk.LabelFrame(fluid_content, text=label, padding=9)
         section.pack(fill="x", pady=(3, 8))
         filter_date_vars[kind] = tk.StringVar(value=date.today().isoformat())
         filter_history_vars[kind] = tk.StringVar()
