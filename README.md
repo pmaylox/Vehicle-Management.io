@@ -2,7 +2,7 @@
 
 ## Current project version
 
-**MileSage Alpha 1.2.0** — fluid checks and air-filter source update (November 14, 2026). Automated code tests passed; desktop and Android manual testing remain pending. No APK has been built or deployed.
+**MileSage Alpha 1.2.1** — safe mobile restore fix following the Alpha 1.2.0 maintenance features (November 14, 2026). Automated code tests passed; desktop and Android manual testing remain pending. No APK has been built or deployed.
 
 The earlier Alpha 1.1.1 patch records the Tacoma's user-configured tire-rotation and oil-service interval changes. GitHub configuration and documentation have been updated; an Android APK has **not** been built, published, or verified, and mobile/desktop testing of the patch remains pending. The standalone mobile HTML remains a preview, and devices may retain older locally saved data until deliberately synchronized.
 
@@ -44,3 +44,12 @@ The **Excel export** includes these entries in the **Service History** worksheet
 **Safety:** The app does not measure actual fluid levels. For coolant, only check the designated reservoir when the engine is cool; never remove a hot pressurized radiator/coolant cap. Use the correct level marks and fluid types described by the vehicle's manual.
 
 **Testing:** Run python -m unittest -v test_fluid_filters.py. GitHub Actions checks Python syntax, regression tests, and mobile JavaScript syntax. GUI and device checks remain necessary before a release.
+
+
+## Alpha 1.2.1 — data-loss protection for phone restores
+
+The phone's **Data & backup → Review GitHub vehicles.json** no longer imports `vehicles.json` that only contains zero-mile placeholders and no tire PSI/history. GitHub checks are now **read-only** and never automatically replace local mobile data. A manual import previews the incoming record count, blocks dangerous GitHub downgrades, and requires confirmation. Local JSON imports warn about reduced odometer values, cleared PSI, missing vehicles, or lost records.
+
+**Recover from saved GitHub backup** lets the user selectively fill blank readings and empty logs from the older `vehicles_backup.json` without downgrading existing phone readings or changing user-configured service intervals. This older backup is not guaranteed to match current vehicle odometers or the most recent pressure settings. Before overwriting, a local recovery snapshot is stored for undo, but browser storage is not a substitute for a downloaded full backup. Do **not** clear browser data or reinstall the app before exporting.
+
+The HTML preview itself must be updated to see these features; importing JSON only replaces **data**, never the app's code. No Android APK has been rebuilt. Test via `node mobile/test_restore_safety.cjs`.
