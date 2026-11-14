@@ -245,6 +245,8 @@ def export_vehicle_excel(vehicle, output_file=None):
     overview_sheet.title = "Overview"
     service_sheet = workbook.create_sheet("Service History")
     fuel_sheet = workbook.create_sheet("Fuel History")
+    fluid_sheet = workbook.create_sheet("Fluid Checks")
+    filter_sheet = workbook.create_sheet("Air Filters")
 
     service_rows = []
     total_service_cost = Decimal("0")
@@ -345,6 +347,52 @@ def export_vehicle_excel(vehicle, output_file=None):
         }
     )
     
+
+    fluid_labels = {
+        "washer": "Windshield washer fluid",
+        "coolant": "Engine coolant reservoir",
+    }
+    fluid_rows = [
+        [
+            date.fromisoformat(event["date"]),
+            event["mileage"],
+            fluid_labels.get(event["fluid"], event["fluid"]),
+            "Confirmed full" if event.get("action") == "confirmed_full"
+                else event.get("action", "Checked"),
+        ]
+        for event in getattr(vehicle, "fluid_check_history", [])
+    ]
+    filter_labels = {
+        "interior": "Interior / cabin air filter",
+        "exterior": "Exterior / engine air filter",
+    }
+    filter_rows = [
+        [
+            date.fromisoformat(event["date"]),
+            event["mileage"],
+            filter_labels.get(event["filter_type"], event["filter_type"]),
+            "Replaced",
+        ]
+        for event in getattr(vehicle, "air_filter_changes", [])
+    ]
+
+    style_sheet(
+        fluid_sheet,
+        f"{title} — Fluid Checks",
+        ["Check Date", "Odometer (mi)", "Fluid", "Recorded Action"],
+        fluid_rows,
+        [19, 20, 42, 26],
+        {1: "mm/dd/yyyy", 2: "#,##0"}
+    )
+    style_sheet(
+        filter_sheet,
+        f"{title} — Air Filter Changes",
+        ["Replacement Date", "Odometer (mi)", "Filter", "Recorded Action"],
+        filter_rows,
+        [22, 20, 42, 26],
+        {1: "mm/dd/yyyy", 2: "#,##0"}
+    )
+
     service_with_cost = len(service_rows) - missing_service_cost
 
     if service_with_cost > 0:
