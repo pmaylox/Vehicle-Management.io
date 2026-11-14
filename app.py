@@ -170,7 +170,7 @@ def main():
     graphs_tab = ttk.Frame(notebook, padding=15)
     notebook.add(graphs_tab, text="Graphs")
 
-    spanding_kind = tk.StringVar(value = "Fuel")
+    spending_kind = tk.StringVar(value="Fuel")
 
     ttk.Combobox(
         graphs_tab,
@@ -314,6 +314,9 @@ def main():
 
             service_status.set("No vehicle selected")
             fuel_status.set("No vehicle selected")
+            spending_chart.set_data([])
+            mpg_chart.set_data([])
+            graph_status.set("Select a vehicle to view its graphs.")
             return
 
         vehicle = visible_vehicles[selection[0]]
@@ -483,6 +486,10 @@ def main():
                     if miles > 0 and gallons_since_full > 0:
                         mpg = Decimal(miles) / gallons_since_full
                         mpg_text = f"{mpg:.2f}"
+                        mpg_points.append((
+                            date.fromisoformat(record["date"]).strftime("%m/%d/%y"),
+                            float(mpg)
+                        ))
                     else:
                         mpg_text = "Insufficient distance"
 
@@ -500,6 +507,8 @@ def main():
                 mpg_text,
                 f"{Decimal(record['cost_cents']) / 100 / gallons:.3f}"
             ))
+
+        mpg_chart.set_data(mpg_points[-6:])
 
         service_status.set(
             f"{len(vehicle.service_history)} service records"
@@ -2178,6 +2187,7 @@ def main():
     search_var.trace_add("write", lambda *args: refresh_vehicle_list())
     sort_var.trace_add("write", lambda *args: refresh_vehicle_list())
     reverse_var.trace_add("write", lambda *args: refresh_vehicle_list())
+    spending_kind.trace_add("write", lambda *args: show_vehicle())
     refresh_vehicle_list()
 
     ttk.Label(
