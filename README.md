@@ -2,9 +2,9 @@
 
 ## Current project version
 
-**MileSage Alpha 1.1.1** — source/configuration patch designation (November 14, 2026).
+**MileSage Alpha 1.2.0** — fluid checks and air-filter source update (November 14, 2026). Automated code tests passed; desktop and Android manual testing remain pending. No APK has been built or deployed.
 
-This patch records the Tacoma's user-configured tire-rotation and oil-service interval changes. GitHub configuration and documentation have been updated; an Android APK has **not** been built, published, or verified, and mobile/desktop testing of the patch remains pending. The standalone mobile HTML remains a preview, and devices may retain older locally saved data until deliberately synchronized.
+The earlier Alpha 1.1.1 patch records the Tacoma's user-configured tire-rotation and oil-service interval changes. GitHub configuration and documentation have been updated; an Android APK has **not** been built, published, or verified, and mobile/desktop testing of the patch remains pending. The standalone mobile HTML remains a preview, and devices may retain older locally saved data until deliberately synchronized.
 
 ## MileSage — configured maintenance intervals
 
@@ -27,9 +27,9 @@ See [`Alpha 1.1 test log`](testing/alpha-1.1/TEST_LOG.md) for the dated change r
 
 The current Tacoma and Explorer intervals in `vehicles.json` are alpha test settings, **not mandatory defaults** for all beta testers. The app should distinguish user preferences from manufacturer guidance; beta testers should consult their vehicle's owner manual or maintenance schedule for appropriate intervals.
 
-## Proposed Alpha 1.2.0 — Fluid checks and air filters (feature branch)
+## Alpha 1.2.0 — Fluid checks and air filters
 
-**Status:** Development proposal; not part of the Alpha 1.1.1 release until reviewed, tested, and merged. This does not deploy an APK or silently synchronize phone data.
+**Status:** Source-code alpha update, passing automated checks. GUI/device testing is pending; this does not deploy an APK or silently synchronize phone data.
 
 In **Service History → Fluids & Filters**, each vehicle independently tracks:
 - Windshield washer fluid: check every **5,000 miles**.
