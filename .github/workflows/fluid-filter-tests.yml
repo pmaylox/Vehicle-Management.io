@@ -24,6 +24,8 @@ jobs:
         run: python -m unittest -v test_fluid_filters.py
       - name: Exercise phone restore safety checks
         run: node mobile/test_restore_safety.cjs
+      - name: Test service photo OCR parser
+        run: node mobile/test_receipt_parser.cjs
       - name: Validate phone JavaScript syntax
         run: |
           python - <<'PY'
