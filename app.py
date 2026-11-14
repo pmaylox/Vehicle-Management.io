@@ -370,6 +370,44 @@ def main():
             command=lambda chosen=kind: record_filter_replacement(chosen)
         ).pack(side="left")
 
+    # Single dated history within Service History, backed by independent records.
+    events_box = ttk.LabelFrame(fluid_content, text="Fluid & Filter History", padding=8)
+    events_box.pack(fill="x", pady=(7, 10))
+    events_columns = ("date", "odometer", "item", "action")
+    maintenance_events_table = ttk.Treeview(
+        events_box, columns=events_columns, show="headings", height=6,
+    )
+    for key, label, width in (
+        ("date", "Date", 110),
+        ("odometer", "Mileage", 90),
+        ("item", "Maintenance item", 240),
+        ("action", "Action", 140),
+    ):
+        maintenance_events_table.heading(key, text=label)
+        maintenance_events_table.column(key, width=width, minwidth=65)
+    maintenance_events_table.pack(fill="x")
+
+    def refresh_maintenance_events(vehicle=None):
+        for row in maintenance_events_table.get_children():
+            maintenance_events_table.delete(row)
+        if vehicle is None:
+            return
+        items = [
+            (record.get("date", ""), record.get("mileage", 0),
+             FLUID_NAMES.get(record.get("fluid"), record.get("fluid", "Unknown fluid")),
+             "Confirmed full")
+            for record in vehicle.fluid_check_history
+        ]
+        items.extend(
+            (record.get("date", ""), record.get("mileage", 0),
+             filter_labels.get(record.get("filter_type"), "Air filter"), "Replaced")
+            for record in vehicle.air_filter_changes
+        )
+        for item in sorted(items, key=lambda row: (row[0], row[1]), reverse=True):
+            maintenance_events_table.insert(
+                "", tk.END, values=(item[0], f"{item[1]:,}", item[2], item[3]),
+            )
+
     # ===== SHARED TABLE BUILDER =====
     def make_table(parent, columns):
         frame = ttk.Frame(parent)
@@ -465,11 +503,13 @@ def main():
             fuel_status.set("No vehicle selected")
             refresh_fluid_panel()
             refresh_filter_panel()
+            refresh_maintenance_events()
             return
 
         vehicle = visible_vehicles[selection[0]]
         refresh_fluid_panel(vehicle)
         refresh_filter_panel(vehicle)
+        refresh_maintenance_events(vehicle)
 
         # ===== MAINTENANCE STATUS =====
         def maintenance_status(remaining):
