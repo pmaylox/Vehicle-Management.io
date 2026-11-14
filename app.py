@@ -10,7 +10,7 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 
 from formatting import format_mileage, format_date, cents_to_dollars
 from validation import parse_cost_cents
-from Vehicle_Manager import Vehicle
+from Vehicle_Manager import Vehicle, FLUID_NAMES, FLUID_CHECK_INTERVAL
 from excel_export import export_vehicle_excel
 from storage import save_vehicles, load_vehicles
 
@@ -160,10 +160,12 @@ def main():
     overview_tab = ttk.Frame(notebook, padding=15)
     service_tab = ttk.Frame(notebook, padding=10)
     fuel_tab = ttk.Frame(notebook, padding=10)
+    fluids_tab = ttk.Frame(notebook, padding=15)
 
     notebook.add(overview_tab, text="Overview")
     notebook.add(service_tab, text="Service History")
     notebook.add(fuel_tab, text="Fuel History")
+    notebook.add(fluids_tab, text="Fluid Checks")
 
     details_text = tk.StringVar(
         value="Select a vehicle to view its details."
@@ -185,6 +187,86 @@ def main():
 
     details_text.trace_add("write", refresh_overview)
     refresh_overview()
+
+    # ===== INDEPENDENT FLUID CHECK REMINDERS =====
+    ttk.Label(
+        fluids_tab,
+        text=f"Check both fluids every {FLUID_CHECK_INTERVAL:,} miles. "
+             "Buttons work at any odometer reading.",
+        wraplength=590,
+    ).pack(anchor="w", pady=(0, 10))
+    fluid_status_vars = {key: tk.StringVar() for key in FLUID_NAMES}
+
+    def fluid_status_text(vehicle, fluid):
+        info = vehicle.fluid_check_status(fluid)
+        if info["miles_remaining"] is None:
+            return "CHECK NOW — no full-level confirmation recorded"
+        remaining = info["miles_remaining"]
+        if remaining <= 0:
+            return f"DUE NOW (overdue by {abs(remaining):,} miles)"
+        return f"{remaining:,} miles remaining (next at {info['next_due_mileage']:,})"
+
+    def refresh_fluid_panel(vehicle=None):
+        for fluid, label in FLUID_NAMES.items():
+            if vehicle is None:
+                fluid_status_vars[fluid].set(f"{label}: Select a vehicle first.")
+            else:
+                last = vehicle.fluid_checks[fluid]
+                detail = (
+                    f"Last confirmed full at {last['last_full_mileage']:,} miles "
+                    f"on {last['last_full_date'] or 'date unknown'}."
+                    if last["last_full_mileage"] is not None
+                    else "Level has not been confirmed."
+                )
+                fluid_status_vars[fluid].set(
+                    f"{label}: {fluid_status_text(vehicle, fluid)}\\n{detail}"
+                )
+
+    def mark_fluid_full(fluid):
+        selected = vehicle_list.curselection()
+        if not selected or selected[0] >= len(visible_vehicles):
+            messagebox.showinfo("Select a vehicle", "Select a vehicle first.", parent=window)
+            return
+        vehicle = visible_vehicles[selected[0]]
+        guidance = (
+            "Only check the coolant expansion reservoir when the engine is cool. "
+            "Never open a hot radiator/pressurized coolant cap.\\n\\n"
+            if fluid == "coolant" else ""
+        )
+        if not messagebox.askyesno(
+            "Confirm fluid level",
+            guidance + f"Did you visually confirm that {FLUID_NAMES[fluid].lower()} "
+                       "is at the correct full mark?\\n\\n"
+                       f"This will log {vehicle.mileage:,} miles and restart only "
+                       "this fluid's 5,000-mile reminder.",
+            parent=window,
+        ):
+            return
+        before = vehicle.fluid_checks[fluid].copy()
+        count = len(vehicle.fluid_check_history)
+        vehicle.reset_fluid_to_full(fluid)
+        try:
+            save_vehicles(vehicles)
+        except OSError as error:
+            vehicle.fluid_checks[fluid] = before
+            del vehicle.fluid_check_history[count:]
+            messagebox.showerror("Save failed", str(error), parent=window)
+            return
+        show_vehicle()
+
+    for fluid, label in FLUID_NAMES.items():
+        section = ttk.LabelFrame(fluids_tab, text=label, padding=12)
+        section.pack(fill="x", pady=(5, 10))
+        ttk.Label(section, textvariable=fluid_status_vars[fluid],
+                  justify="left", wraplength=540).pack(anchor="w", pady=(0, 8))
+        ttk.Button(section, text="Reset to Full",
+                   command=lambda key=fluid: mark_fluid_full(key)).pack(anchor="w")
+    ttk.Label(
+        fluids_tab,
+        text="Manually confirmed levels only; MileSage does not measure fluids. "
+             "Follow each vehicle's owner manual for proper levels and fluid types.",
+        wraplength=590,
+    ).pack(anchor="w", pady=8)
 
     # ===== SHARED TABLE BUILDER =====
     def make_table(parent, columns):
@@ -279,9 +361,11 @@ def main():
 
             service_status.set("No vehicle selected")
             fuel_status.set("No vehicle selected")
+            refresh_fluid_panel()
             return
 
         vehicle = visible_vehicles[selection[0]]
+        refresh_fluid_panel(vehicle)
 
         # ===== MAINTENANCE STATUS =====
         def maintenance_status(remaining):
@@ -348,7 +432,10 @@ def main():
             f"Current odometer: {format_mileage(vehicle.mileage)}\n\n"
             f"MAINTENANCE\n"
             f"Oil change: {oil_status}\n"
-            f"Tire rotation: {tire_status}\n\n"
+            f"Tire rotation: {tire_status}\\n\\n"
+            f"FLUID CHECKS (every {FLUID_CHECK_INTERVAL:,} miles)\\n"
+            f"Washer fluid: {fluid_status_text(vehicle, 'washer')}\\n"
+            f"Coolant reservoir: {fluid_status_text(vehicle, 'coolant')}\\n\\n"
             f"BATTERY\n{battery_summary(vehicle)}\n\n"
             f"CURRENT TIRE PRESSURE (calculated PSI)\n"
             f"Driver's front: {pressure_text('driver_front')}\n"
