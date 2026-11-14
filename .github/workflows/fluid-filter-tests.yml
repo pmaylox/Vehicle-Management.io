@@ -26,6 +26,8 @@ jobs:
         run: node mobile/test_restore_safety.cjs
       - name: Test service photo OCR parser
         run: node mobile/test_receipt_parser.cjs
+      - name: Test fuel receipt OCR parser
+        run: node mobile/test_fuel_receipt_parser.cjs
       - name: Validate phone JavaScript syntax
         run: |
           python - <<'PY'
