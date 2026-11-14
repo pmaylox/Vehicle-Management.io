@@ -317,6 +317,43 @@ def main():
             return
 
         vehicle = visible_vehicles[selection[0]]
+        # ===== SPENDING DATA =====
+        monthly_cents = {}
+        missing_costs = 0
+
+        records = (
+            vehicle.fuel_history
+            if spending_kind.get() == "Fuel"
+            else vehicle.service_history
+        )
+
+        for record in records:
+            cents = record.get("cost_cents")
+
+            if cents is None:
+                missing_costs += 1
+                continue
+
+            month = record["date"][:7]
+            monthly_cents[month] = monthly_cents.get(month, 0) + cents
+
+        spending_points = [
+            (
+                date.fromisoformat(month + "-01").strftime("%b %Y"),
+                cents / 100
+            )
+            for month, cents in sorted(monthly_cents.items())[-6:]
+        ]
+
+        spending_chart.set_data(spending_points)
+        graph_status.set(
+            f"{vehicle.year} {vehicle.name} • "
+            f"{spending_kind.get()} spending • "
+            f"Latest 6 recorded months • "
+            f"{missing_costs} records with unknown cost excluded"
+        )
+
+        mpg_points = []
 
         # ===== MAINTENANCE STATUS =====
         def maintenance_status(remaining):
