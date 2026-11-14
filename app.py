@@ -174,7 +174,7 @@ def main():
     service_notebook.add(fluids_tab, text="Fluids & Filters")
 
     # Scrollable controls keep all four maintenance actions accessible on phones
-    # sized desktops and smaller laptop windows.
+    # and smaller laptop windows.
     fluid_canvas = tk.Canvas(fluids_tab, highlightthickness=0)
     fluid_scroll = ttk.Scrollbar(fluids_tab, orient="vertical",
                                  command=fluid_canvas.yview)
@@ -294,7 +294,7 @@ def main():
     ).pack(anchor="w", pady=8)
 
     # ===== AIR FILTER REPLACEMENT RECORDS =====
-    ttk.Separator(fluids_tab).pack(fill="x", pady=(10, 8))
+    ttk.Separator(fluid_content).pack(fill="x", pady=(10, 8))
     ttk.Label(fluid_content, text="Air Filter Replacement History",
               font=("Segoe UI", 12, "bold")).pack(anchor="w", pady=(0, 5))
     ttk.Label(
