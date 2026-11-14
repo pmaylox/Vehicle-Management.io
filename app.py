@@ -274,6 +274,83 @@ def main():
         wraplength=590,
     ).pack(anchor="w", pady=8)
 
+    # ===== AIR FILTER REPLACEMENT RECORDS =====
+    ttk.Separator(fluids_tab).pack(fill="x", pady=(10, 8))
+    ttk.Label(fluids_tab, text="Air Filter Replacement History",
+              font=("Segoe UI", 12, "bold")).pack(anchor="w", pady=(0, 5))
+    ttk.Label(
+        fluids_tab,
+        text="Record a replacement date separately for each filter. "
+             "These records are included in the Excel export.",
+        wraplength=590,
+    ).pack(anchor="w", pady=(0, 8))
+
+    filter_labels = {
+        "interior": "Interior / cabin air filter",
+        "exterior": "Exterior / engine air filter",
+    }
+    filter_date_vars = {}
+    filter_history_vars = {}
+
+    def refresh_filter_panel(vehicle=None):
+        for kind in filter_labels:
+            if vehicle is None:
+                filter_history_vars[kind].set("Select a vehicle.")
+                continue
+            history = [r for r in vehicle.air_filter_changes
+                       if r.get("filter_type") == kind]
+            if history:
+                last = max(history, key=lambda r: (r.get("date", ""), r.get("mileage", 0)))
+                filter_history_vars[kind].set(
+                    f"Last replaced: {last['date']} at {last['mileage']:,} mi "
+                    f"({len(history)} total records)"
+                )
+            else:
+                filter_history_vars[kind].set("Not recorded")
+
+    def record_filter_replacement(kind):
+        selected = vehicle_list.curselection()
+        if not selected or selected[0] >= len(visible_vehicles):
+            messagebox.showinfo("Select vehicle", "Select a vehicle first.", parent=window)
+            return
+        vehicle = visible_vehicles[selected[0]]
+        replacement_date = filter_date_vars[kind].get()
+        if not messagebox.askyesno(
+            "Confirm replacement",
+            f"Was the {filter_labels[kind].lower()} replaced on "
+            f"{replacement_date} at {vehicle.mileage:,} miles?",
+            parent=window,
+        ):
+            return
+        try:
+            vehicle.record_air_filter_change(kind, replacement_date)
+        except ValueError as error:
+            messagebox.showerror("Invalid replacement", str(error), parent=window)
+            return
+        try:
+            save_vehicles(vehicles)
+        except (OSError, ValueError, TypeError) as error:
+            vehicle.air_filter_changes.pop()
+            messagebox.showerror("Could not save", str(error), parent=window)
+            return
+        show_vehicle()
+
+    for kind, label in filter_labels.items():
+        section = ttk.LabelFrame(fluids_tab, text=label, padding=9)
+        section.pack(fill="x", pady=(3, 8))
+        filter_date_vars[kind] = tk.StringVar(value=date.today().isoformat())
+        filter_history_vars[kind] = tk.StringVar()
+        ttk.Label(section, textvariable=filter_history_vars[kind]).pack(anchor="w")
+        controls = ttk.Frame(section)
+        controls.pack(anchor="w", pady=(5, 0))
+        ttk.Label(controls, text="Date (YYYY-MM-DD)").pack(side="left")
+        ttk.Entry(controls, textvariable=filter_date_vars[kind], width=13).pack(
+            side="left", padx=7)
+        ttk.Button(
+            controls, text="Record Changed",
+            command=lambda chosen=kind: record_filter_replacement(chosen)
+        ).pack(side="left")
+
     # ===== SHARED TABLE BUILDER =====
     def make_table(parent, columns):
         frame = ttk.Frame(parent)
@@ -368,10 +445,12 @@ def main():
             service_status.set("No vehicle selected")
             fuel_status.set("No vehicle selected")
             refresh_fluid_panel()
+            refresh_filter_panel()
             return
 
         vehicle = visible_vehicles[selection[0]]
         refresh_fluid_panel(vehicle)
+        refresh_filter_panel(vehicle)
 
         # ===== MAINTENANCE STATUS =====
         def maintenance_status(remaining):
@@ -442,6 +521,9 @@ def main():
             f"FLUID CHECKS (every {FLUID_CHECK_INTERVAL:,} miles)\n"
             f"Washer fluid: {fluid_status_text(vehicle, 'washer')}\n"
             f"Coolant reservoir: {fluid_status_text(vehicle, 'coolant')}\n\n"
+            f"AIR FILTERS\n"
+            f"Cabin: {filter_history_vars['interior'].get()}\n"
+            f"Engine air: {filter_history_vars['exterior'].get()}\n\n"
             f"BATTERY\n{battery_summary(vehicle)}\n\n"
             f"CURRENT TIRE PRESSURE (calculated PSI)\n"
             f"Driver's front: {pressure_text('driver_front')}\n"
