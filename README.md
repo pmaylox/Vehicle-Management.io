@@ -2,7 +2,7 @@
 
 ## Current project version
 
-**MileSage Alpha 1.2.1** — safe mobile restore fix following the Alpha 1.2.0 maintenance features (November 14, 2026). Automated code tests passed; desktop and Android manual testing remain pending. No APK has been built or deployed.
+**MileSage Alpha 1.3.0** — service receipt photo workflow added to mobile HTML preview after the safe restore fix following the Alpha 1.2.0 maintenance features (November 14, 2026). Automated code tests passed; desktop and Android manual testing remain pending. No APK has been built or deployed.
 
 The earlier Alpha 1.1.1 patch records the Tacoma's user-configured tire-rotation and oil-service interval changes. GitHub configuration and documentation have been updated; an Android APK has **not** been built, published, or verified, and mobile/desktop testing of the patch remains pending. The standalone mobile HTML remains a preview, and devices may retain older locally saved data until deliberately synchronized.
 
@@ -53,3 +53,14 @@ The phone's **Data & backup → Review GitHub vehicles.json** no longer imports 
 **Recover from saved GitHub backup** lets the user selectively fill blank readings and empty logs from the older `vehicles_backup.json` without downgrading existing phone readings or changing user-configured service intervals. This older backup is not guaranteed to match current vehicle odometers or the most recent pressure settings. Before overwriting, a local recovery snapshot is stored for undo, but browser storage is not a substitute for a downloaded full backup. Do **not** clear browser data or reinstall the app before exporting.
 
 The HTML preview itself must be updated to see these features; importing JSON only replaces **data**, never the app's code. No Android APK has been rebuilt. Test via `node mobile/test_restore_safety.cjs`.
+
+
+## Alpha 1.3.0 — Service receipt photo entry (phone HTML preview)
+
+In **Service → Log maintenance**, users can tap **Take receipt photo** (rear camera on supported mobile browsers) or **Choose photo** (existing image), then have MileSage suggest entries for **work performed, service date, odometer, total cost, oil/tire countdown resets and cabin/engine air filter replacement** from OCR text. All suggested values are editable before save. A receipt scan never automatically saves or increases vehicle mileage; saving still validates dates, odometer and cost.
+
+OCR uses Tesseract.js v6.0.1 in the phone browser, downloaded as needed; recognition runs on the device. Internet access is required to load OCR resources the first time, and older/local file browsers may block workers. A failed scan leaves manual entry available. Images and raw OCR text are not stored in public GitHub, vehicle JSON or Excel; the user should retain originals separately. Camera access depends on browser support.
+
+This is currently **phone HTML preview functionality, not a new native Android APK**. The photo buttons do not appear if the phone continues running an older locally saved copy of the app. Importing vehicle data does not update application code.
+
+Node parser tests live at `mobile/test_receipt_parser.cjs`; real phone camera/OCR behavior requires hands-on device verification.
