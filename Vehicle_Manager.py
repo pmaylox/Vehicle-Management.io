@@ -2,6 +2,14 @@ from battery import battery_details, battery_summary, service_suggestions, batte
 from cmath import cos
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
+
+FLUID_CHECK_INTERVAL = 5000
+FLUID_NAMES = {
+    "washer": "Windshield washer fluid",
+    "coolant": "Engine coolant reservoir",
+}
+
+
 class Vehicle:
     def __init__(self, name, year, mileage, service_interval=5000):
         self.tire_pressures = {
@@ -22,6 +30,73 @@ class Vehicle:
         self.fuel_history = []  # Initialize an empty fuel history list
         self.tire_rotation_interval = 10000  # Default tire rotation interval
         self.last_tire_rotation_mileage = None
+        # Each fluid has its own odometer-based, manually confirmed full level.
+        # Unknown readings are never assumed to be full.
+        self.fluid_checks = {
+            key: {"last_full_mileage": None, "last_full_date": None}
+            for key in FLUID_NAMES
+        }
+        self.fluid_check_history = []
+        # Interior = cabin filter; exterior = engine air-intake filter.
+        self.air_filter_changes = []
+
+    def record_air_filter_change(self, filter_type, changed_on, mileage=None):
+        """Log a dated replacement of a cabin or engine intake air filter."""
+        if filter_type not in ("interior", "exterior"):
+            raise ValueError("Choose interior or exterior air filter.")
+        if mileage is None:
+            mileage = self.mileage
+        if type(mileage) is not int or not self.starting_mileage <= mileage <= self.mileage:
+            raise ValueError("Filter-change mileage must be in the recorded odometer range.")
+        if isinstance(changed_on, date):
+            changed_on = changed_on.isoformat()
+        if not isinstance(changed_on, str):
+            raise ValueError("Enter a replacement date as YYYY-MM-DD.")
+        try:
+            parsed = date.fromisoformat(changed_on)
+        except ValueError:
+            raise ValueError("Enter a valid replacement date as YYYY-MM-DD.") from None
+        if parsed > date.today():
+            raise ValueError("Replacement date cannot be in the future.")
+        record = {
+            "filter_type": filter_type,
+            "date": parsed.isoformat(),
+            "mileage": mileage,
+        }
+        self.air_filter_changes.append(record)
+        return record
+
+    def fluid_check_status(self, fluid):
+        """Report next check without claiming to measure an actual fluid level."""
+        if fluid not in FLUID_NAMES:
+            raise ValueError("Unknown fluid type.")
+        last = self.fluid_checks[fluid]["last_full_mileage"]
+        if last is None:
+            return {"due": True, "miles_remaining": None, "next_due_mileage": None}
+        next_due = last + FLUID_CHECK_INTERVAL
+        remaining = next_due - self.mileage
+        return {
+            "due": remaining <= 0,
+            "miles_remaining": remaining,
+            "next_due_mileage": next_due,
+        }
+
+    def reset_fluid_to_full(self, fluid):
+        """Record a user-confirmed full level even before the reminder is due."""
+        if fluid not in FLUID_NAMES:
+            raise ValueError("Unknown fluid type.")
+        today = date.today().isoformat()
+        self.fluid_checks[fluid] = {
+            "last_full_mileage": self.mileage,
+            "last_full_date": today,
+        }
+        self.fluid_check_history.append({
+            "fluid": fluid,
+            "date": today,
+            "mileage": self.mileage,
+            "action": "confirmed_full",
+        })
+        return self.fluid_check_status(fluid)
 
     def record_tire_pressure(self, starting, added, reset_starting=False):
         """Record measured baselines and PSI increases, preserving earlier events."""
@@ -744,7 +819,10 @@ class Vehicle:
             "fuel_history": self.fuel_history,
             "tire_pressures": self.tire_pressures,
             "starting_tire_pressures": self.starting_tire_pressures,
-            "tire_pressure_history": self.tire_pressure_history
+            "tire_pressure_history": self.tire_pressure_history,
+            "fluid_checks": self.fluid_checks,
+            "fluid_check_history": self.fluid_check_history,
+            "air_filter_changes": self.air_filter_changes
         }
     @classmethod
     def from_dict(cls, data):
@@ -774,6 +852,24 @@ class Vehicle:
             data.get("starting_tire_pressures", vehicle.tire_pressures)
         )
         vehicle.tire_pressure_history = data.get("tire_pressure_history", [])
+        saved_checks = data.get("fluid_checks", {})
+        if isinstance(saved_checks, dict):
+            for fluid in FLUID_NAMES:
+                saved = saved_checks.get(fluid, {})
+                if not isinstance(saved, dict):
+                    continue
+                mileage = saved.get("last_full_mileage")
+                # Do not import invalid or future odometer values as confirmed levels.
+                if type(mileage) is int and 0 <= mileage <= vehicle.mileage:
+                    vehicle.fluid_checks[fluid] = {
+                        "last_full_mileage": mileage,
+                        "last_full_date": saved.get("last_full_date")
+                        if isinstance(saved.get("last_full_date"), str) else None,
+                    }
+        history = data.get("fluid_check_history", [])
+        vehicle.fluid_check_history = history if isinstance(history, list) else []
+        changes = data.get("air_filter_changes", [])
+        vehicle.air_filter_changes = changes if isinstance(changes, list) else []
 
         return vehicle
 

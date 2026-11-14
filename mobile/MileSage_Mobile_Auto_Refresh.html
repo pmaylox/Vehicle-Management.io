@@ -52,7 +52,7 @@ label.field{display:block;font-size:13px;font-weight:700;margin:13px 0 7px}input
 <div class="card feature-card"><h3 style="margin-top:0">Bring in your existing records</h3><p class="small muted">This version checks your public GitHub vehicle records when opened and approximately every 2 minutes while visible. It automatically updates only when your local copy has no unmerged changes. Manual import below replaces local records after confirmation. Phone edits never upload to GitHub.</p>
 <div class="button-row"><button id="githubImport" class="btn" type="button">Import from GitHub</button><button id="fileImportButton" class="btn secondary" type="button">Choose JSON file</button></div><input id="jsonFile" type="file" accept=".json,application/json" hidden><p class="note">Your GitHub backup may be older than the laptop copy. Import the newest file available, and export a backup before replacing existing phone records.</p></div>
 <div class="card"><h3 style="margin-top:0">Save a backup</h3><p class="small muted">Phone edits are saved in this browser, not uploaded to GitHub or your laptop. Export regularly before clearing browser data or changing phones.</p><div class="button-row"><button id="exportPython" class="btn" type="button">Export vehicles.json</button><button id="exportFull" class="btn secondary" type="button">Full mobile backup</button></div><p class="small muted" style="margin-bottom:0">The Python export uses the same vehicle JSON structure as your desktop app. Mobile-only expense and mileage-log details are included in the full backup.</p></div>
-<div class="card"><h3 style="margin-top:0">About this version</h3><p class="small muted">MileSage Alpha 1.1.1 • Mobile Preview v3 • Tire PSI • Automatic read-only GitHub refresh when safe • Works with locally saved data offline. Full two-way cloud sync, push alerts, OBD-II and APK packaging are not implemented.</p><p class="small muted" id="storageNote"></p></div>
+<div class="card"><h3 style="margin-top:0">About this version</h3><p class="small muted">MileSage Alpha 1.2.0 preview • Mobile Preview v4 • Tire PSI • Automatic read-only GitHub refresh when safe • Works with locally saved data offline. Full two-way cloud sync, push alerts, OBD-II and APK packaging are not implemented.</p><p class="small muted" id="storageNote"></p></div>
 </section>
 </main>
 <nav class="bottom" aria-label="Main tabs"><div class="tabs">
@@ -93,6 +93,12 @@ function normalize(data){if(!Array.isArray(data))throw Error('Expected a JSON li
   tire_pressures:x.tire_pressures||{driver_front:null,driver_rear:null,passenger_front:null,passenger_rear:null},
   starting_tire_pressures:x.starting_tire_pressures||{driver_front:null,driver_rear:null,passenger_front:null,passenger_rear:null},
   tire_pressure_history:Array.isArray(x.tire_pressure_history)?x.tire_pressure_history:[],
+  fluid_checks:{
+    washer:{last_full_mileage:x.fluid_checks?.washer?.last_full_mileage??null,last_full_date:x.fluid_checks?.washer?.last_full_date??null},
+    coolant:{last_full_mileage:x.fluid_checks?.coolant?.last_full_mileage??null,last_full_date:x.fluid_checks?.coolant?.last_full_date??null}
+  },
+  fluid_check_history:Array.isArray(x.fluid_check_history)?x.fluid_check_history:[],
+  air_filter_changes:Array.isArray(x.air_filter_changes)?x.air_filter_changes:[],
   mobile_expenses:Array.isArray(x.mobile_expenses)?x.mobile_expenses:[],
   mobile_mileage_log:Array.isArray(x.mobile_mileage_log)?x.mobile_mileage_log:[]
 }));}
@@ -156,8 +162,63 @@ function wireTirePressureForm(a){
    save();renderAll();message('Tire-pressure readings saved.');
  }catch(error){alert(error.message)}};
 }
-function renderService(){const a=v(), el=$('serviceBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}el.innerHTML=tirePressureCard(a)+`<div class="card feature-card"><h3 style="margin-top:0">Log maintenance</h3>${formVehicleName(a)}<form id="serviceForm"><label class="field" for="serviceDesc">Work performed</label><input id="serviceDesc" type="text" required maxlength="180" placeholder="Oil change, tire rotation…"><div class="grid2"><div><label class="field" for="serviceDate">Date</label><input type="date" id="serviceDate" required value="${localDate()}"></div><div><label class="field" for="serviceOdo">Odometer</label><input type="number" id="serviceOdo" inputmode="numeric" min="0" required step="1" value="${a.mileage}"></div></div><label class="field" for="serviceCost">Cost in dollars (optional)</label><input id="serviceCost" inputmode="decimal" type="text" placeholder="89.95"><div class="check"><input type="checkbox" id="oilReset"><label for="oilReset">Reset oil-change countdown</label></div><div class="check"><input type="checkbox" id="tireReset"><label for="tireReset">Reset tire-rotation countdown</label></div><button type="submit" class="btn full">Save service record</button></form></div><div class="card"><h3 style="margin-top:0">Service history (${num(a.service_history.length)})</h3>${recordList(a.service_history,'service')}</div>`;
-wireTirePressureForm(a);$('serviceForm').onsubmit=e=>{e.preventDefault();try{let od=whole($('serviceOdo').value,'Odometer');let date=$('serviceDate').value;if(!validDate(date))throw Error('Enter a valid service date, not in the future.');if(od>a.mileage)throw Error('Service odometer is ahead of the current reading. Update mileage on Home first.');let desc=$('serviceDesc').value.trim();if(!desc)throw Error('Enter the work performed.');let record={date,mileage:od,description:desc,cost_cents:costCents($('serviceCost').value,true),oil_reset:$('oilReset').checked,tire_reset:$('tireReset').checked};a.service_history.push(record);if(record.oil_reset)a.last_service_mileage=od;if(record.tire_reset)a.last_tire_rotation_mileage=od;save();renderAll();message('Service record saved.')}catch(error){alert(error.message)}};}
+
+const fluidNames={washer:'Windshield washer fluid',coolant:'Engine coolant reservoir'};
+const filterNames={interior:'Interior / cabin air filter',exterior:'Exterior / engine air filter'};
+function fluidStatus(a,kind){
+ const last=a.fluid_checks[kind]?.last_full_mileage;
+ if(last==null)return 'Check now — full level not yet recorded';
+ const left=Number(last)+5000-a.mileage;
+ return left<=0?'Check due ('+num(Math.abs(left))+' miles overdue)':num(left)+' miles remaining · next at '+num(Number(last)+5000);
+}
+function fluidFilterCard(a){
+ const fluidCards=Object.entries(fluidNames).map(([kind,label])=>{
+  const record=a.fluid_checks[kind];
+  const last=record?.last_full_mileage==null?'Never confirmed full':('Last full: '+num(record.last_full_mileage)+' mi · '+esc(record.last_full_date||'date unknown'));
+  return '<div class="card feature-card"><h3 style="margin-top:0">'+esc(label)+'</h3><p><strong>'+esc(fluidStatus(a,kind))+'</strong></p><p class="small muted">'+last+'</p><button class="btn secondary full" data-full-fluid="'+kind+'" type="button">Reset to Full</button></div>';
+ }).join('');
+ const filters=Object.entries(filterNames).map(([kind,label])=>{
+  const matches=a.air_filter_changes.filter(x=>x.filter_type===kind);
+  const latest=[...matches].sort((x,y)=>String(y.date).localeCompare(String(x.date)))[0];
+  return '<div class="card"><h3 style="margin-top:0">'+esc(label)+'</h3><p class="small muted">'+(latest?'Last replaced: '+esc(latest.date)+' at '+num(latest.mileage)+' miles':'No replacement recorded')+'</p><label class="field" for="filterDate-'+kind+'">Date replaced</label><input id="filterDate-'+kind+'" type="date" max="'+localDate()+'" value="'+localDate()+'"><label class="field" for="filterOdo-'+kind+'">Mileage at replacement</label><input type="number" inputmode="numeric" step="1" id="filterOdo-'+kind+'" min="'+num(a.starting_mileage).replace(/,/g,'')+'" max="'+a.mileage+'" value="'+a.mileage+'"><button type="button" class="btn secondary full" style="margin-top:10px" data-filter-change="'+kind+'">Record Changed</button></div>';
+ }).join('');
+ const recent=[
+  ...a.fluid_check_history.map(x=>({date:x.date,mileage:x.mileage,title:fluidNames[x.fluid]+' — confirmed full'})),
+  ...a.air_filter_changes.map(x=>({date:x.date,mileage:x.mileage,title:filterNames[x.filter_type]+' — replaced'}))
+ ].sort((x,y)=>String(y.date).localeCompare(String(x.date))).slice(0,20);
+ const history=recent.length?recent.map(x=>'<div class="record"><div><h4>'+esc(x.title||'Maintenance check')+'</h4><small>'+esc(x.date||'Unknown date')+' · '+num(x.mileage)+' miles</small></div></div>').join(''):empty('No fluid or filter events recorded yet.');
+ return '<h3 class="section-title">Fluid reminders · 5,000 miles</h3>'+fluidCards+
+  '<div class="note info">Reset to Full works at any mileage after you manually confirm the level. For engine coolant, check the reservoir only when the engine is cool, and follow the owner manual. Never open a hot pressurized cap.</div>'+
+  '<h3 class="section-title">Air filter replacements</h3>'+filters+
+  '<div class="card"><h3 style="margin-top:0">Fluid & filter history</h3>'+history+'</div>';
+}
+function wireFluidAndFilters(a){
+ document.querySelectorAll('[data-full-fluid]').forEach(btn=>btn.onclick=()=>{
+  const kind=btn.dataset.fullFluid;
+  if(!(kind in fluidNames))return;
+  if(!confirm('Did you manually confirm the '+fluidNames[kind]+' is at the correct full mark?'+(kind==='coolant'?' Check only with the engine cool; never open a hot pressurized coolant cap.':'')))return;
+  const event={fluid:kind,date:localDate(),mileage:a.mileage,action:'confirmed_full'};
+  a.fluid_checks[kind]={last_full_mileage:a.mileage,last_full_date:event.date};
+  a.fluid_check_history.push(event);
+  save();renderAll();message(fluidNames[kind]+' reset to full at '+num(a.mileage)+' miles.');
+ });
+ document.querySelectorAll('[data-filter-change]').forEach(btn=>btn.onclick=()=>{
+  const kind=btn.dataset.filterChange;
+  if(!(kind in filterNames))return;
+  const dt=$('filterDate-'+kind)?.value;
+  if(!validDate(dt)){alert('Choose a valid date, not in the future.');return;}
+  let odo;
+  try{odo=whole($('filterOdo-'+kind).value,'Replacement mileage',a.starting_mileage);
+      if(odo>a.mileage)throw Error('Replacement mileage cannot exceed the current odometer.');}
+  catch(e){alert(e.message);return;}
+  if(!confirm('Confirm '+filterNames[kind]+' was replaced on '+dt+' at '+num(odo)+' miles?'))return;
+  a.air_filter_changes.push({filter_type:kind,date:dt,mileage:odo});
+  save();renderAll();message(filterNames[kind]+' replacement recorded.');
+ });
+}
+
+function renderService(){const a=v(), el=$('serviceBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}el.innerHTML=tirePressureCard(a)+fluidFilterCard(a)+`<div class="card feature-card"><h3 style="margin-top:0">Log maintenance</h3>${formVehicleName(a)}<form id="serviceForm"><label class="field" for="serviceDesc">Work performed</label><input id="serviceDesc" type="text" required maxlength="180" placeholder="Oil change, tire rotation…"><div class="grid2"><div><label class="field" for="serviceDate">Date</label><input type="date" id="serviceDate" required value="${localDate()}"></div><div><label class="field" for="serviceOdo">Odometer</label><input type="number" id="serviceOdo" inputmode="numeric" min="0" required step="1" value="${a.mileage}"></div></div><label class="field" for="serviceCost">Cost in dollars (optional)</label><input id="serviceCost" inputmode="decimal" type="text" placeholder="89.95"><div class="check"><input type="checkbox" id="oilReset"><label for="oilReset">Reset oil-change countdown</label></div><div class="check"><input type="checkbox" id="tireReset"><label for="tireReset">Reset tire-rotation countdown</label></div><button type="submit" class="btn full">Save service record</button></form></div><div class="card"><h3 style="margin-top:0">Service history (${num(a.service_history.length)})</h3>${recordList(a.service_history,'service')}</div>`;
+wireTirePressureForm(a);wireFluidAndFilters(a);$('serviceForm').onsubmit=e=>{e.preventDefault();try{let od=whole($('serviceOdo').value,'Odometer');let date=$('serviceDate').value;if(!validDate(date))throw Error('Enter a valid service date, not in the future.');if(od>a.mileage)throw Error('Service odometer is ahead of the current reading. Update mileage on Home first.');let desc=$('serviceDesc').value.trim();if(!desc)throw Error('Enter the work performed.');let record={date,mileage:od,description:desc,cost_cents:costCents($('serviceCost').value,true),oil_reset:$('oilReset').checked,tire_reset:$('tireReset').checked};a.service_history.push(record);if(record.oil_reset)a.last_service_mileage=od;if(record.tire_reset)a.last_tire_rotation_mileage=od;save();renderAll();message('Service record saved.')}catch(error){alert(error.message)}};}
 function renderFuel(){const a=v(), el=$('fuelBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}el.innerHTML=`<div class="card feature-card"><h3 style="margin-top:0">Record a fill-up</h3>${formVehicleName(a)}<form id="fuelForm"><div class="grid2"><div><label class="field" for="fuelDate">Date</label><input type="date" id="fuelDate" required value="${localDate()}"></div><div><label class="field" for="fuelOdo">Odometer</label><input type="number" min="${a.mileage}" step="1" inputmode="numeric" id="fuelOdo" required value="${a.mileage}"></div></div><div class="grid2"><div><label class="field" for="fuelGallons">US gallons</label><input id="fuelGallons" required inputmode="decimal" type="number" min="0.001" max="9999" step="any" placeholder="12.5"></div><div><label class="field" for="fuelCost">Total paid ($)</label><input id="fuelCost" required type="text" inputmode="decimal" placeholder="42.85"></div></div><div class="check"><input type="checkbox" id="fullTank" checked><label for="fullTank">Filled the tank completely</label></div><p class="small muted">MPG uses distances between full tanks and includes partial fill-ups in between.</p><button type="submit" class="btn full">Save fuel & mileage</button></form></div><div class="card"><h3 style="margin-top:0">Fuel history (${num(a.fuel_history.length)})</h3>${recordList(a.fuel_history,'fuel')}</div>`;
 $('fuelForm').onsubmit=e=>{e.preventDefault();try{let od=whole($('fuelOdo').value,'Odometer',a.mileage);let dt=$('fuelDate').value;if(!validDate(dt))throw Error('Enter a valid fill-up date.');const history=a.fuel_history;if(history.length&&dt<history[history.length-1].date)throw Error('Fill-up date cannot be earlier than your last recorded fill-up.');let gal=Number($('fuelGallons').value);if(!Number.isFinite(gal)||gal<=0||gal>9999)throw Error('Enter a valid positive number of gallons.');let c=costCents($('fuelCost').value);a.fuel_history.push({date:dt,mileage:od,gallons:String(gal),cost_cents:c,full_tank:$('fullTank').checked});if(od>a.mileage){a.mobile_mileage_log.push({date:dt,from:a.mileage,to:od});a.mileage=od;}save();renderAll();message('Fuel fill-up saved.')}catch(error){alert(error.message)}};}
 function expenseSummary(a){let service=a.service_history.reduce((s,r)=>s+(Number(r.cost_cents)||0),0);let fuel=a.fuel_history.reduce((s,r)=>s+(Number(r.cost_cents)||0),0);let extra=a.mobile_expenses.reduce((s,r)=>s+(Number(r.cost_cents)||0),0);return {service,fuel,extra,total:service+fuel+extra}}
