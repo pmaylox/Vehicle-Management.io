@@ -17,6 +17,8 @@ Test MileSage from a clean data state, keeping the original two vehicle profiles
 - Expense and graph totals derived from history start at zero/empty. Mobile-only expenses and mobile mileage logs must also be cleared on the **phone's own copy** by importing the reset data.
 
 ## Confirmed initial vehicle state
+The table below is the historical **2026-11-13 reset baseline**, not the current interval configuration. See the 2026-11-14 settings update near the end of this log.
+
 | Vehicle | Odometer | Oil interval | Tire-rotation interval | Service records | Fuel records | Tire PSI readings |
 |---|---:|---:|---:|---:|---:|---|
 | 2026 Toyota Tacoma | 0 mi | 5,500 mi | 10,000 mi | 0 | 0 | Not entered |
@@ -94,3 +96,11 @@ For each test: record local date/time, device/build, steps, expected result, act
 - **Source commit:** `2f048d4362ee9fa544da1eb84c3ac7c40cc6fdd7`.
 - **Expected phone steps:** Download that ZIP, extract it, open `MileSage_Mobile.html` in a browser, and manually import from GitHub or choose the included JSON. Confirm Tacoma and Explorer both have zero miles and empty histories.
 - **Status:** Package created on GitHub; phone end-to-end launch and import are pending verification.
+
+## 2026-11-14 — Maintenance interval settings updated in GitHub
+- **User-requested change:** 2026 Toyota Tacoma tire rotations changed from **10,000 mi** to **5,000 mi**, and oil/service changes from **5,500 mi** to **10,000 mi**.
+- **Unchanged:** 2025 Ford Explorer tire rotation and oil/service intervals remain **5,000 mi** each.
+- **Source of truth:** `main/vehicles.json` updated and re-read to verify both vehicles' persisted settings. Settings commit: `c56de55b83c8894682ab73f67ced6aaeb0d1907e`.
+- **Data scope:** Only interval values were changed; no odometer, histories, or tire-pressure values changed. The table above documents the earlier reset state.
+- **Application status:** GitHub data update confirmed, but no phone or desktop runtime test was performed. The mobile web app stores vehicle data locally and may need a deliberate GitHub import; back up phone-only records before replacing local data.
+- **Important:** These are user-configured reminders, not a verified Toyota or Ford factory maintenance schedule.
