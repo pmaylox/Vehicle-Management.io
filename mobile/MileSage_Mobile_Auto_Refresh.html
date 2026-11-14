@@ -180,7 +180,7 @@ function fluidFilterCard(a){
  const filters=Object.entries(filterNames).map(([kind,label])=>{
   const matches=a.air_filter_changes.filter(x=>x.filter_type===kind);
   const latest=[...matches].sort((x,y)=>String(y.date).localeCompare(String(x.date)))[0];
-  return '<div class="card"><h3 style="margin-top:0">'+esc(label)+'</h3><p class="small muted">'+(latest?'Last replaced: '+esc(latest.date)+' at '+num(latest.mileage)+' miles':'No replacement recorded')+'</p><label class="field" for="filterDate-'+kind+'">Date replaced</label><input id="filterDate-'+kind+'" type="date" max="'+localDate()+'" value="'+localDate()+'"><button type="button" class="btn secondary full" style="margin-top:10px" data-filter-change="'+kind+'">Record Changed</button></div>';
+  return '<div class="card"><h3 style="margin-top:0">'+esc(label)+'</h3><p class="small muted">'+(latest?'Last replaced: '+esc(latest.date)+' at '+num(latest.mileage)+' miles':'No replacement recorded')+'</p><label class="field" for="filterDate-'+kind+'">Date replaced</label><input id="filterDate-'+kind+'" type="date" max="'+localDate()+'" value="'+localDate()+'"><label class="field" for="filterOdo-'+kind+'">Mileage at replacement</label><input type="number" inputmode="numeric" step="1" id="filterOdo-'+kind+'" min="'+num(a.starting_mileage).replace(/,/g,'')+'" max="'+a.mileage+'" value="'+a.mileage+'"><button type="button" class="btn secondary full" style="margin-top:10px" data-filter-change="'+kind+'">Record Changed</button></div>';
  }).join('');
  const recent=[
   ...a.fluid_check_history.map(x=>({date:x.date,mileage:x.mileage,title:fluidNames[x.fluid]+' — confirmed full'})),
@@ -207,8 +207,12 @@ function wireFluidAndFilters(a){
   if(!(kind in filterNames))return;
   const dt=$('filterDate-'+kind)?.value;
   if(!validDate(dt)){alert('Choose a valid date, not in the future.');return;}
-  if(!confirm('Confirm '+filterNames[kind]+' was replaced on '+dt+' at '+num(a.mileage)+' miles?'))return;
-  a.air_filter_changes.push({filter_type:kind,date:dt,mileage:a.mileage});
+  let odo;
+  try{odo=whole($('filterOdo-'+kind).value,'Replacement mileage',a.starting_mileage);
+      if(odo>a.mileage)throw Error('Replacement mileage cannot exceed the current odometer.');}
+  catch(e){alert(e.message);return;}
+  if(!confirm('Confirm '+filterNames[kind]+' was replaced on '+dt+' at '+num(odo)+' miles?'))return;
+  a.air_filter_changes.push({filter_type:kind,date:dt,mileage:odo});
   save();renderAll();message(filterNames[kind]+' replacement recorded.');
  });
 }
