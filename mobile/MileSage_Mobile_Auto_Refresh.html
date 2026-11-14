@@ -23,7 +23,7 @@ label.field{display:block;font-size:13px;font-weight:700;margin:13px 0 7px}input
 </style>
 </head>
 <body>
-<header class="top"><div class="topline"><div class="brand"><div class="logo" aria-hidden="true"><svg width="37" height="37" viewBox="0 0 40 40" fill="none"><path d="M8 31 L12 9 L20 20 L28 9 L32 31" stroke="#f4cfb2" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 4 V10 M20 14 V18 M20 25 V29 M20 33 V37" stroke="#fff" stroke-width="2" stroke-dasharray="3 4"/></svg></div><div><h1>MileSage</h1><small>Vehicle intelligence</small></div></div><button class="top-action" id="dataButton" type="button">Data & backup</button></div></header>
+<header class="top"><div class="topline"><div class="brand"><div class="logo" aria-hidden="true"><svg width="37" height="37" viewBox="0 0 40 40" fill="none"><path d="M8 31 L12 9 L20 20 L28 9 L32 31" stroke="#f4cfb2" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 4 V10 M20 14 V18 M20 25 V29 M20 33 V37" stroke="#fff" stroke-width="2" stroke-dasharray="3 4"/></svg></div><div><h1>MileSage</h1><small>Vehicle intelligence · Alpha 1.3.0 photo receipts</small></div></div><button class="top-action" id="dataButton" type="button">Data & backup</button></div></header>
 <main>
 <div id="notice" class="notice" role="status"></div>
 <section id="home" class="section active" aria-label="Home">
@@ -49,10 +49,10 @@ label.field{display:block;font-size:13px;font-weight:700;margin:13px 0 7px}input
 </section>
 <section id="data" class="section" aria-label="Data and backup">
 <div class="section-head"><h2>Data & backup</h2></div>
-<div class="card feature-card"><h3 style="margin-top:0">Bring in your existing records</h3><p class="small muted">This version checks your public GitHub vehicle records when opened and approximately every 2 minutes while visible. It automatically updates only when your local copy has no unmerged changes. Manual import below replaces local records after confirmation. Phone edits never upload to GitHub.</p>
-<div class="button-row"><button id="githubImport" class="btn" type="button">Import from GitHub</button><button id="fileImportButton" class="btn secondary" type="button">Choose JSON file</button></div><input id="jsonFile" type="file" accept=".json,application/json" hidden><p class="note">Your GitHub backup may be older than the laptop copy. Import the newest file available, and export a backup before replacing existing phone records.</p></div>
-<div class="card"><h3 style="margin-top:0">Save a backup</h3><p class="small muted">Phone edits are saved in this browser, not uploaded to GitHub or your laptop. Export regularly before clearing browser data or changing phones.</p><div class="button-row"><button id="exportPython" class="btn" type="button">Export vehicles.json</button><button id="exportFull" class="btn secondary" type="button">Full mobile backup</button></div><p class="small muted" style="margin-bottom:0">The Python export uses the same vehicle JSON structure as your desktop app. Mobile-only expense and mileage-log details are included in the full backup.</p></div>
-<div class="card"><h3 style="margin-top:0">About this version</h3><p class="small muted">MileSage Mobile Preview v3 • Tire PSI • Automatic read-only GitHub refresh when safe • Works with locally saved data offline. Full two-way cloud sync, push alerts, OBD-II and APK packaging are not implemented.</p><p class="small muted" id="storageNote"></p></div>
+<div class="card feature-card"><h3 style="margin-top:0">Recover or import your data safely</h3><p class="small muted">Your phone data is stored locally. GitHub is checked read-only and will <strong>never</strong> replace it automatically. The main GitHub vehicles.json currently contains zero-mileage placeholder records; importing these is blocked. Importing a JSON file requires review and saves a local recovery snapshot first.</p>
+<div class="button-row"><button id="githubBackupRecovery" class="btn" type="button">Recover from saved GitHub backup</button><button id="fileImportButton" class="btn secondary" type="button">Import JSON file</button></div><button id="githubImport" class="btn secondary" type="button" style="margin-top:8px">Review GitHub vehicles.json</button><input id="jsonFile" type="file" accept=".json,application/json" hidden><p class="note">The saved GitHub backup is older (November 2026), but has recorded odometer and tire pressure data. Recovery fills only currently missing readings and empty histories, retaining your phone settings. Check mileage against your actual odometer after recovery. This will not update the app code or install an APK.</p></div>
+<div class="card"><h3 style="margin-top:0">Save a backup</h3><p class="small muted">Phone edits are saved in this browser, not uploaded to GitHub or your laptop. Export regularly before clearing browser data or changing phones.</p><div class="button-row"><button id="exportPython" class="btn" type="button">Export vehicles.json</button><button id="exportFull" class="btn secondary" type="button">Full mobile backup</button><button id="undoImport" class="btn secondary" type="button">Restore pre-import snapshot</button></div><p class="small muted" style="margin-bottom:0">The Python export uses the same vehicle JSON structure as your desktop app. Mobile-only expense and mileage-log details are included in the full backup.</p></div>
+<div class="card"><h3 style="margin-top:0">About this version</h3><p class="small muted">MileSage Alpha 1.3.0 preview • Mobile Preview v6 • Fluid & filter buttons on the Service tab • Safe manual data restore • GitHub checks never overwrite records • Works with locally saved data offline. Full two-way cloud sync, push alerts, OBD-II and APK packaging are not implemented.</p><p class="small muted" id="storageNote"></p></div>
 </section>
 </main>
 <nav class="bottom" aria-label="Main tabs"><div class="tabs">
@@ -66,9 +66,11 @@ label.field{display:block;font-size:13px;font-weight:700;margin:13px 0 7px}input
 <script>
 (()=>{'use strict';
 const KEY='milesage-mobile-offline-v1';
- const BASE_KEY='milesage-mobile-github-snapshot-v1';
+const BASE_KEY='milesage-mobile-github-snapshot-v1';
+const RECOVERY_KEY='milesage-mobile-recovery-history-v1';
 const REMOTE='https://raw.githubusercontent.com/pmaylox/Vehicle-Management.io/main/vehicles.json';
-let vehicles=[], current=0, tab='home', hasStorage=true, lastToastTimer, syncStatus='GitHub check pending', checkingGitHub=false;
+const BACKUP_REMOTE='https://raw.githubusercontent.com/pmaylox/Vehicle-Management.io/main/vehicles_backup.json';
+let vehicles=[], current=0, tab='home', hasStorage=true, lastToastTimer, syncStatus='GitHub data are read-only until you review an import', checkingGitHub=false;
 const $=id=>document.getElementById(id);
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num=n=>Number(n||0).toLocaleString('en-US');
@@ -93,12 +95,18 @@ function normalize(data){if(!Array.isArray(data))throw Error('Expected a JSON li
   tire_pressures:x.tire_pressures||{driver_front:null,driver_rear:null,passenger_front:null,passenger_rear:null},
   starting_tire_pressures:x.starting_tire_pressures||{driver_front:null,driver_rear:null,passenger_front:null,passenger_rear:null},
   tire_pressure_history:Array.isArray(x.tire_pressure_history)?x.tire_pressure_history:[],
+  fluid_checks:{
+    washer:{last_full_mileage:x.fluid_checks?.washer?.last_full_mileage??null,last_full_date:x.fluid_checks?.washer?.last_full_date??null},
+    coolant:{last_full_mileage:x.fluid_checks?.coolant?.last_full_mileage??null,last_full_date:x.fluid_checks?.coolant?.last_full_date??null}
+  },
+  fluid_check_history:Array.isArray(x.fluid_check_history)?x.fluid_check_history:[],
+  air_filter_changes:Array.isArray(x.air_filter_changes)?x.air_filter_changes:[],
   mobile_expenses:Array.isArray(x.mobile_expenses)?x.mobile_expenses:[],
   mobile_mileage_log:Array.isArray(x.mobile_mileage_log)?x.mobile_mileage_log:[]
 }));}
 function save(){try{localStorage.setItem(KEY,JSON.stringify({vehicles,current}));hasStorage=true;}catch(e){hasStorage=false;message('Browser storage unavailable — export your data now!')}updateBanner()}
 function load(){try{const raw=localStorage.getItem(KEY);if(raw){const o=JSON.parse(raw);vehicles=normalize(o.vehicles||[]);current=Math.max(0,Math.min(Number(o.current)||0,vehicles.length-1));}}catch(e){hasStorage=false;vehicles=[]}updateBanner()}
-function updateBanner(){let text='';if(!hasStorage)text='<div class="note" role="alert"><strong>Warning:</strong> This browser is not keeping changes. Export a JSON backup after every change.</div>';else if(!vehicles.length)text='<div class="note info"><strong>Get started:</strong> Open <strong>Data & backup</strong> and tap <strong>Import from GitHub</strong> to load your Tacoma and Explorer with existing service and fuel records.</div>';else text='<div class="note info" style="margin-top:0"><strong>GitHub check:</strong> '+esc(syncStatus)+'<div style="margin-top:5px">Read-only updates from GitHub; phone edits remain local. Back up before manual import.</div></div>';$('notice').innerHTML=text;$('storageNote').textContent=hasStorage?'Browser storage is available. Keep an exported backup in case browser data is cleared.':'Browser storage is blocked/unavailable. Make a backup immediately.'}
+function updateBanner(){let text='';if(!hasStorage)text='<div class="note" role="alert"><strong>Warning:</strong> This browser is not keeping changes. Export a JSON backup after every change.</div>';else if(!vehicles.length)text='<div class="note info"><strong>Get started:</strong> In <strong>Data & backup</strong>, use <strong>Recover from saved GitHub backup</strong> for earlier recorded mileage and tire pressures. The current GitHub vehicles.json is a blank template and cannot restore readings.</div>';else text='<div class="note info" style="margin-top:0"><strong>GitHub check:</strong> '+esc(syncStatus)+'<div style="margin-top:5px">GitHub checks do not change your phone data. Always export a full backup before restoring.</div></div>';$('notice').innerHTML=text;$('storageNote').textContent=hasStorage?'Browser storage is available. Keep an exported backup in case browser data is cleared.':'Browser storage is blocked/unavailable. Make a backup immediately.'}
 function status(val,inter){if(!Number.isFinite(val))return ['Unknown','warn'];if(val<=0)return ['Due now','due'];if(val<=Math.max(500,inter*.12))return [`${num(val)} mi left`,'warn'];return [`${num(val)} mi left`,'good']}
 function vehicleTag(obj){const remain=Number(obj.service_interval)-Math.max(0,Number(obj.mileage)-Number(obj.last_service_mileage));const [s,cls]=status(remain,Number(obj.service_interval));return `<span class="pill ${cls}">Oil: ${esc(s)}</span>`}
 function renderVehicles(){const root=$('vehicleCards');root.innerHTML=vehicles.length?vehicles.map((a,i)=>`<button class="vehicle-card ${i===current?'selected':''}" type="button" data-vehicle="${i}" aria-pressed="${i===current}"><div class="vehicle-title">${esc(a.name)} <span class="vehicle-year">${esc(a.year)}</span></div><div class="vehicle-mileage">${num(a.mileage)} <small>miles</small></div><div style="margin-top:9px">${vehicleTag(a)}</div></button>`).join(''):empty('No vehicles loaded yet. Import your GitHub data or add a vehicle.');
@@ -156,10 +164,317 @@ function wireTirePressureForm(a){
    save();renderAll();message('Tire-pressure readings saved.');
  }catch(error){alert(error.message)}};
 }
-function renderService(){const a=v(), el=$('serviceBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}el.innerHTML=tirePressureCard(a)+`<div class="card feature-card"><h3 style="margin-top:0">Log maintenance</h3>${formVehicleName(a)}<form id="serviceForm"><label class="field" for="serviceDesc">Work performed</label><input id="serviceDesc" type="text" required maxlength="180" placeholder="Oil change, tire rotation…"><div class="grid2"><div><label class="field" for="serviceDate">Date</label><input type="date" id="serviceDate" required value="${localDate()}"></div><div><label class="field" for="serviceOdo">Odometer</label><input type="number" id="serviceOdo" inputmode="numeric" min="0" required step="1" value="${a.mileage}"></div></div><label class="field" for="serviceCost">Cost in dollars (optional)</label><input id="serviceCost" inputmode="decimal" type="text" placeholder="89.95"><div class="check"><input type="checkbox" id="oilReset"><label for="oilReset">Reset oil-change countdown</label></div><div class="check"><input type="checkbox" id="tireReset"><label for="tireReset">Reset tire-rotation countdown</label></div><button type="submit" class="btn full">Save service record</button></form></div><div class="card"><h3 style="margin-top:0">Service history (${num(a.service_history.length)})</h3>${recordList(a.service_history,'service')}</div>`;
-wireTirePressureForm(a);$('serviceForm').onsubmit=e=>{e.preventDefault();try{let od=whole($('serviceOdo').value,'Odometer');let date=$('serviceDate').value;if(!validDate(date))throw Error('Enter a valid service date, not in the future.');if(od>a.mileage)throw Error('Service odometer is ahead of the current reading. Update mileage on Home first.');let desc=$('serviceDesc').value.trim();if(!desc)throw Error('Enter the work performed.');let record={date,mileage:od,description:desc,cost_cents:costCents($('serviceCost').value,true),oil_reset:$('oilReset').checked,tire_reset:$('tireReset').checked};a.service_history.push(record);if(record.oil_reset)a.last_service_mileage=od;if(record.tire_reset)a.last_tire_rotation_mileage=od;save();renderAll();message('Service record saved.')}catch(error){alert(error.message)}};}
-function renderFuel(){const a=v(), el=$('fuelBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}el.innerHTML=`<div class="card feature-card"><h3 style="margin-top:0">Record a fill-up</h3>${formVehicleName(a)}<form id="fuelForm"><div class="grid2"><div><label class="field" for="fuelDate">Date</label><input type="date" id="fuelDate" required value="${localDate()}"></div><div><label class="field" for="fuelOdo">Odometer</label><input type="number" min="${a.mileage}" step="1" inputmode="numeric" id="fuelOdo" required value="${a.mileage}"></div></div><div class="grid2"><div><label class="field" for="fuelGallons">US gallons</label><input id="fuelGallons" required inputmode="decimal" type="number" min="0.001" max="9999" step="any" placeholder="12.5"></div><div><label class="field" for="fuelCost">Total paid ($)</label><input id="fuelCost" required type="text" inputmode="decimal" placeholder="42.85"></div></div><div class="check"><input type="checkbox" id="fullTank" checked><label for="fullTank">Filled the tank completely</label></div><p class="small muted">MPG uses distances between full tanks and includes partial fill-ups in between.</p><button type="submit" class="btn full">Save fuel & mileage</button></form></div><div class="card"><h3 style="margin-top:0">Fuel history (${num(a.fuel_history.length)})</h3>${recordList(a.fuel_history,'fuel')}</div>`;
-$('fuelForm').onsubmit=e=>{e.preventDefault();try{let od=whole($('fuelOdo').value,'Odometer',a.mileage);let dt=$('fuelDate').value;if(!validDate(dt))throw Error('Enter a valid fill-up date.');const history=a.fuel_history;if(history.length&&dt<history[history.length-1].date)throw Error('Fill-up date cannot be earlier than your last recorded fill-up.');let gal=Number($('fuelGallons').value);if(!Number.isFinite(gal)||gal<=0||gal>9999)throw Error('Enter a valid positive number of gallons.');let c=costCents($('fuelCost').value);a.fuel_history.push({date:dt,mileage:od,gallons:String(gal),cost_cents:c,full_tank:$('fullTank').checked});if(od>a.mileage){a.mobile_mileage_log.push({date:dt,from:a.mileage,to:od});a.mileage=od;}save();renderAll();message('Fuel fill-up saved.')}catch(error){alert(error.message)}};}
+
+const fluidNames={washer:'Windshield washer fluid',coolant:'Engine coolant reservoir'};
+const filterNames={interior:'Interior / cabin air filter',exterior:'Exterior / engine air filter'};
+function fluidStatus(a,kind){
+ const last=a.fluid_checks[kind]?.last_full_mileage;
+ if(last==null)return 'Check now — full level not yet recorded';
+ const left=Number(last)+5000-a.mileage;
+ return left<=0?'Check due ('+num(Math.abs(left))+' miles overdue)':num(left)+' miles remaining · next at '+num(Number(last)+5000);
+}
+function fluidFilterCard(a){
+ const fluidCards=Object.entries(fluidNames).map(([kind,label])=>{
+  const record=a.fluid_checks[kind];
+  const last=record?.last_full_mileage==null?'Never confirmed full':('Last full: '+num(record.last_full_mileage)+' mi · '+esc(record.last_full_date||'date unknown'));
+  return '<div class="card feature-card"><h3 style="margin-top:0">'+esc(label)+'</h3><p><strong>'+esc(fluidStatus(a,kind))+'</strong></p><p class="small muted">'+last+'</p><button class="btn secondary full" data-full-fluid="'+kind+'" type="button">Reset to Full</button></div>';
+ }).join('');
+ const filters=Object.entries(filterNames).map(([kind,label])=>{
+  const matches=a.air_filter_changes.filter(x=>x.filter_type===kind);
+  const latest=[...matches].sort((x,y)=>String(y.date).localeCompare(String(x.date)))[0];
+  return '<div class="card"><h3 style="margin-top:0">'+esc(label)+'</h3><p class="small muted">'+(latest?'Last replaced: '+esc(latest.date)+' at '+num(latest.mileage)+' miles':'No replacement recorded')+'</p><label class="field" for="filterDate-'+kind+'">Date replaced</label><input id="filterDate-'+kind+'" type="date" max="'+localDate()+'" value="'+localDate()+'"><label class="field" for="filterOdo-'+kind+'">Mileage at replacement</label><input type="number" inputmode="numeric" step="1" id="filterOdo-'+kind+'" min="'+num(a.starting_mileage).replace(/,/g,'')+'" max="'+a.mileage+'" value="'+a.mileage+'"><button type="button" class="btn secondary full" style="margin-top:10px" data-filter-change="'+kind+'">Record Changed</button></div>';
+ }).join('');
+ const recent=[
+  ...a.fluid_check_history.map(x=>({date:x.date,mileage:x.mileage,title:fluidNames[x.fluid]+' — confirmed full'})),
+  ...a.air_filter_changes.map(x=>({date:x.date,mileage:x.mileage,title:filterNames[x.filter_type]+' — replaced'}))
+ ].sort((x,y)=>String(y.date).localeCompare(String(x.date))).slice(0,20);
+ const history=recent.length?recent.map(x=>'<div class="record"><div><h4>'+esc(x.title||'Maintenance check')+'</h4><small>'+esc(x.date||'Unknown date')+' · '+num(x.mileage)+' miles</small></div></div>').join(''):empty('No fluid or filter events recorded yet.');
+ return '<h3 class="section-title">Fluid reminders · 5,000 miles</h3>'+fluidCards+
+  '<div class="note info">Reset to Full works at any mileage after you manually confirm the level. For engine coolant, check the reservoir only when the engine is cool, and follow the owner manual. Never open a hot pressurized cap.</div>'+
+  '<h3 class="section-title">Air filter replacements</h3>'+filters+
+  '<div class="card"><h3 style="margin-top:0">Fluid & filter history</h3>'+history+'</div>';
+}
+function wireFluidAndFilters(a){
+ document.querySelectorAll('[data-full-fluid]').forEach(btn=>btn.onclick=()=>{
+  const kind=btn.dataset.fullFluid;
+  if(!(kind in fluidNames))return;
+  if(!confirm('Did you manually confirm the '+fluidNames[kind]+' is at the correct full mark?'+(kind==='coolant'?' Check only with the engine cool; never open a hot pressurized coolant cap.':'')))return;
+  const event={fluid:kind,date:localDate(),mileage:a.mileage,action:'confirmed_full'};
+  a.fluid_checks[kind]={last_full_mileage:a.mileage,last_full_date:event.date};
+  a.fluid_check_history.push(event);
+  save();renderAll();message(fluidNames[kind]+' reset to full at '+num(a.mileage)+' miles.');
+ });
+ document.querySelectorAll('[data-filter-change]').forEach(btn=>btn.onclick=()=>{
+  const kind=btn.dataset.filterChange;
+  if(!(kind in filterNames))return;
+  const dt=$('filterDate-'+kind)?.value;
+  if(!validDate(dt)){alert('Choose a valid date, not in the future.');return;}
+  let odo;
+  try{odo=whole($('filterOdo-'+kind).value,'Replacement mileage',a.starting_mileage);
+      if(odo>a.mileage)throw Error('Replacement mileage cannot exceed the current odometer.');}
+  catch(e){alert(e.message);return;}
+  if(!confirm('Confirm '+filterNames[kind]+' was replaced on '+dt+' at '+num(odo)+' miles?'))return;
+  a.air_filter_changes.push({filter_type:kind,date:dt,mileage:odo});
+  save();renderAll();message(filterNames[kind]+' replacement recorded.');
+ });
+}
+
+/* RECEIPT_PARSER_BEGIN */
+function parseServiceReceiptText(raw,today){
+ const text=String(raw||'');
+ const lines=text.split(/\r?\n/).map(x=>x.replace(/\s+/g,' ').trim()).filter(Boolean);
+ const result={date:null,mileage:null,cost:null,description:null,oil:false,tire:false,cabin:false,engine:false};
+ const dateRegex=/\b(\d{4}[-/.]\d{1,2}[-/.]\d{1,2}|\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4})\b/;
+ const namedDate=lines.find(x=>/\b(?:service date|invoice date|date|completed|performed)\b/i.test(x)&&dateRegex.test(x));
+ const dateHit=(namedDate||text).match(dateRegex);
+ if(dateHit){
+  const source=dateHit[1].replace(/[/.]/g,'-').split('-');
+  let year,month,day;
+  if(source[0].length===4){year=Number(source[0]);month=Number(source[1]);day=Number(source[2]);}
+  else {month=Number(source[0]);day=Number(source[1]);year=Number(source[2]);if(year<100)year+=2000;}
+  const iso=[String(year).padStart(4,'0'),String(month).padStart(2,'0'),String(day).padStart(2,'0')].join('-');
+  const verified=new Date(iso+'T12:00:00');
+  if(!Number.isNaN(verified.getTime())&&verified.getFullYear()===year&&
+      verified.getMonth()+1===month&&verified.getDate()===day&&iso<=today)result.date=iso;
+ }
+ const mileageRegex=/\b(?:odometer|odo|vehicle mileage|mileage(?: in)?|miles(?: in)?|in mileage)\b[^\d\n]{0,22}([0-9]{1,3}(?:,[0-9]{3})+|[0-9]{3,8})\b/i;
+ const mileageLine=lines.find(x=>mileageRegex.test(x));
+ const m=(mileageLine||text).match(mileageRegex);
+ if(m){
+  const od=Number(m[1].replace(/,/g,''));
+  if(Number.isSafeInteger(od)&&od>=0)result.mileage=od;
+ }
+ const payLabel=/\b(?:grand total|invoice total|total (?:due|amount|paid|charges|cost)|amount due|balance due|paid amount|total\s*:|payment)\b/i;
+ const moneyRegex=/\$?\s*([0-9]{1,3}(?:,[0-9]{3})*\.[0-9]{2}|[0-9]+\.[0-9]{2})\b/g;
+ const totalLine=lines.findLast(x=>payLabel.test(x)&&[...x.matchAll(moneyRegex)].length>0);
+ if(totalLine){
+  const parts=[...totalLine.matchAll(moneyRegex)];
+  const amount=parts.at(-1)?.[1]?.replace(/,/g,'');
+  if(amount&&Number.isFinite(Number(amount))&&Number(amount)>=0)result.cost=Number(amount).toFixed(2);
+ }
+ const patterns=[
+  {re:/\b(?:oil chang(?:e|ed)|synthetic oil|oil and filter|engine oil)\b/i,desc:'Oil change',flag:'oil'},
+  {re:/\b(?:tire rotation|rotate tires|rotated tires|tires rotated)\b/i,desc:'Tire rotation',flag:'tire'},
+  {re:/\b(?:cabin air filter|cabin filter|interior air filter|pollen filter)\b/i,desc:'Cabin air filter',flag:'cabin'},
+  {re:/\b(?:engine air filter|engine intake filter|intake air filter|exterior air filter)\b/i,desc:'Engine air filter',flag:'engine'},
+  {re:/\b(?:wiper blades?|windshield wipers?)\b/i,desc:'Wiper blades',flag:null},
+  {re:/\b(?:brake pads?|brake service)\b/i,desc:'Brake service',flag:null},
+  {re:/\b(?:battery replaced|new battery|battery replacement)\b/i,desc:'Battery replacement',flag:null},
+ ];
+ const descriptions=[];
+ for(const p of patterns){
+  if(p.re.test(text)){
+   descriptions.push(p.desc);
+   if(p.flag==='oil'||p.flag==='tire')result[p.flag]=true;
+   if(p.flag==='cabin'||p.flag==='engine'){
+    const mention=lines.find(x=>p.re.test(x))||'';
+    // A mention of an inspection is not proof of replacement.
+    result[p.flag]=/\b(replac(?:ed|ement)?|install(?:ed|ation)?|changed|change|new|r\s*&\s*r)\b/i.test(mention);
+   }
+  }
+ }
+ if(descriptions.length)result.description=descriptions.join(', ').slice(0,180);
+ return result;
+}
+/* RECEIPT_PARSER_END */
+/* FUEL_RECEIPT_PARSER_BEGIN */
+function parseFuelReceiptText(raw,today){
+ const text=String(raw||'');
+ const lines=text.split(/\r?\n/).map(x=>x.replace(/\s+/g,' ').trim()).filter(Boolean);
+ // Share the validated date and odometer parsing with service receipts.
+ const shared=parseServiceReceiptText(text,today);
+ const result={date:shared.date,mileage:shared.mileage,gallons:null,total:null};
+ // Favor a quantity explicitly labeled gallons/volume; do NOT infer quantity
+ // from the pump price, grade, monetary total, or incidental item numbers.
+ const patterns=[
+  /\b(?:gallons?|volume|fuel qty|fuel quantity|quantity|qty)\s*(?:\(us\)|\(gal\)|us|gal|liters?)?\s*[:=\-]?\s*(\d{1,4}(?:\.\d{1,4})?)\b/i,
+  /\b(\d{1,4}\.\d{1,4})\s*(?:us\s*)?gallons?\b/i,
+  /\b(\d{1,4}\.\d{1,4})\s*(?:us\s*)?gal\b/i
+ ];
+ for(const line of lines){
+  if(/\b(?:price\s*(?:per|\/)\s*(?:gal|gallon)|unit price|ppu|price\/gallon)\b/i.test(line))continue;
+  for(const pattern of patterns){
+   const found=line.match(pattern);
+   if(found){
+    const n=Number(found[1]);
+    if(Number.isFinite(n)&&n>=0.001&&n<=9999){
+     result.gallons=String(n);
+     break;
+    }
+   }
+  }
+  if(result.gallons!==null)break;
+ }
+ const moneyRe=/\$?\s*(\d{1,3}(?:,\d{3})*\.\d{2}|\d+\.\d{2})\b/g;
+ const totalRe=/\b(?:grand total|fuel total|sale total|transaction total|total(?: sale| due| paid| amount| purchase)?|amount(?: paid| due)?|purchase amount|fuel sale)\b/i;
+ // Prefer a line with a labeled total, and reject lines that identify pump
+ // unit price, discount or tax. Never use a random dollar figure as a total.
+ const labeled=lines.filter(line=>totalRe.test(line)&&
+   !/\b(?:price\s*(?:per|\/)\s*(?:gal|gallon)|unit price|subtotal|sales tax|tax rate|discount|rewards savings)\b/i.test(line));
+ for(let i=labeled.length-1;i>=0;i--){
+  const amounts=[...labeled[i].matchAll(moneyRe)];
+  if(amounts.length){
+   const n=Number(amounts.at(-1)[1].replace(/,/g,''));
+   if(Number.isFinite(n)&&n>=0&&n<=100000){
+    result.total=n.toFixed(2);
+    break;
+   }
+  }
+ }
+ return result;
+}
+/* FUEL_RECEIPT_PARSER_END */
+
+
+let receiptScriptPromise=null;
+function ensureReceiptOCR(){
+ if(window.Tesseract?.createWorker)return Promise.resolve(window.Tesseract);
+ if(!receiptScriptPromise){
+  receiptScriptPromise=new Promise((resolve,reject)=>{
+   const script=document.createElement('script');
+   script.src='https://cdn.jsdelivr.net/npm/tesseract.js@6.0.1/dist/tesseract.min.js';
+   script.async=true;
+   script.onload=()=>window.Tesseract?.createWorker
+     ?resolve(window.Tesseract):reject(Error('Receipt reader could not initialize.'));
+   script.onerror=()=>reject(Error('Could not download the receipt reader. Check the phone connection.'));
+   document.head.appendChild(script);
+  }).catch(error=>{receiptScriptPromise=null;throw error;});
+ }
+ return receiptScriptPromise;
+}
+function wireServiceReceiptPhoto(a){
+ const camera=$('serviceCameraInput'),gallery=$('serviceGalleryInput');
+ const buttons=[$('serviceCameraButton'),$('serviceGalleryButton')];
+ $('serviceCameraButton').onclick=()=>camera.click();
+ $('serviceGalleryButton').onclick=()=>gallery.click();
+ const read=async input=>{
+  const file=input.files?.[0];
+  if(!file)return;
+  if(!file.type.startsWith('image/')){alert('Choose an image of the receipt.');input.value='';return;}
+  if(file.size>15_000_000){alert('Receipt photo is too large. Use an image under 15 MB.');input.value='';return;}
+  buttons.forEach(x=>x.disabled=true);
+  const status=$('receiptProgress');
+  status.textContent='Preparing receipt reader… (first scan needs internet).';
+  let worker=null;
+  try{
+   const engine=await ensureReceiptOCR();
+   status.textContent='Reading receipt on this device…';
+   worker=await engine.createWorker('eng');
+   const result=await worker.recognize(file);
+   const text=String(result?.data?.text||'').trim();
+   if(!text)throw Error('No readable text found. Try retaking the photo in better light.');
+   const details=$('receiptTextReview');
+   const textArea=$('receiptOcrText');
+   details.style.display='';
+   textArea.textContent=text.slice(0,12000);
+   const suggestion=parseServiceReceiptText(text,localDate());
+   const fields=[];
+   if(suggestion.description){
+    if(!$('serviceDesc').value.trim()){
+     $('serviceDesc').value=suggestion.description;
+     fields.push('work performed');
+    }else status.textContent='Existing service description kept; review extracted text below.';
+   }
+   if(suggestion.date){$('serviceDate').value=suggestion.date;fields.push('date');}
+   if(suggestion.mileage!=null){
+    $('serviceOdo').value=String(suggestion.mileage);fields.push('mileage');
+   }
+   if(suggestion.cost){
+    $('serviceCost').value=suggestion.cost;fields.push('total cost');
+   }
+   if(suggestion.oil)$('oilReset').checked=true;
+   if(suggestion.tire)$('tireReset').checked=true;
+   if(suggestion.cabin)$('cabinReplaced').checked=true;
+   if(suggestion.engine)$('engineReplaced').checked=true;
+   const flags=[suggestion.oil&&'oil countdown',suggestion.tire&&'tire countdown',
+                suggestion.cabin&&'cabin filter',suggestion.engine&&'engine filter'].filter(Boolean);
+   if(flags.length)fields.push(...flags);
+   status.textContent=fields.length
+      ?'Suggested from photo: '+fields.join(', ')+'. REVIEW before saving.'
+      :'Receipt text recognized, but fields could not be identified. Please enter them manually.';
+   if(suggestion.mileage!=null&&suggestion.mileage>a.mileage)
+    status.textContent+=' Photo mileage exceeds the current odometer. Update mileage on Home first, then rescan.';
+   message('Receipt scanned; review the suggested service fields.');
+  }catch(error){
+   status.textContent='Receipt scan unavailable: '+error.message+
+      ' You can still enter the service details manually.';
+  }finally{
+   if(worker){try{await worker.terminate();}catch(e){}}
+   buttons.forEach(x=>x.disabled=false);
+   input.value='';
+  }
+ };
+ camera.onchange=()=>read(camera);
+ gallery.onchange=()=>read(gallery);
+}
+
+function renderService(){const a=v(), el=$('serviceBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}el.innerHTML=tirePressureCard(a)+fluidFilterCard(a)+`<div class="card feature-card"><h3 style="margin-top:0">Log maintenance</h3>${formVehicleName(a)}<form id="serviceForm"><div class="note info"><strong>Service receipt photo</strong><div class="small">Take a photo or choose an existing image. MileSage will attempt to fill the date, mileage, service description and cost; review all fields before saving. OCR downloads recognition tools when connected, and the receipt image is not uploaded to GitHub or stored in your vehicle JSON.</div></div><div class="button-row"><button id="serviceCameraButton" class="btn secondary" type="button">Take receipt photo</button><button id="serviceGalleryButton" class="btn secondary" type="button">Choose photo</button></div><input id="serviceCameraInput" type="file" accept="image/*" capture="environment" hidden><input id="serviceGalleryInput" type="file" accept="image/*" hidden><div id="receiptProgress" class="small muted" role="status" aria-live="polite">No receipt scanned yet.</div><details id="receiptTextReview" style="display:none"><summary>View recognized text</summary><pre id="receiptOcrText" style="white-space:pre-wrap;word-wrap:break-word;max-height:180px;overflow:auto"></pre></details><label class="field" for="serviceDesc">Work performed</label><input id="serviceDesc" type="text" required maxlength="180" placeholder="Oil change, tire rotation…"><div class="grid2"><div><label class="field" for="serviceDate">Date</label><input type="date" id="serviceDate" required value="${localDate()}"></div><div><label class="field" for="serviceOdo">Odometer</label><input type="number" id="serviceOdo" inputmode="numeric" min="0" required step="1" value="${a.mileage}"></div></div><label class="field" for="serviceCost">Cost in dollars (optional)</label><input id="serviceCost" inputmode="decimal" type="text" placeholder="89.95"><div class="check"><input type="checkbox" id="oilReset"><label for="oilReset">Reset oil-change countdown</label></div><div class="check"><input type="checkbox" id="tireReset"><label for="tireReset">Reset tire-rotation countdown</label></div><div class="check"><input type="checkbox" id="cabinReplaced"><label for="cabinReplaced">Cabin air filter replaced (log replacement)</label></div><div class="check"><input type="checkbox" id="engineReplaced"><label for="engineReplaced">Engine air filter replaced (log replacement)</label></div><button type="submit" class="btn full">Save service record</button></form></div><div class="card"><h3 style="margin-top:0">Service history (${num(a.service_history.length)})</h3>${recordList(a.service_history,'service')}</div>`;
+wireTirePressureForm(a);wireFluidAndFilters(a);wireServiceReceiptPhoto(a);$('serviceForm').onsubmit=e=>{e.preventDefault();try{let od=whole($('serviceOdo').value,'Odometer');let date=$('serviceDate').value;if(!validDate(date))throw Error('Enter a valid service date, not in the future.');if(od>a.mileage)throw Error('Service odometer is ahead of the current reading. Update mileage on Home first.');let desc=$('serviceDesc').value.trim();if(!desc)throw Error('Enter the work performed.');let record={date,mileage:od,description:desc,cost_cents:costCents($('serviceCost').value,true),oil_reset:$('oilReset').checked,tire_reset:$('tireReset').checked};a.service_history.push(record);for(const [kind,flag] of [['interior','cabinReplaced'],['exterior','engineReplaced']]){if($(flag).checked&&!a.air_filter_changes.some(x=>x.filter_type===kind&&x.date===date&&Number(x.mileage)===od))a.air_filter_changes.push({filter_type:kind,date,mileage:od});}if(record.oil_reset)a.last_service_mileage=od;if(record.tire_reset)a.last_tire_rotation_mileage=od;save();renderAll();message('Service record saved.')}catch(error){alert(error.message)}};}
+
+function wireFuelReceiptPhoto(a){
+ const camera=$('fuelCameraInput'),gallery=$('fuelGalleryInput');
+ const buttons=[$('fuelCameraButton'),$('fuelGalleryButton')];
+ if(!camera||!gallery)return;
+ $('fuelCameraButton').onclick=()=>camera.click();
+ $('fuelGalleryButton').onclick=()=>gallery.click();
+ const read=async input=>{
+  const file=input.files?.[0];
+  if(!file)return;
+  if(!file.type.startsWith('image/')){
+   alert('Choose a photo of a fuel receipt.');input.value='';return;
+  }
+  if(file.size>15_000_000){
+   alert('Fuel receipt photo exceeds 15 MB. Choose a smaller image.');input.value='';return;
+  }
+  const progress=$('fuelReceiptProgress');
+  buttons.forEach(x=>x.disabled=true);
+  progress.textContent='Preparing on-device receipt reader… (internet needed for first scan).';
+  let worker=null;
+  try{
+   const engine=await ensureReceiptOCR();
+   worker=await engine.createWorker('eng');
+   progress.textContent='Recognizing fuel receipt on this device…';
+   const detected=await worker.recognize(file);
+   const text=String(detected?.data?.text||'').trim();
+   if(!text)throw Error('No readable receipt text found. Retake the photo with better lighting.');
+   $('fuelReceiptTextReview').style.display='';
+   $('fuelReceiptOcrText').textContent=text.slice(0,12000);
+   const found=parseFuelReceiptText(text,localDate());
+   const fields=[];
+   if(found.date){$('fuelDate').value=found.date;fields.push('date');}
+   if(found.gallons!==null){$('fuelGallons').value=found.gallons;fields.push('gallons');}
+   if(found.total!==null){$('fuelCost').value=found.total;fields.push('total paid');}
+   if(found.mileage!==null){
+    if(found.mileage>=a.mileage){
+     $('fuelOdo').value=String(found.mileage);fields.push('odometer');
+    }else{
+     progress.textContent='Receipt odometer is below the current vehicle mileage; it was not applied.';
+    }
+   }
+   // Never infer full_tank from OCR; partial/full must be user-confirmed.
+   $('fullTank').checked=false;
+   progress.textContent=(fields.length
+    ?'Suggested from photo: '+fields.join(', ')+'.'
+    :'No reliable fuel fields recognized.')+
+    ' REVIEW every field. Confirm Full Tank manually before saving.'+
+    (found.mileage!==null&&found.mileage<a.mileage
+     ?' Receipt odometer was older and ignored.':'');
+   message('Fuel receipt scanned. Check suggested values before saving.');
+  }catch(error){
+   progress.textContent='Fuel receipt scan unavailable: '+error.message+
+    ' You can still enter the fill-up details manually.';
+  }finally{
+   if(worker){try{await worker.terminate();}catch(e){}}
+   buttons.forEach(x=>x.disabled=false);
+   input.value='';
+  }
+ };
+ camera.onchange=()=>read(camera);
+ gallery.onchange=()=>read(gallery);
+}
+
+function renderFuel(){const a=v(), el=$('fuelBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}el.innerHTML=`<div class="card feature-card"><h3 style="margin-top:0">Record a fill-up</h3>${formVehicleName(a)}<form id="fuelForm"><div class="note info"><strong>Fuel receipt photo</strong><div class="small">Photograph your pump receipt or choose a saved photo. Suggested purchase date, gallons, total paid and odometer will fill in for review. Many receipts do not show odometer mileage. You must still confirm whether the tank was completely filled. No receipt photo is saved to GitHub.</div></div><div class="button-row"><button id="fuelCameraButton" class="btn secondary" type="button">Take fuel receipt photo</button><button id="fuelGalleryButton" class="btn secondary" type="button">Choose photo</button></div><input id="fuelCameraInput" type="file" accept="image/*" capture="environment" hidden><input id="fuelGalleryInput" type="file" accept="image/*" hidden><div id="fuelReceiptProgress" class="small muted" role="status" aria-live="polite">No receipt scanned yet.</div><details id="fuelReceiptTextReview" style="display:none"><summary>View recognized receipt text</summary><pre id="fuelReceiptOcrText" style="white-space:pre-wrap;word-wrap:break-word;max-height:180px;overflow:auto"></pre></details><div class="grid2"><div><label class="field" for="fuelDate">Date</label><input type="date" id="fuelDate" required value="${localDate()}"></div><div><label class="field" for="fuelOdo">Odometer</label><input type="number" min="${a.mileage}" step="1" inputmode="numeric" id="fuelOdo" required value="${a.mileage}"></div></div><div class="grid2"><div><label class="field" for="fuelGallons">US gallons</label><input id="fuelGallons" required inputmode="decimal" type="number" min="0.001" max="9999" step="any" placeholder="12.5"></div><div><label class="field" for="fuelCost">Total paid ($)</label><input id="fuelCost" required type="text" inputmode="decimal" placeholder="42.85"></div></div><div class="check"><input type="checkbox" id="fullTank" checked><label for="fullTank">Filled the tank completely</label></div><p class="small muted">MPG uses distances between full tanks and includes partial fill-ups in between.</p><button type="submit" class="btn full">Save fuel & mileage</button></form></div><div class="card"><h3 style="margin-top:0">Fuel history (${num(a.fuel_history.length)})</h3>${recordList(a.fuel_history,'fuel')}</div>`;
+wireFuelReceiptPhoto(a);$('fuelForm').onsubmit=e=>{e.preventDefault();try{let od=whole($('fuelOdo').value,'Odometer',a.mileage);let dt=$('fuelDate').value;if(!validDate(dt))throw Error('Enter a valid fill-up date.');const history=a.fuel_history;if(history.length&&dt<history[history.length-1].date)throw Error('Fill-up date cannot be earlier than your last recorded fill-up.');let gal=Number($('fuelGallons').value);if(!Number.isFinite(gal)||gal<=0||gal>9999)throw Error('Enter a valid positive number of gallons.');let c=costCents($('fuelCost').value);a.fuel_history.push({date:dt,mileage:od,gallons:String(gal),cost_cents:c,full_tank:$('fullTank').checked});if(od>a.mileage){a.mobile_mileage_log.push({date:dt,from:a.mileage,to:od});a.mileage=od;}save();renderAll();message('Fuel fill-up saved.')}catch(error){alert(error.message)}};}
 function expenseSummary(a){let service=a.service_history.reduce((s,r)=>s+(Number(r.cost_cents)||0),0);let fuel=a.fuel_history.reduce((s,r)=>s+(Number(r.cost_cents)||0),0);let extra=a.mobile_expenses.reduce((s,r)=>s+(Number(r.cost_cents)||0),0);return {service,fuel,extra,total:service+fuel+extra}}
 function renderExpenses(){const a=v(),el=$('expensesBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}const totals=expenseSummary(a);el.innerHTML=`<div class="card"><div class="eyebrow">Recorded spending · ${esc(a.name)}</div><h2 style="font-size:31px;margin:4px 0 13px">${usd(totals.total)}</h2><div class="grid2 triple"><div class="stat"><div class="eyebrow">Service</div><strong style="font-size:18px">${usd(totals.service)}</strong></div><div class="stat"><div class="eyebrow">Fuel</div><strong style="font-size:18px">${usd(totals.fuel)}</strong></div><div class="stat"><div class="eyebrow">Other</div><strong style="font-size:18px">${usd(totals.extra)}</strong></div></div><p class="small muted" style="margin-bottom:0">Totals cover recorded expenses only; missing service costs are excluded.</p></div><div class="card"><h3 style="margin-top:0">Add other expense</h3>${formVehicleName(a)}<form id="extraForm"><label class="field" for="extraDesc">Description</label><input id="extraDesc" required type="text" maxlength="180" placeholder="Registration, parking, detailing…"><div class="grid2"><div><label class="field" for="extraDate">Date</label><input id="extraDate" required type="date" value="${localDate()}"></div><div><label class="field" for="extraCost">Cost ($)</label><input id="extraCost" required type="text" inputmode="decimal" placeholder="25.00"></div></div><button type="submit" class="btn full" style="margin-top:12px">Save other expense</button></form><p class="small muted">Other-expense entries are mobile-only until merged into the desktop app. Use <strong>Full mobile backup</strong> to preserve them.</p></div><div class="card"><h3 style="margin-top:0">Other expense history</h3>${recordList(a.mobile_expenses,'expense')}</div>`;
 $('extraForm').onsubmit=e=>{e.preventDefault();try{const desc=$('extraDesc').value.trim(),date=$('extraDate').value;if(!desc)throw Error('Description is required.');if(!validDate(date))throw Error('Enter a valid date.');a.mobile_expenses.push({date,description:desc,mileage:a.mileage,cost_cents:costCents($('extraCost').value)});save();renderAll();message('Other expense saved.')}catch(error){alert(error.message)}};}
@@ -171,8 +486,178 @@ function switchTab(id){tab=id;document.querySelectorAll('.section').forEach(x=>x
 function filename(prefix){return `${prefix}-${localDate()}.json`}
 function download(name,data){const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);message('Backup prepared. Check Downloads on your phone.');}
 function pythonExport(){return vehicles.map(({mobile_expenses,mobile_mileage_log,...obj})=>obj)}
-function replace(data,fromGitHub=false){let recs,cur=0;if(Array.isArray(data))recs=normalize(data);else if(data&&Array.isArray(data.vehicles)){recs=normalize(data.vehicles);cur=Math.max(0,Math.min(Number(data.current)||0,recs.length-1));}else throw Error('This does not look like a MileSage or Vehicle Manager backup.');if(!confirm(`Replace the data on this phone with ${recs.length} imported vehicle(s)? Any changes not exported as a backup will be lost.`))return false;vehicles=recs;current=cur;save();try{if(fromGitHub)localStorage.setItem(BASE_KEY,JSON.stringify(vehicles));else localStorage.removeItem(BASE_KEY)}catch(e){}syncStatus=fromGitHub?'GitHub data imported; auto-refresh is enabled until you make local changes.':'Local file imported; GitHub auto-refresh will not overwrite it without review.';renderAll();switchTab('home');message(`${recs.length} vehicle(s) imported.`);return true}
-async function githubImport(){const btn=$('githubImport');btn.disabled=true;btn.textContent='Importing…';try{const r=await fetch(REMOTE,{cache:'no-store'});if(!r.ok)throw Error('GitHub returned '+r.status);replace(await r.json(),true);}catch(e){alert('GitHub import could not complete. Check your connection or download vehicles.json from GitHub and choose JSON file.\n\n'+e.message);}finally{btn.disabled=false;btn.textContent='Import from GitHub';}}
+/* RESTORE_GUARDS_BEGIN */
+function vehicleID(a){return String(a.year)+'|'+String(a.name).trim().toLowerCase();}
+function isBlankSeed(recs){
+ return recs.length>0 && recs.every(a=>
+   Number(a.mileage)===0 &&
+   Object.values(a.tire_pressures||{}).every(x=>x==null) &&
+   (a.service_history||[]).length===0 && (a.fuel_history||[]).length===0 &&
+   (a.tire_pressure_history||[]).length===0
+ );
+}
+function destructiveDiffs(existing,incoming){
+ const src=new Map(incoming.map(a=>[vehicleID(a),a]));
+ const problems=[];
+ for(const local of existing){
+  const next=src.get(vehicleID(local));
+  if(!next){problems.push(local.name+': vehicle missing in import');continue;}
+  if(Number(next.mileage)<Number(local.mileage))
+   problems.push(local.name+': mileage '+local.mileage+' → '+next.mileage);
+  for(const key of ['driver_front','driver_rear','passenger_front','passenger_rear']){
+   if(local.tire_pressures?.[key]!=null && next.tire_pressures?.[key]==null)
+    problems.push(local.name+': '+key.replace('_',' ')+' pressure would be cleared');
+  }
+  for(const key of ['service_history','fuel_history','tire_pressure_history',
+    'fluid_check_history','air_filter_changes','mobile_expenses','mobile_mileage_log']){
+   if((next[key]||[]).length<(local[key]||[]).length)
+    problems.push(local.name+': '+key.replaceAll('_',' ')+' would lose entries');
+  }
+ }
+ return problems;
+}
+function mergeRecovery(existing,backups){
+ const prior=new Map(backups.map(a=>[vehicleID(a),a]));
+ const updated=existing.map(local=>{
+  const backup=prior.get(vehicleID(local));
+  if(!backup)return {...local};
+  const item=JSON.parse(JSON.stringify(local));
+  if(Number(item.mileage)===0 && Number(backup.mileage)>0){
+   item.mileage=backup.mileage;
+   item.starting_mileage=backup.starting_mileage;
+   item.last_service_mileage=backup.last_service_mileage;
+   item.last_tire_rotation_mileage=backup.last_tire_rotation_mileage;
+  }
+  for(const name of ['driver_front','driver_rear','passenger_front','passenger_rear']){
+   if(item.tire_pressures?.[name]==null && backup.tire_pressures?.[name]!=null)
+    item.tire_pressures[name]=backup.tire_pressures[name];
+   if(item.starting_tire_pressures?.[name]==null && backup.starting_tire_pressures?.[name]!=null)
+    item.starting_tire_pressures[name]=backup.starting_tire_pressures[name];
+  }
+  for(const key of ['service_history','fuel_history','tire_pressure_history',
+      'fluid_check_history','air_filter_changes','mobile_expenses','mobile_mileage_log']){
+   if(!item[key]?.length && backup[key]?.length)
+    item[key]=JSON.parse(JSON.stringify(backup[key]));
+  }
+  for(const kind of ['washer','coolant']){
+   if(item.fluid_checks?.[kind]?.last_full_mileage==null &&
+      backup.fluid_checks?.[kind]?.last_full_mileage!=null)
+     item.fluid_checks[kind]=JSON.parse(JSON.stringify(backup.fluid_checks[kind]));
+  }
+  // Never modify service_interval or tire_rotation_interval during recovery.
+  return item;
+ });
+ const existingIDs=new Set(existing.map(vehicleID));
+ for(const backup of backups){
+  if(!existingIDs.has(vehicleID(backup)))updated.push(JSON.parse(JSON.stringify(backup)));
+ }
+ return updated;
+}
+/* RESTORE_GUARDS_END */
+function readSnapshots(){
+ try{const x=JSON.parse(localStorage.getItem(RECOVERY_KEY)||'[]');return Array.isArray(x)?x:[]}
+ catch(e){return [];}
+}
+function preservePreImport(){
+ try{
+  const snapshots=readSnapshots();
+  snapshots.unshift({created_at:new Date().toISOString(),
+    vehicles:JSON.parse(JSON.stringify(vehicles)), current});
+  localStorage.setItem(RECOVERY_KEY,JSON.stringify(snapshots.slice(0,3)));
+  return true;
+ }catch(e){
+  alert('Import cancelled: the browser could not save a recovery snapshot. Export a full mobile backup first.');
+  return false;
+ }
+}
+function commitImport(newVehicles,newCurrent,reason){
+ if(!preservePreImport())return false;
+ const prevVehicles=vehicles, prevCurrent=current;
+ try{
+  localStorage.setItem(KEY,JSON.stringify({vehicles:newVehicles,current:newCurrent}));
+ }catch(e){
+  alert('Import cancelled: unable to save new vehicle data. Your previous records remain.');
+  return false;
+ }
+ vehicles=newVehicles;current=newCurrent;hasStorage=true;
+ syncStatus='Phone records preserved locally; GitHub cannot overwrite them automatically.';
+ updateBanner();renderAll();switchTab('home');
+ message(reason+' Local undo snapshot saved.');
+ return true;
+}
+function replace(data,fromGitHub=false){
+ let recs,cur=0;
+ if(Array.isArray(data))recs=normalize(data);
+ else if(data&&Array.isArray(data.vehicles)){
+  recs=normalize(data.vehicles);
+  cur=Math.max(0,Math.min(Number(data.current)||0,recs.length-1));
+ }else throw Error('This does not look like a MileSage or Vehicle Manager backup.');
+ if(fromGitHub && isBlankSeed(recs)){
+  alert('Import BLOCKED. The main GitHub vehicles.json has only 0-mile placeholder data and blank tire pressures. Use "Recover from saved GitHub backup" instead.');
+  return false;
+ }
+ const problems=destructiveDiffs(vehicles,recs);
+ if(fromGitHub && problems.length){
+  alert('GitHub import BLOCKED because it could erase phone records:\n\n'+
+        problems.slice(0,8).join('\n')+'\n\nUse a known-good backup instead.');
+  return false;
+ }
+ if(!confirm('REVIEW IMPORT: Replace phone data with '+recs.length+
+             ' vehicle(s)?\n\nThis imports DATA only, not the latest app code. '+
+             'A local undo snapshot will be saved first.'))return false;
+ if(problems.length && !confirm('WARNING — this import would REMOVE or DOWNGRADE existing phone data:\n\n'+
+           problems.slice(0,8).join('\n')+'\n\nContinue anyway?'))return false;
+ return commitImport(recs,cur,'JSON import completed.');
+}
+async function githubImport(){
+ const btn=$('githubImport');btn.disabled=true;btn.textContent='Reviewing…';
+ try{
+  const r=await fetch(REMOTE,{cache:'no-store'});
+  if(!r.ok)throw Error('GitHub returned '+r.status);
+  replace(await r.json(),true);
+ }catch(e){alert('GitHub data review could not complete: '+e.message)}
+ finally{btn.disabled=false;btn.textContent='Review GitHub vehicles.json';}
+}
+async function recoverFromGitHubBackup(){
+ const btn=$('githubBackupRecovery');btn.disabled=true;btn.textContent='Checking backup…';
+ try{
+  const r=await fetch(BACKUP_REMOTE,{cache:'no-store'});
+  if(!r.ok)throw Error('GitHub backup returned '+r.status);
+  const saved=normalize(await r.json());
+  if(isBlankSeed(saved))throw Error('Backup has no recoverable mileage or tire pressures.');
+  const merged=mergeRecovery(vehicles,saved);
+  const summary=merged.map(a=>a.name+': '+num(a.mileage)+' mi, '+
+      Object.values(a.tire_pressures||{}).filter(x=>x!=null).length+' tire readings').join('\n');
+  if(JSON.stringify(merged)===JSON.stringify(vehicles)){
+   alert('This backup has no missing readings to recover. Your phone data has not been changed.');
+   return;
+  }
+  if(!confirm('RECOVERY PREVIEW — older GitHub backup:\n\n'+summary+
+      '\n\nOnly blank fields and empty histories will be restored for existing vehicles. '+
+      'Oil/tire intervals already set on your phone will remain unchanged. '+
+      'The actual vehicle odometers may be newer.\n\nApply recovery?'))return;
+  commitImport(merged,current,'Older GitHub backup partially recovered.');
+ }catch(e){alert('Recovery could not complete: '+e.message)}
+ finally{btn.disabled=false;btn.textContent='Recover from saved GitHub backup';}
+}
+function undoImport(){
+ const history=readSnapshots();
+ if(!history.length){alert('No pre-import snapshot exists in this version. Check phone Downloads for an earlier full mobile backup.');return;}
+ const latest=history[0];
+ if(!confirm('Restore phone data from the snapshot created '+latest.created_at+
+     '?\nThis replaces the current phone data. Export a full backup of the current version first.'))return;
+ if(!preservePreImport())return;
+ try{
+  const restored=normalize(latest.vehicles);
+  localStorage.setItem(KEY,JSON.stringify({vehicles:restored,current:latest.current}));
+  vehicles=restored;current=Math.max(0,Math.min(latest.current,vehicles.length-1));
+  // Remove the original snapshot once used, retaining the new undo snapshot.
+  const next=readSnapshots().filter(x=>x.created_at!==latest.created_at);
+  localStorage.setItem(RECOVERY_KEY,JSON.stringify(next.slice(0,3)));
+  syncStatus='Previous local snapshot restored. GitHub has not overwritten it.';
+  renderAll();switchTab('home');message('Previous local snapshot restored.');
+ }catch(e){alert('Could not restore snapshot: '+e.message);}
+}
 async function autoRefreshGitHub(){
  if(checkingGitHub||document.hidden)return;
  checkingGitHub=true;
@@ -180,28 +665,32 @@ async function autoRefreshGitHub(){
   const response=await fetch(REMOTE+'?v='+Date.now(),{cache:'no-store'});
   if(!response.ok)throw Error('GitHub returned '+response.status);
   const incoming=normalize(await response.json());
-  const incomingText=JSON.stringify(incoming),localText=JSON.stringify(vehicles);
-  const snapshot=localStorage.getItem(BASE_KEY);
-  if(incomingText===localText){
-   localStorage.setItem(BASE_KEY,localText);
-   syncStatus='Up to date with GitHub.';
-  }else if(!vehicles.length||(snapshot!==null&&localText===snapshot)){
-   vehicles=incoming;
-   current=Math.max(0,Math.min(current,vehicles.length-1));
-   save();
-   localStorage.setItem(BASE_KEY,JSON.stringify(vehicles));
-   renderAll();
-   syncStatus='Updated from GitHub (read-only).';
-   message('MileSage refreshed from GitHub.');
-  }else{
-   syncStatus='New GitHub data found. Your phone data was preserved. Back up, then use Data & backup → Import from GitHub.';
-  }
- }catch(e){
-  syncStatus='Unable to check GitHub; using saved phone data.';
- }finally{checkingGitHub=false;updateBanner();}
+  syncStatus=isBlankSeed(incoming)
+   ? 'GitHub vehicles.json is a blank placeholder and cannot overwrite your phone.'
+   : 'GitHub records available for review. No automatic data overwrite.';
+ }catch(e){syncStatus='GitHub status unavailable; phone data has not changed.';}
+ finally{checkingGitHub=false;updateBanner();}
 }
 function addVehicle(){const name=prompt('Vehicle name (example: Toyota Tacoma)');if(name===null)return;if(!name.trim()){alert('Enter a vehicle name.');return}const yearText=prompt('Model year',String(new Date().getFullYear()));if(yearText===null)return;const milesText=prompt('Current odometer mileage','0');if(milesText===null)return;let year,miles;try{year=whole(yearText,'Year',1900);miles=whole(milesText,'Mileage',0);if(year>new Date().getFullYear()+2)throw Error('Check the vehicle year.')}catch(error){alert(error.message);return}const first=normalize([{name:name.trim(),year,mileage:miles,starting_mileage:miles,last_service_mileage:miles,service_interval:5000}])[0];vehicles.push(first);current=vehicles.length-1;save();renderAll();message('Vehicle added.');}
-function init(){load();renderAll();for(const b of document.querySelectorAll('[data-tab]'))b.onclick=()=>switchTab(b.dataset.tab);$('dataButton').onclick=()=>switchTab('data');$('addVehicleButton').onclick=addVehicle;$('githubImport').onclick=githubImport;$('fileImportButton').onclick=()=>$('jsonFile').click();$('jsonFile').onchange=async e=>{try{const f=e.target.files?.[0];if(!f)return;if(f.size>15_000_000)throw Error('File is too large.');replace(JSON.parse(await f.text()));}catch(error){alert('Could not import JSON: '+error.message)}finally{e.target.value=''}};$('exportPython').onclick=()=>download('vehicles.json',pythonExport());$('exportFull').onclick=()=>download(filename('MileSage-mobile-full-backup'),{format:'MileSage-Mobile-v1',saved_at:new Date().toISOString(),vehicles,current});}
+function init(){
+ load();renderAll();
+ for(const b of document.querySelectorAll('[data-tab]'))b.onclick=()=>switchTab(b.dataset.tab);
+ $('dataButton').onclick=()=>switchTab('data');
+ $('addVehicleButton').onclick=addVehicle;
+ $('githubImport').onclick=githubImport;
+ $('githubBackupRecovery').onclick=recoverFromGitHubBackup;
+ $('undoImport').onclick=undoImport;
+ $('fileImportButton').onclick=()=>$('jsonFile').click();
+ $('jsonFile').onchange=async e=>{try{
+  const f=e.target.files?.[0];if(!f)return;
+  if(f.size>15000000)throw Error('File is too large.');
+  replace(JSON.parse(await f.text()));
+ }catch(error){alert('Could not import JSON: '+error.message)}
+ finally{e.target.value=''}};
+ $('exportPython').onclick=()=>download('vehicles.json',pythonExport());
+ $('exportFull').onclick=()=>download(filename('MileSage-mobile-full-backup'),
+   {format:'MileSage-Mobile-v1',saved_at:new Date().toISOString(),vehicles,current});
+}
 init();
 autoRefreshGitHub();
 setInterval(autoRefreshGitHub,120000);

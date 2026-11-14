@@ -5,9 +5,9 @@
         "mileage": 0,
         "starting_mileage": 0,
         "last_service_mileage": 0,
-        "service_interval": 5500,
+        "service_interval": 10000,
         "service_history": [],
-        "tire_rotation_interval": 10000,
+        "tire_rotation_interval": 5000,
         "last_tire_rotation_mileage": null,
         "fuel_history": [],
         "tire_pressures": {

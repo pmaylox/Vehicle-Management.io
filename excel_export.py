@@ -245,6 +245,8 @@ def export_vehicle_excel(vehicle, output_file=None):
     overview_sheet.title = "Overview"
     service_sheet = workbook.create_sheet("Service History")
     fuel_sheet = workbook.create_sheet("Fuel History")
+    fluid_sheet = workbook.create_sheet("Fluid Checks")
+    filter_sheet = workbook.create_sheet("Air Filters")
 
     service_rows = []
     total_service_cost = Decimal("0")
@@ -345,6 +347,52 @@ def export_vehicle_excel(vehicle, output_file=None):
         }
     )
     
+
+    fluid_labels = {
+        "washer": "Windshield washer fluid",
+        "coolant": "Engine coolant reservoir",
+    }
+    fluid_rows = [
+        [
+            date.fromisoformat(event["date"]),
+            event["mileage"],
+            fluid_labels.get(event["fluid"], event["fluid"]),
+            "Confirmed full" if event.get("action") == "confirmed_full"
+                else event.get("action", "Checked"),
+        ]
+        for event in getattr(vehicle, "fluid_check_history", [])
+    ]
+    filter_labels = {
+        "interior": "Interior / cabin air filter",
+        "exterior": "Exterior / engine air filter",
+    }
+    filter_rows = [
+        [
+            date.fromisoformat(event["date"]),
+            event["mileage"],
+            filter_labels.get(event["filter_type"], event["filter_type"]),
+            "Replaced",
+        ]
+        for event in getattr(vehicle, "air_filter_changes", [])
+    ]
+
+    style_sheet(
+        fluid_sheet,
+        f"{title} — Fluid Checks",
+        ["Check Date", "Odometer (mi)", "Fluid", "Recorded Action"],
+        fluid_rows,
+        [19, 20, 42, 26],
+        {1: "mm/dd/yyyy", 2: "#,##0"}
+    )
+    style_sheet(
+        filter_sheet,
+        f"{title} — Air Filter Changes",
+        ["Replacement Date", "Odometer (mi)", "Filter", "Recorded Action"],
+        filter_rows,
+        [22, 20, 42, 26],
+        {1: "mm/dd/yyyy", 2: "#,##0"}
+    )
+
     service_with_cost = len(service_rows) - missing_service_cost
 
     if service_with_cost > 0:
@@ -365,6 +413,54 @@ def export_vehicle_excel(vehicle, output_file=None):
     service_sheet.cell(service_summary_row +3, 4).number_format = '"$"#,##0.00'
     
     style_summary(service_sheet, service_summary_row, 4)
+
+    # Include new items on the main Service History worksheet too,
+    # without counting fluid confirmations as paid service entries.
+    events = [
+        (
+            date.fromisoformat(record["date"]),
+            record["mileage"],
+            fluid_labels.get(record["fluid"], record["fluid"]),
+            "Confirmed full",
+        )
+        for record in getattr(vehicle, "fluid_check_history", [])
+    ]
+    events.extend(
+        (
+            date.fromisoformat(record["date"]),
+            record["mileage"],
+            filter_labels.get(record["filter_type"], record["filter_type"]),
+            "Replaced",
+        )
+        for record in getattr(vehicle, "air_filter_changes", [])
+    )
+    events.sort(key=lambda row: (row[0], row[1]))
+    events_start = service_summary_row + 6
+    service_sheet.merge_cells(
+        start_row=events_start, start_column=1,
+        end_row=events_start, end_column=6,
+    )
+    events_title = service_sheet.cell(
+        events_start, 1, "Fluid Checks & Air Filter Replacements"
+    )
+    events_title.font = Font(name="Calibri", bold=True, color="FFFFFF", size=12)
+    events_title.fill = PatternFill("solid", fgColor="17365D")
+    service_sheet.row_dimensions[events_start].height = 24
+    for col, header in enumerate(
+        ("Date", "Odometer (mi)", "Item", "Action"), start=1
+    ):
+        cell = service_sheet.cell(events_start + 1, col, header)
+        cell.font = Font(name="Calibri", bold=True, color="17365D")
+        cell.fill = PatternFill("solid", fgColor="E8EEF5")
+    for row_number, values in enumerate(events, start=events_start + 2):
+        for col, value in enumerate(values, start=1):
+            service_sheet.cell(row_number, col, value)
+        service_sheet.cell(row_number, 1).number_format = "mm/dd/yyyy"
+        service_sheet.cell(row_number, 2).number_format = "#,##0"
+    if not events:
+        service_sheet.cell(events_start + 2, 1, "No fluid/filter records yet")
+    service_sheet.print_area = f"A1:F{max(events_start + 2, events_start + 1 + len(events))}"
+
             
     summary_row = fuel_sheet.max_row + 2
     fuel_sheet.cell(summary_row, 3, "Total fuel spending")
