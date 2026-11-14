@@ -160,12 +160,18 @@ def main():
     overview_tab = ttk.Frame(notebook, padding=15)
     service_tab = ttk.Frame(notebook, padding=10)
     fuel_tab = ttk.Frame(notebook, padding=10)
-    fluids_tab = ttk.Frame(notebook, padding=15)
 
     notebook.add(overview_tab, text="Overview")
     notebook.add(service_tab, text="Service History")
     notebook.add(fuel_tab, text="Fuel History")
-    notebook.add(fluids_tab, text="Fluid Checks")
+
+    # All added maintenance controls remain inside the Service History tab.
+    service_notebook = ttk.Notebook(service_tab)
+    service_notebook.pack(fill="both", expand=True)
+    service_records_tab = ttk.Frame(service_notebook, padding=8)
+    fluids_tab = ttk.Frame(service_notebook, padding=12)
+    service_notebook.add(service_records_tab, text="Service Records")
+    service_notebook.add(fluids_tab, text="Fluids & Filters")
 
     details_text = tk.StringVar(
         value="Select a vehicle to view its details."
@@ -219,7 +225,7 @@ def main():
                     else "Level has not been confirmed."
                 )
                 fluid_status_vars[fluid].set(
-                    f"{label}: {fluid_status_text(vehicle, fluid)}\\n{detail}"
+                    f"{label}: {fluid_status_text(vehicle, fluid)}\n{detail}"
                 )
 
     def mark_fluid_full(fluid):
@@ -230,13 +236,13 @@ def main():
         vehicle = visible_vehicles[selected[0]]
         guidance = (
             "Only check the coolant expansion reservoir when the engine is cool. "
-            "Never open a hot radiator/pressurized coolant cap.\\n\\n"
+            "Never open a hot radiator/pressurized coolant cap.\n\n"
             if fluid == "coolant" else ""
         )
         if not messagebox.askyesno(
             "Confirm fluid level",
             guidance + f"Did you visually confirm that {FLUID_NAMES[fluid].lower()} "
-                       "is at the correct full mark?\\n\\n"
+                       "is at the correct full mark?\n\n"
                        f"This will log {vehicle.mileage:,} miles and restart only "
                        "this fluid's 5,000-mile reminder.",
             parent=window,
@@ -308,7 +314,7 @@ def main():
         return table
 
     # ===== SERVICE TABLE =====
-    service_table = make_table(service_tab, [
+    service_table = make_table(service_records_tab, [
         ("date", "Date", 110),
         ("mileage", "Mileage", 100),
         ("description", "Service Performed", 260),
@@ -320,7 +326,7 @@ def main():
     )
 
     ttk.Label(
-        service_tab,
+        service_records_tab,
         textvariable=service_status
     ).pack(anchor="w", pady=(8, 0))
 
@@ -432,10 +438,10 @@ def main():
             f"Current odometer: {format_mileage(vehicle.mileage)}\n\n"
             f"MAINTENANCE\n"
             f"Oil change: {oil_status}\n"
-            f"Tire rotation: {tire_status}\\n\\n"
-            f"FLUID CHECKS (every {FLUID_CHECK_INTERVAL:,} miles)\\n"
-            f"Washer fluid: {fluid_status_text(vehicle, 'washer')}\\n"
-            f"Coolant reservoir: {fluid_status_text(vehicle, 'coolant')}\\n\\n"
+            f"Tire rotation: {tire_status}\n\n"
+            f"FLUID CHECKS (every {FLUID_CHECK_INTERVAL:,} miles)\n"
+            f"Washer fluid: {fluid_status_text(vehicle, 'washer')}\n"
+            f"Coolant reservoir: {fluid_status_text(vehicle, 'coolant')}\n\n"
             f"BATTERY\n{battery_summary(vehicle)}\n\n"
             f"CURRENT TIRE PRESSURE (calculated PSI)\n"
             f"Driver's front: {pressure_text('driver_front')}\n"
@@ -1310,7 +1316,7 @@ def main():
         description_entry.focus_set()
 
     ttk.Button(
-        service_tab,
+        service_records_tab,
         text="Record Service",
         command=record_service
     ).pack(anchor="w", pady=(10, 0))
@@ -1525,7 +1531,7 @@ def main():
         description_entry.focus_set()
 
     ttk.Button(
-        service_tab,
+        service_records_tab,
         text="Edit Service",
         command=edit_service
     ).pack(anchor="w", pady=(8, 0))
@@ -1594,7 +1600,7 @@ def main():
         )
 
     ttk.Button(
-        service_tab,
+        service_records_tab,
         text="Delete Service",
         command=delete_service
     ).pack(anchor="w", pady=(8, 0))
