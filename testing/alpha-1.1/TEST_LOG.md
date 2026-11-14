@@ -111,3 +111,8 @@ For each test: record local date/time, device/build, steps, expected result, act
 - **Verification:** GitHub values confirmed; app/phone behavior has not been retested.
 - **Distribution:** No new Android APK, mobile ZIP, or GitHub Release is claimed as published. Previously generated Alpha 1.1 mobile packages are older snapshots, not Alpha 1.1.1 builds.
 - **Status:** Documentation/version designation completed. Installation, mobile data import, and device-level validation remain pending.
+
+## 2026-11-14 — Beta backlog: per-tester service interval controls
+- **Requested requirement:** In the beta release, each tester will set their own tire-rotation and oil-change intervals in MileSage, separately for each vehicle.
+- **Expected behavior:** Editable in-app, persisted, used for maintenance due calculations; no GitHub edit needed. Include beta validation for persistence and multi-vehicle separation.
+- **Status:** Planned; not implemented by this documentation change. Alpha 1.1.1 vehicle settings remain unchanged.
