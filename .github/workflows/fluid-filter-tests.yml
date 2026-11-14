@@ -22,6 +22,8 @@ jobs:
         run: python -m compileall -q Vehicle_Manager.py app.py excel_export.py storage.py test_fluid_filters.py
       - name: Run fluid/filter and export regression tests
         run: python -m unittest -v test_fluid_filters.py
+      - name: Exercise phone restore safety checks
+        run: node mobile/test_restore_safety.cjs
       - name: Validate phone JavaScript syntax
         run: |
           python - <<'PY'
