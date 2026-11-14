@@ -278,6 +278,88 @@ function parseServiceReceiptText(raw,today){
 }
 /* RECEIPT_PARSER_END */
 
+let receiptScriptPromise=null;
+function ensureReceiptOCR(){
+ if(window.Tesseract?.createWorker)return Promise.resolve(window.Tesseract);
+ if(!receiptScriptPromise){
+  receiptScriptPromise=new Promise((resolve,reject)=>{
+   const script=document.createElement('script');
+   script.src='https://cdn.jsdelivr.net/npm/tesseract.js@6.0.1/dist/tesseract.min.js';
+   script.async=true;
+   script.onload=()=>window.Tesseract?.createWorker
+     ?resolve(window.Tesseract):reject(Error('Receipt reader could not initialize.'));
+   script.onerror=()=>reject(Error('Could not download the receipt reader. Check the phone connection.'));
+   document.head.appendChild(script);
+  }).catch(error=>{receiptScriptPromise=null;throw error;});
+ }
+ return receiptScriptPromise;
+}
+function wireServiceReceiptPhoto(a){
+ const camera=$('serviceCameraInput'),gallery=$('serviceGalleryInput');
+ const buttons=[$('serviceCameraButton'),$('serviceGalleryButton')];
+ $('serviceCameraButton').onclick=()=>camera.click();
+ $('serviceGalleryButton').onclick=()=>gallery.click();
+ const read=async input=>{
+  const file=input.files?.[0];
+  if(!file)return;
+  if(!file.type.startsWith('image/')){alert('Choose an image of the receipt.');input.value='';return;}
+  if(file.size>15_000_000){alert('Receipt photo is too large. Use an image under 15 MB.');input.value='';return;}
+  buttons.forEach(x=>x.disabled=true);
+  const status=$('receiptProgress');
+  status.textContent='Preparing receipt reader… (first scan needs internet).';
+  let worker=null;
+  try{
+   const engine=await ensureReceiptOCR();
+   status.textContent='Reading receipt on this device…';
+   worker=await engine.createWorker('eng');
+   const result=await worker.recognize(file);
+   const text=String(result?.data?.text||'').trim();
+   if(!text)throw Error('No readable text found. Try retaking the photo in better light.');
+   const details=$('receiptTextReview');
+   const textArea=$('receiptOcrText');
+   details.style.display='';
+   textArea.textContent=text.slice(0,12000);
+   const suggestion=parseServiceReceiptText(text,localDate());
+   const fields=[];
+   if(suggestion.description){
+    if(!$('serviceDesc').value.trim()){
+     $('serviceDesc').value=suggestion.description;
+     fields.push('work performed');
+    }else status.textContent='Existing service description kept; review extracted text below.';
+   }
+   if(suggestion.date){$('serviceDate').value=suggestion.date;fields.push('date');}
+   if(suggestion.mileage!=null){
+    $('serviceOdo').value=String(suggestion.mileage);fields.push('mileage');
+   }
+   if(suggestion.cost){
+    $('serviceCost').value=suggestion.cost;fields.push('total cost');
+   }
+   if(suggestion.oil)$('oilReset').checked=true;
+   if(suggestion.tire)$('tireReset').checked=true;
+   if(suggestion.cabin)$('cabinReplaced').checked=true;
+   if(suggestion.engine)$('engineReplaced').checked=true;
+   const flags=[suggestion.oil&&'oil countdown',suggestion.tire&&'tire countdown',
+                suggestion.cabin&&'cabin filter',suggestion.engine&&'engine filter'].filter(Boolean);
+   if(flags.length)fields.push(...flags);
+   status.textContent=fields.length
+      ?'Suggested from photo: '+fields.join(', ')+'. REVIEW before saving.'
+      :'Receipt text recognized, but fields could not be identified. Please enter them manually.';
+   if(suggestion.mileage!=null&&suggestion.mileage>a.mileage)
+    status.textContent+=' Photo mileage exceeds the current odometer. Update mileage on Home first, then rescan.';
+   message('Receipt scanned; review the suggested service fields.');
+  }catch(error){
+   status.textContent='Receipt scan unavailable: '+error.message+
+      ' You can still enter the service details manually.';
+  }finally{
+   if(worker){try{await worker.terminate();}catch(e){}}
+   buttons.forEach(x=>x.disabled=false);
+   input.value='';
+  }
+ };
+ camera.onchange=()=>read(camera);
+ gallery.onchange=()=>read(gallery);
+}
+
 function renderService(){const a=v(), el=$('serviceBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}el.innerHTML=tirePressureCard(a)+fluidFilterCard(a)+`<div class="card feature-card"><h3 style="margin-top:0">Log maintenance</h3>${formVehicleName(a)}<form id="serviceForm"><div class="note info"><strong>Service receipt photo</strong><div class="small">Take a photo or choose an existing image. MileSage will attempt to fill the date, mileage, service description and cost; review all fields before saving. OCR downloads recognition tools when connected, and the receipt image is not uploaded to GitHub or stored in your vehicle JSON.</div></div><div class="button-row"><button id="serviceCameraButton" class="btn secondary" type="button">Take receipt photo</button><button id="serviceGalleryButton" class="btn secondary" type="button">Choose photo</button></div><input id="serviceCameraInput" type="file" accept="image/*" capture="environment" hidden><input id="serviceGalleryInput" type="file" accept="image/*" hidden><div id="receiptProgress" class="small muted" role="status" aria-live="polite">No receipt scanned yet.</div><details id="receiptTextReview" style="display:none"><summary>View recognized text</summary><pre id="receiptOcrText" style="white-space:pre-wrap;word-wrap:break-word;max-height:180px;overflow:auto"></pre></details><label class="field" for="serviceDesc">Work performed</label><input id="serviceDesc" type="text" required maxlength="180" placeholder="Oil change, tire rotation…"><div class="grid2"><div><label class="field" for="serviceDate">Date</label><input type="date" id="serviceDate" required value="${localDate()}"></div><div><label class="field" for="serviceOdo">Odometer</label><input type="number" id="serviceOdo" inputmode="numeric" min="0" required step="1" value="${a.mileage}"></div></div><label class="field" for="serviceCost">Cost in dollars (optional)</label><input id="serviceCost" inputmode="decimal" type="text" placeholder="89.95"><div class="check"><input type="checkbox" id="oilReset"><label for="oilReset">Reset oil-change countdown</label></div><div class="check"><input type="checkbox" id="tireReset"><label for="tireReset">Reset tire-rotation countdown</label></div><div class="check"><input type="checkbox" id="cabinReplaced"><label for="cabinReplaced">Cabin air filter replaced (log replacement)</label></div><div class="check"><input type="checkbox" id="engineReplaced"><label for="engineReplaced">Engine air filter replaced (log replacement)</label></div><button type="submit" class="btn full">Save service record</button></form></div><div class="card"><h3 style="margin-top:0">Service history (${num(a.service_history.length)})</h3>${recordList(a.service_history,'service')}</div>`;
 wireTirePressureForm(a);wireFluidAndFilters(a);wireServiceReceiptPhoto(a);$('serviceForm').onsubmit=e=>{e.preventDefault();try{let od=whole($('serviceOdo').value,'Odometer');let date=$('serviceDate').value;if(!validDate(date))throw Error('Enter a valid service date, not in the future.');if(od>a.mileage)throw Error('Service odometer is ahead of the current reading. Update mileage on Home first.');let desc=$('serviceDesc').value.trim();if(!desc)throw Error('Enter the work performed.');let record={date,mileage:od,description:desc,cost_cents:costCents($('serviceCost').value,true),oil_reset:$('oilReset').checked,tire_reset:$('tireReset').checked};a.service_history.push(record);for(const [kind,flag] of [['interior','cabinReplaced'],['exterior','engineReplaced']]){if($(flag).checked&&!a.air_filter_changes.some(x=>x.filter_type===kind&&x.date===date&&Number(x.mileage)===od))a.air_filter_changes.push({filter_type:kind,date,mileage:od});}if(record.oil_reset)a.last_service_mileage=od;if(record.tire_reset)a.last_tire_rotation_mileage=od;save();renderAll();message('Service record saved.')}catch(error){alert(error.message)}};}
 function renderFuel(){const a=v(), el=$('fuelBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}el.innerHTML=`<div class="card feature-card"><h3 style="margin-top:0">Record a fill-up</h3>${formVehicleName(a)}<form id="fuelForm"><div class="grid2"><div><label class="field" for="fuelDate">Date</label><input type="date" id="fuelDate" required value="${localDate()}"></div><div><label class="field" for="fuelOdo">Odometer</label><input type="number" min="${a.mileage}" step="1" inputmode="numeric" id="fuelOdo" required value="${a.mileage}"></div></div><div class="grid2"><div><label class="field" for="fuelGallons">US gallons</label><input id="fuelGallons" required inputmode="decimal" type="number" min="0.001" max="9999" step="any" placeholder="12.5"></div><div><label class="field" for="fuelCost">Total paid ($)</label><input id="fuelCost" required type="text" inputmode="decimal" placeholder="42.85"></div></div><div class="check"><input type="checkbox" id="fullTank" checked><label for="fullTank">Filled the tank completely</label></div><p class="small muted">MPG uses distances between full tanks and includes partial fill-ups in between.</p><button type="submit" class="btn full">Save fuel & mileage</button></form></div><div class="card"><h3 style="margin-top:0">Fuel history (${num(a.fuel_history.length)})</h3>${recordList(a.fuel_history,'fuel')}</div>`;
