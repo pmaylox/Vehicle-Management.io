@@ -272,7 +272,7 @@ def main():
         vehicle.reset_fluid_to_full(fluid)
         try:
             save_vehicles(vehicles)
-        except OSError as error:
+        except (OSError, ValueError, TypeError) as error:
             vehicle.fluid_checks[fluid] = before
             del vehicle.fluid_check_history[count:]
             messagebox.showerror("Save failed", str(error), parent=window)
@@ -309,10 +309,12 @@ def main():
         "exterior": "Exterior / engine air filter",
     }
     filter_date_vars = {}
+    filter_mileage_vars = {}
     filter_history_vars = {}
 
     def refresh_filter_panel(vehicle=None):
         for kind in filter_labels:
+            filter_mileage_vars[kind].set(str(vehicle.mileage) if vehicle else "")
             if vehicle is None:
                 filter_history_vars[kind].set("Select a vehicle.")
                 continue
@@ -334,15 +336,24 @@ def main():
             return
         vehicle = visible_vehicles[selected[0]]
         replacement_date = filter_date_vars[kind].get()
+        try:
+            odometer = int(filter_mileage_vars[kind].get())
+            if odometer < vehicle.starting_mileage or odometer > vehicle.mileage:
+                raise ValueError("Mileage must be within the vehicle's recorded range.")
+        except (TypeError, ValueError):
+            messagebox.showerror("Invalid mileage",
+                                 "Enter a whole-number mileage no higher than the current odometer.",
+                                 parent=window)
+            return
         if not messagebox.askyesno(
             "Confirm replacement",
             f"Was the {filter_labels[kind].lower()} replaced on "
-            f"{replacement_date} at {vehicle.mileage:,} miles?",
+            f"{replacement_date} at {odometer:,} miles?",
             parent=window,
         ):
             return
         try:
-            vehicle.record_air_filter_change(kind, replacement_date)
+            vehicle.record_air_filter_change(kind, replacement_date, odometer)
         except ValueError as error:
             messagebox.showerror("Invalid replacement", str(error), parent=window)
             return
@@ -358,12 +369,16 @@ def main():
         section = ttk.LabelFrame(fluid_content, text=label, padding=9)
         section.pack(fill="x", pady=(3, 8))
         filter_date_vars[kind] = tk.StringVar(value=date.today().isoformat())
+        filter_mileage_vars[kind] = tk.StringVar(value="0")
         filter_history_vars[kind] = tk.StringVar()
         ttk.Label(section, textvariable=filter_history_vars[kind]).pack(anchor="w")
         controls = ttk.Frame(section)
         controls.pack(anchor="w", pady=(5, 0))
         ttk.Label(controls, text="Date (YYYY-MM-DD)").pack(side="left")
         ttk.Entry(controls, textvariable=filter_date_vars[kind], width=13).pack(
+            side="left", padx=7)
+        ttk.Label(controls, text="Mileage").pack(side="left")
+        ttk.Entry(controls, textvariable=filter_mileage_vars[kind], width=10).pack(
             side="left", padx=7)
         ttk.Button(
             controls, text="Record Changed",
