@@ -23,10 +23,11 @@ class DashboardChart(ttk.Frame):
         self.canvas.pack(fill="both", expand=True)
         self.canvas.bind("<Configure>", self.draw)
 
-    def set_date(self, points):
+    def set_data(self, points):
         self.points = points
         self.draw()
 
+ 
     def draw(self, event=None):
         canvas = self.canvas
         canvas.delete("all")
@@ -34,33 +35,29 @@ class DashboardChart(ttk.Frame):
         width = max(canvas.winfo_width(), 300)
         height = max(canvas.winfo_height(), 200)
 
-        if not  self.points:
+        if not self.points:
             canvas.create_text(
-                width /2,
-                height / 2,
-                text="Notenough recorded data yet",
+                width / 2, height / 2,
+                text="Not enough recorded data yet",
                 fill="#666666",
                 font=("Segoe UI", 11)
             )
             return
 
-        left =55
-        right = width - 20
-        top = 25
-        bottom = height - 40
+        left = 65
+        right = width - 25
+        top = 30
+        bottom = height - 45
 
         highest = max(value for label, value in self.points)
-        scale_max = highest * 1.15 if highest >0 else 1
+        scale_max = highest * 1.2 if highest > 0 else 1
 
-
-        # Horizontal grid lines and value labels.
         for step in range(5):
-            fraction = step /4
+            fraction = step / 4
             y = bottom - fraction * (bottom - top)
 
             canvas.create_line(
-                left, y, right, y,
-                fill="#E8E3DE"
+                left, y, right, y, fill="#E8E3DE"
             )
             canvas.create_text(
                 left - 8, y,
@@ -69,16 +66,15 @@ class DashboardChart(ttk.Frame):
                 fill="#666666"
             )
 
-            spacing = (right - left) / len(self.points)
-            previous = None
+        spacing = (right - left) / len(self.points)
+        previous = None
 
-            for index, (label, value) in enumerate(self.points):
-                x = left + spacing * (index + 0.5)
-                y = bottom - value / scale_max * (bottom - top)
+        for index, (label, value) in enumerate(self.points):
+            x = left + spacing * (index + 0.5)
+            y = bottom - value / scale_max * (bottom - top)
 
-                if self.kind == "bar":
-                     half_width = spacing * 0.28
-
+            if self.kind == "bar":
+                half_width = spacing * 0.28
                 canvas.create_rectangle(
                     x - half_width, y,
                     x + half_width, bottom,
