@@ -237,7 +237,7 @@ function parseServiceReceiptText(raw,today){
   if(!Number.isNaN(verified.getTime())&&verified.getFullYear()===year&&
       verified.getMonth()+1===month&&verified.getDate()===day&&iso<=today)result.date=iso;
  }
- const mileageRegex=/\b(?:odometer|odo|vehicle mileage|mileage(?: in)?|miles in|in mileage)\b[^\d\n]{0,22}([0-9]{1,3}(?:,[0-9]{3})+|[0-9]{3,8})\b/i;
+ const mileageRegex=/\b(?:odometer|odo|vehicle mileage|mileage(?: in)?|miles(?: in)?|in mileage)\b[^\d\n]{0,22}([0-9]{1,3}(?:,[0-9]{3})+|[0-9]{3,8})\b/i;
  const mileageLine=lines.find(x=>mileageRegex.test(x));
  const m=(mileageLine||text).match(mileageRegex);
  if(m){
