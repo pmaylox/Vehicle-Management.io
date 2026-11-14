@@ -104,3 +104,10 @@ For each test: record local date/time, device/build, steps, expected result, act
 - **Data scope:** Only interval values were changed; no odometer, histories, or tire-pressure values changed. The table above documents the earlier reset state.
 - **Application status:** GitHub data update confirmed, but no phone or desktop runtime test was performed. The mobile web app stores vehicle data locally and may need a deliberate GitHub import; back up phone-only records before replacing local data.
 - **Important:** These are user-configured reminders, not a verified Toyota or Ford factory maintenance schedule.
+
+## 2026-11-14 — Version designation: MileSage Alpha 1.1.1
+- **Designation:** Alpha 1.1.1 is the current GitHub source/configuration patch version, following Alpha 1.1 testing.
+- **Patch scope:** Tacoma oil/service interval set to 10,000 miles and tire rotation interval set to 5,000 miles in `vehicles.json`; Explorer settings unchanged. Corresponding README and test log updated.
+- **Verification:** GitHub values confirmed; app/phone behavior has not been retested.
+- **Distribution:** No new Android APK, mobile ZIP, or GitHub Release is claimed as published. Previously generated Alpha 1.1 mobile packages are older snapshots, not Alpha 1.1.1 builds.
+- **Status:** Documentation/version designation completed. Installation, mobile data import, and device-level validation remain pending.
