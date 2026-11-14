@@ -1,5 +1,11 @@
 # Vehick-Management.io
 
+## Current project version
+
+**MileSage Alpha 1.1.1** — source/configuration patch designation (November 14, 2026).
+
+This patch records the Tacoma's user-configured tire-rotation and oil-service interval changes. GitHub configuration and documentation have been updated; an Android APK has **not** been built, published, or verified, and mobile/desktop testing of the patch remains pending. The standalone mobile HTML remains a preview, and devices may retain older locally saved data until deliberately synchronized.
+
 ## MileSage — configured maintenance intervals
 
 Current user-configured service reminders in [`vehicles.json`](vehicles.json) (updated November 14, 2026):
