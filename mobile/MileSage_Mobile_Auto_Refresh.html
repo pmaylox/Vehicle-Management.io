@@ -23,7 +23,7 @@ label.field{display:block;font-size:13px;font-weight:700;margin:13px 0 7px}input
 </style>
 </head>
 <body>
-<header class="top"><div class="topline"><div class="brand"><div class="logo" aria-hidden="true"><svg width="37" height="37" viewBox="0 0 40 40" fill="none"><path d="M8 31 L12 9 L20 20 L28 9 L32 31" stroke="#f4cfb2" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 4 V10 M20 14 V18 M20 25 V29 M20 33 V37" stroke="#fff" stroke-width="2" stroke-dasharray="3 4"/></svg></div><div><h1>MileSage</h1><small>Vehicle intelligence</small></div></div><button class="top-action" id="dataButton" type="button">Data & backup</button></div></header>
+<header class="top"><div class="topline"><div class="brand"><div class="logo" aria-hidden="true"><svg width="37" height="37" viewBox="0 0 40 40" fill="none"><path d="M8 31 L12 9 L20 20 L28 9 L32 31" stroke="#f4cfb2" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 4 V10 M20 14 V18 M20 25 V29 M20 33 V37" stroke="#fff" stroke-width="2" stroke-dasharray="3 4"/></svg></div><div><h1>MileSage</h1><small>Vehicle intelligence · Alpha 1.2.1 safe restore</small></div></div><button class="top-action" id="dataButton" type="button">Data & backup</button></div></header>
 <main>
 <div id="notice" class="notice" role="status"></div>
 <section id="home" class="section active" aria-label="Home">
@@ -49,10 +49,10 @@ label.field{display:block;font-size:13px;font-weight:700;margin:13px 0 7px}input
 </section>
 <section id="data" class="section" aria-label="Data and backup">
 <div class="section-head"><h2>Data & backup</h2></div>
-<div class="card feature-card"><h3 style="margin-top:0">Bring in your existing records</h3><p class="small muted">This version checks your public GitHub vehicle records when opened and approximately every 2 minutes while visible. It automatically updates only when your local copy has no unmerged changes. Manual import below replaces local records after confirmation. Phone edits never upload to GitHub.</p>
-<div class="button-row"><button id="githubImport" class="btn" type="button">Import from GitHub</button><button id="fileImportButton" class="btn secondary" type="button">Choose JSON file</button></div><input id="jsonFile" type="file" accept=".json,application/json" hidden><p class="note">Your GitHub backup may be older than the laptop copy. Import the newest file available, and export a backup before replacing existing phone records.</p></div>
-<div class="card"><h3 style="margin-top:0">Save a backup</h3><p class="small muted">Phone edits are saved in this browser, not uploaded to GitHub or your laptop. Export regularly before clearing browser data or changing phones.</p><div class="button-row"><button id="exportPython" class="btn" type="button">Export vehicles.json</button><button id="exportFull" class="btn secondary" type="button">Full mobile backup</button></div><p class="small muted" style="margin-bottom:0">The Python export uses the same vehicle JSON structure as your desktop app. Mobile-only expense and mileage-log details are included in the full backup.</p></div>
-<div class="card"><h3 style="margin-top:0">About this version</h3><p class="small muted">MileSage Alpha 1.2.0 preview • Mobile Preview v4 • Tire PSI • Automatic read-only GitHub refresh when safe • Works with locally saved data offline. Full two-way cloud sync, push alerts, OBD-II and APK packaging are not implemented.</p><p class="small muted" id="storageNote"></p></div>
+<div class="card feature-card"><h3 style="margin-top:0">Recover or import your data safely</h3><p class="small muted">Your phone data is stored locally. GitHub is checked read-only and will <strong>never</strong> replace it automatically. The main GitHub vehicles.json currently contains zero-mileage placeholder records; importing these is blocked. Importing a JSON file requires review and saves a local recovery snapshot first.</p>
+<div class="button-row"><button id="githubBackupRecovery" class="btn" type="button">Recover from saved GitHub backup</button><button id="fileImportButton" class="btn secondary" type="button">Import JSON file</button></div><button id="githubImport" class="btn secondary" type="button" style="margin-top:8px">Review GitHub vehicles.json</button><input id="jsonFile" type="file" accept=".json,application/json" hidden><p class="note">The saved GitHub backup is older (November 2026), but has recorded odometer and tire pressure data. Recovery fills only currently missing readings and empty histories, retaining your phone settings. Check mileage against your actual odometer after recovery. This will not update the app code or install an APK.</p></div>
+<div class="card"><h3 style="margin-top:0">Save a backup</h3><p class="small muted">Phone edits are saved in this browser, not uploaded to GitHub or your laptop. Export regularly before clearing browser data or changing phones.</p><div class="button-row"><button id="exportPython" class="btn" type="button">Export vehicles.json</button><button id="exportFull" class="btn secondary" type="button">Full mobile backup</button><button id="undoImport" class="btn secondary" type="button">Restore pre-import snapshot</button></div><p class="small muted" style="margin-bottom:0">The Python export uses the same vehicle JSON structure as your desktop app. Mobile-only expense and mileage-log details are included in the full backup.</p></div>
+<div class="card"><h3 style="margin-top:0">About this version</h3><p class="small muted">MileSage Alpha 1.2.1 preview • Mobile Preview v5 • Fluid & filter buttons on the Service tab • Safe manual data restore • GitHub checks never overwrite records • Works with locally saved data offline. Full two-way cloud sync, push alerts, OBD-II and APK packaging are not implemented.</p><p class="small muted" id="storageNote"></p></div>
 </section>
 </main>
 <nav class="bottom" aria-label="Main tabs"><div class="tabs">
@@ -66,9 +66,11 @@ label.field{display:block;font-size:13px;font-weight:700;margin:13px 0 7px}input
 <script>
 (()=>{'use strict';
 const KEY='milesage-mobile-offline-v1';
- const BASE_KEY='milesage-mobile-github-snapshot-v1';
+const BASE_KEY='milesage-mobile-github-snapshot-v1';
+const RECOVERY_KEY='milesage-mobile-recovery-history-v1';
 const REMOTE='https://raw.githubusercontent.com/pmaylox/Vehicle-Management.io/main/vehicles.json';
-let vehicles=[], current=0, tab='home', hasStorage=true, lastToastTimer, syncStatus='GitHub check pending', checkingGitHub=false;
+const BACKUP_REMOTE='https://raw.githubusercontent.com/pmaylox/Vehicle-Management.io/main/vehicles_backup.json';
+let vehicles=[], current=0, tab='home', hasStorage=true, lastToastTimer, syncStatus='GitHub data are read-only until you review an import', checkingGitHub=false;
 const $=id=>document.getElementById(id);
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num=n=>Number(n||0).toLocaleString('en-US');
@@ -104,7 +106,7 @@ function normalize(data){if(!Array.isArray(data))throw Error('Expected a JSON li
 }));}
 function save(){try{localStorage.setItem(KEY,JSON.stringify({vehicles,current}));hasStorage=true;}catch(e){hasStorage=false;message('Browser storage unavailable — export your data now!')}updateBanner()}
 function load(){try{const raw=localStorage.getItem(KEY);if(raw){const o=JSON.parse(raw);vehicles=normalize(o.vehicles||[]);current=Math.max(0,Math.min(Number(o.current)||0,vehicles.length-1));}}catch(e){hasStorage=false;vehicles=[]}updateBanner()}
-function updateBanner(){let text='';if(!hasStorage)text='<div class="note" role="alert"><strong>Warning:</strong> This browser is not keeping changes. Export a JSON backup after every change.</div>';else if(!vehicles.length)text='<div class="note info"><strong>Get started:</strong> Open <strong>Data & backup</strong> and tap <strong>Import from GitHub</strong> to load your Tacoma and Explorer with existing service and fuel records.</div>';else text='<div class="note info" style="margin-top:0"><strong>GitHub check:</strong> '+esc(syncStatus)+'<div style="margin-top:5px">Read-only updates from GitHub; phone edits remain local. Back up before manual import.</div></div>';$('notice').innerHTML=text;$('storageNote').textContent=hasStorage?'Browser storage is available. Keep an exported backup in case browser data is cleared.':'Browser storage is blocked/unavailable. Make a backup immediately.'}
+function updateBanner(){let text='';if(!hasStorage)text='<div class="note" role="alert"><strong>Warning:</strong> This browser is not keeping changes. Export a JSON backup after every change.</div>';else if(!vehicles.length)text='<div class="note info"><strong>Get started:</strong> In <strong>Data & backup</strong>, use <strong>Recover from saved GitHub backup</strong> for earlier recorded mileage and tire pressures. The current GitHub vehicles.json is a blank template and cannot restore readings.</div>';else text='<div class="note info" style="margin-top:0"><strong>GitHub check:</strong> '+esc(syncStatus)+'<div style="margin-top:5px">GitHub checks do not change your phone data. Always export a full backup before restoring.</div></div>';$('notice').innerHTML=text;$('storageNote').textContent=hasStorage?'Browser storage is available. Keep an exported backup in case browser data is cleared.':'Browser storage is blocked/unavailable. Make a backup immediately.'}
 function status(val,inter){if(!Number.isFinite(val))return ['Unknown','warn'];if(val<=0)return ['Due now','due'];if(val<=Math.max(500,inter*.12))return [`${num(val)} mi left`,'warn'];return [`${num(val)} mi left`,'good']}
 function vehicleTag(obj){const remain=Number(obj.service_interval)-Math.max(0,Number(obj.mileage)-Number(obj.last_service_mileage));const [s,cls]=status(remain,Number(obj.service_interval));return `<span class="pill ${cls}">Oil: ${esc(s)}</span>`}
 function renderVehicles(){const root=$('vehicleCards');root.innerHTML=vehicles.length?vehicles.map((a,i)=>`<button class="vehicle-card ${i===current?'selected':''}" type="button" data-vehicle="${i}" aria-pressed="${i===current}"><div class="vehicle-title">${esc(a.name)} <span class="vehicle-year">${esc(a.year)}</span></div><div class="vehicle-mileage">${num(a.mileage)} <small>miles</small></div><div style="margin-top:9px">${vehicleTag(a)}</div></button>`).join(''):empty('No vehicles loaded yet. Import your GitHub data or add a vehicle.');
@@ -232,8 +234,178 @@ function switchTab(id){tab=id;document.querySelectorAll('.section').forEach(x=>x
 function filename(prefix){return `${prefix}-${localDate()}.json`}
 function download(name,data){const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);message('Backup prepared. Check Downloads on your phone.');}
 function pythonExport(){return vehicles.map(({mobile_expenses,mobile_mileage_log,...obj})=>obj)}
-function replace(data,fromGitHub=false){let recs,cur=0;if(Array.isArray(data))recs=normalize(data);else if(data&&Array.isArray(data.vehicles)){recs=normalize(data.vehicles);cur=Math.max(0,Math.min(Number(data.current)||0,recs.length-1));}else throw Error('This does not look like a MileSage or Vehicle Manager backup.');if(!confirm(`Replace the data on this phone with ${recs.length} imported vehicle(s)? Any changes not exported as a backup will be lost.`))return false;vehicles=recs;current=cur;save();try{if(fromGitHub)localStorage.setItem(BASE_KEY,JSON.stringify(vehicles));else localStorage.removeItem(BASE_KEY)}catch(e){}syncStatus=fromGitHub?'GitHub data imported; auto-refresh is enabled until you make local changes.':'Local file imported; GitHub auto-refresh will not overwrite it without review.';renderAll();switchTab('home');message(`${recs.length} vehicle(s) imported.`);return true}
-async function githubImport(){const btn=$('githubImport');btn.disabled=true;btn.textContent='Importing…';try{const r=await fetch(REMOTE,{cache:'no-store'});if(!r.ok)throw Error('GitHub returned '+r.status);replace(await r.json(),true);}catch(e){alert('GitHub import could not complete. Check your connection or download vehicles.json from GitHub and choose JSON file.\n\n'+e.message);}finally{btn.disabled=false;btn.textContent='Import from GitHub';}}
+/* RESTORE_GUARDS_BEGIN */
+function vehicleID(a){return String(a.year)+'|'+String(a.name).trim().toLowerCase();}
+function isBlankSeed(recs){
+ return recs.length>0 && recs.every(a=>
+   Number(a.mileage)===0 &&
+   Object.values(a.tire_pressures||{}).every(x=>x==null) &&
+   (a.service_history||[]).length===0 && (a.fuel_history||[]).length===0 &&
+   (a.tire_pressure_history||[]).length===0
+ );
+}
+function destructiveDiffs(existing,incoming){
+ const src=new Map(incoming.map(a=>[vehicleID(a),a]));
+ const problems=[];
+ for(const local of existing){
+  const next=src.get(vehicleID(local));
+  if(!next){problems.push(local.name+': vehicle missing in import');continue;}
+  if(Number(next.mileage)<Number(local.mileage))
+   problems.push(local.name+': mileage '+local.mileage+' → '+next.mileage);
+  for(const key of ['driver_front','driver_rear','passenger_front','passenger_rear']){
+   if(local.tire_pressures?.[key]!=null && next.tire_pressures?.[key]==null)
+    problems.push(local.name+': '+key.replace('_',' ')+' pressure would be cleared');
+  }
+  for(const key of ['service_history','fuel_history','tire_pressure_history',
+    'fluid_check_history','air_filter_changes','mobile_expenses','mobile_mileage_log']){
+   if((next[key]||[]).length<(local[key]||[]).length)
+    problems.push(local.name+': '+key.replaceAll('_',' ')+' would lose entries');
+  }
+ }
+ return problems;
+}
+function mergeRecovery(existing,backups){
+ const prior=new Map(backups.map(a=>[vehicleID(a),a]));
+ const updated=existing.map(local=>{
+  const backup=prior.get(vehicleID(local));
+  if(!backup)return {...local};
+  const item=JSON.parse(JSON.stringify(local));
+  if(Number(item.mileage)===0 && Number(backup.mileage)>0){
+   item.mileage=backup.mileage;
+   item.starting_mileage=backup.starting_mileage;
+   item.last_service_mileage=backup.last_service_mileage;
+   item.last_tire_rotation_mileage=backup.last_tire_rotation_mileage;
+  }
+  for(const name of ['driver_front','driver_rear','passenger_front','passenger_rear']){
+   if(item.tire_pressures?.[name]==null && backup.tire_pressures?.[name]!=null)
+    item.tire_pressures[name]=backup.tire_pressures[name];
+   if(item.starting_tire_pressures?.[name]==null && backup.starting_tire_pressures?.[name]!=null)
+    item.starting_tire_pressures[name]=backup.starting_tire_pressures[name];
+  }
+  for(const key of ['service_history','fuel_history','tire_pressure_history',
+      'fluid_check_history','air_filter_changes','mobile_expenses','mobile_mileage_log']){
+   if(!item[key]?.length && backup[key]?.length)
+    item[key]=JSON.parse(JSON.stringify(backup[key]));
+  }
+  for(const kind of ['washer','coolant']){
+   if(item.fluid_checks?.[kind]?.last_full_mileage==null &&
+      backup.fluid_checks?.[kind]?.last_full_mileage!=null)
+     item.fluid_checks[kind]=JSON.parse(JSON.stringify(backup.fluid_checks[kind]));
+  }
+  // Never modify service_interval or tire_rotation_interval during recovery.
+  return item;
+ });
+ const existingIDs=new Set(existing.map(vehicleID));
+ for(const backup of backups){
+  if(!existingIDs.has(vehicleID(backup)))updated.push(JSON.parse(JSON.stringify(backup)));
+ }
+ return updated;
+}
+/* RESTORE_GUARDS_END */
+function readSnapshots(){
+ try{const x=JSON.parse(localStorage.getItem(RECOVERY_KEY)||'[]');return Array.isArray(x)?x:[]}
+ catch(e){return [];}
+}
+function preservePreImport(){
+ try{
+  const snapshots=readSnapshots();
+  snapshots.unshift({created_at:new Date().toISOString(),
+    vehicles:JSON.parse(JSON.stringify(vehicles)), current});
+  localStorage.setItem(RECOVERY_KEY,JSON.stringify(snapshots.slice(0,3)));
+  return true;
+ }catch(e){
+  alert('Import cancelled: the browser could not save a recovery snapshot. Export a full mobile backup first.');
+  return false;
+ }
+}
+function commitImport(newVehicles,newCurrent,reason){
+ if(!preservePreImport())return false;
+ const prevVehicles=vehicles, prevCurrent=current;
+ try{
+  localStorage.setItem(KEY,JSON.stringify({vehicles:newVehicles,current:newCurrent}));
+ }catch(e){
+  alert('Import cancelled: unable to save new vehicle data. Your previous records remain.');
+  return false;
+ }
+ vehicles=newVehicles;current=newCurrent;hasStorage=true;
+ syncStatus='Phone records preserved locally; GitHub cannot overwrite them automatically.';
+ updateBanner();renderAll();switchTab('home');
+ message(reason+' Local undo snapshot saved.');
+ return true;
+}
+function replace(data,fromGitHub=false){
+ let recs,cur=0;
+ if(Array.isArray(data))recs=normalize(data);
+ else if(data&&Array.isArray(data.vehicles)){
+  recs=normalize(data.vehicles);
+  cur=Math.max(0,Math.min(Number(data.current)||0,recs.length-1));
+ }else throw Error('This does not look like a MileSage or Vehicle Manager backup.');
+ if(fromGitHub && isBlankSeed(recs)){
+  alert('Import BLOCKED. The main GitHub vehicles.json has only 0-mile placeholder data and blank tire pressures. Use "Recover from saved GitHub backup" instead.');
+  return false;
+ }
+ const problems=destructiveDiffs(vehicles,recs);
+ if(fromGitHub && problems.length){
+  alert('GitHub import BLOCKED because it could erase phone records:\n\n'+
+        problems.slice(0,8).join('\n')+'\n\nUse a known-good backup instead.');
+  return false;
+ }
+ if(!confirm('REVIEW IMPORT: Replace phone data with '+recs.length+
+             ' vehicle(s)?\n\nThis imports DATA only, not the latest app code. '+
+             'A local undo snapshot will be saved first.'))return false;
+ if(problems.length && !confirm('WARNING — this import would REMOVE or DOWNGRADE existing phone data:\n\n'+
+           problems.slice(0,8).join('\n')+'\n\nContinue anyway?'))return false;
+ return commitImport(recs,cur,'JSON import completed.');
+}
+async function githubImport(){
+ const btn=$('githubImport');btn.disabled=true;btn.textContent='Reviewing…';
+ try{
+  const r=await fetch(REMOTE,{cache:'no-store'});
+  if(!r.ok)throw Error('GitHub returned '+r.status);
+  replace(await r.json(),true);
+ }catch(e){alert('GitHub data review could not complete: '+e.message)}
+ finally{btn.disabled=false;btn.textContent='Review GitHub vehicles.json';}
+}
+async function recoverFromGitHubBackup(){
+ const btn=$('githubBackupRecovery');btn.disabled=true;btn.textContent='Checking backup…';
+ try{
+  const r=await fetch(BACKUP_REMOTE,{cache:'no-store'});
+  if(!r.ok)throw Error('GitHub backup returned '+r.status);
+  const saved=normalize(await r.json());
+  if(isBlankSeed(saved))throw Error('Backup has no recoverable mileage or tire pressures.');
+  const merged=mergeRecovery(vehicles,saved);
+  const summary=merged.map(a=>a.name+': '+num(a.mileage)+' mi, '+
+      Object.values(a.tire_pressures||{}).filter(x=>x!=null).length+' tire readings').join('\n');
+  if(JSON.stringify(merged)===JSON.stringify(vehicles)){
+   alert('This backup has no missing readings to recover. Your phone data has not been changed.');
+   return;
+  }
+  if(!confirm('RECOVERY PREVIEW — older GitHub backup:\n\n'+summary+
+      '\n\nOnly blank fields and empty histories will be restored for existing vehicles. '+
+      'Oil/tire intervals already set on your phone will remain unchanged. '+
+      'The actual vehicle odometers may be newer.\n\nApply recovery?'))return;
+  commitImport(merged,current,'Older GitHub backup partially recovered.');
+ }catch(e){alert('Recovery could not complete: '+e.message)}
+ finally{btn.disabled=false;btn.textContent='Recover from saved GitHub backup';}
+}
+function undoImport(){
+ const history=readSnapshots();
+ if(!history.length){alert('No pre-import snapshot exists in this version. Check phone Downloads for an earlier full mobile backup.');return;}
+ const latest=history[0];
+ if(!confirm('Restore phone data from the snapshot created '+latest.created_at+
+     '?\nThis replaces the current phone data. Export a full backup of the current version first.'))return;
+ if(!preservePreImport())return;
+ try{
+  const restored=normalize(latest.vehicles);
+  localStorage.setItem(KEY,JSON.stringify({vehicles:restored,current:latest.current}));
+  vehicles=restored;current=Math.max(0,Math.min(latest.current,vehicles.length-1));
+  // Remove the original snapshot once used, retaining the new undo snapshot.
+  const next=readSnapshots().filter(x=>x.created_at!==latest.created_at);
+  localStorage.setItem(RECOVERY_KEY,JSON.stringify(next.slice(0,3)));
+  syncStatus='Previous local snapshot restored. GitHub has not overwritten it.';
+  renderAll();switchTab('home');message('Previous local snapshot restored.');
+ }catch(e){alert('Could not restore snapshot: '+e.message);}
+}
 async function autoRefreshGitHub(){
  if(checkingGitHub||document.hidden)return;
  checkingGitHub=true;
@@ -241,28 +413,32 @@ async function autoRefreshGitHub(){
   const response=await fetch(REMOTE+'?v='+Date.now(),{cache:'no-store'});
   if(!response.ok)throw Error('GitHub returned '+response.status);
   const incoming=normalize(await response.json());
-  const incomingText=JSON.stringify(incoming),localText=JSON.stringify(vehicles);
-  const snapshot=localStorage.getItem(BASE_KEY);
-  if(incomingText===localText){
-   localStorage.setItem(BASE_KEY,localText);
-   syncStatus='Up to date with GitHub.';
-  }else if(!vehicles.length||(snapshot!==null&&localText===snapshot)){
-   vehicles=incoming;
-   current=Math.max(0,Math.min(current,vehicles.length-1));
-   save();
-   localStorage.setItem(BASE_KEY,JSON.stringify(vehicles));
-   renderAll();
-   syncStatus='Updated from GitHub (read-only).';
-   message('MileSage refreshed from GitHub.');
-  }else{
-   syncStatus='New GitHub data found. Your phone data was preserved. Back up, then use Data & backup → Import from GitHub.';
-  }
- }catch(e){
-  syncStatus='Unable to check GitHub; using saved phone data.';
- }finally{checkingGitHub=false;updateBanner();}
+  syncStatus=isBlankSeed(incoming)
+   ? 'GitHub vehicles.json is a blank placeholder and cannot overwrite your phone.'
+   : 'GitHub records available for review. No automatic data overwrite.';
+ }catch(e){syncStatus='GitHub status unavailable; phone data has not changed.';}
+ finally{checkingGitHub=false;updateBanner();}
 }
 function addVehicle(){const name=prompt('Vehicle name (example: Toyota Tacoma)');if(name===null)return;if(!name.trim()){alert('Enter a vehicle name.');return}const yearText=prompt('Model year',String(new Date().getFullYear()));if(yearText===null)return;const milesText=prompt('Current odometer mileage','0');if(milesText===null)return;let year,miles;try{year=whole(yearText,'Year',1900);miles=whole(milesText,'Mileage',0);if(year>new Date().getFullYear()+2)throw Error('Check the vehicle year.')}catch(error){alert(error.message);return}const first=normalize([{name:name.trim(),year,mileage:miles,starting_mileage:miles,last_service_mileage:miles,service_interval:5000}])[0];vehicles.push(first);current=vehicles.length-1;save();renderAll();message('Vehicle added.');}
-function init(){load();renderAll();for(const b of document.querySelectorAll('[data-tab]'))b.onclick=()=>switchTab(b.dataset.tab);$('dataButton').onclick=()=>switchTab('data');$('addVehicleButton').onclick=addVehicle;$('githubImport').onclick=githubImport;$('fileImportButton').onclick=()=>$('jsonFile').click();$('jsonFile').onchange=async e=>{try{const f=e.target.files?.[0];if(!f)return;if(f.size>15_000_000)throw Error('File is too large.');replace(JSON.parse(await f.text()));}catch(error){alert('Could not import JSON: '+error.message)}finally{e.target.value=''}};$('exportPython').onclick=()=>download('vehicles.json',pythonExport());$('exportFull').onclick=()=>download(filename('MileSage-mobile-full-backup'),{format:'MileSage-Mobile-v1',saved_at:new Date().toISOString(),vehicles,current});}
+function init(){
+ load();renderAll();
+ for(const b of document.querySelectorAll('[data-tab]'))b.onclick=()=>switchTab(b.dataset.tab);
+ $('dataButton').onclick=()=>switchTab('data');
+ $('addVehicleButton').onclick=addVehicle;
+ $('githubImport').onclick=githubImport;
+ $('githubBackupRecovery').onclick=recoverFromGitHubBackup;
+ $('undoImport').onclick=undoImport;
+ $('fileImportButton').onclick=()=>$('jsonFile').click();
+ $('jsonFile').onchange=async e=>{try{
+  const f=e.target.files?.[0];if(!f)return;
+  if(f.size>15000000)throw Error('File is too large.');
+  replace(JSON.parse(await f.text()));
+ }catch(error){alert('Could not import JSON: '+error.message)}
+ finally{e.target.value=''}};
+ $('exportPython').onclick=()=>download('vehicles.json',pythonExport());
+ $('exportFull').onclick=()=>download(filename('MileSage-mobile-full-backup'),
+   {format:'MileSage-Mobile-v1',saved_at:new Date().toISOString(),vehicles,current});
+}
 init();
 autoRefreshGitHub();
 setInterval(autoRefreshGitHub,120000);
