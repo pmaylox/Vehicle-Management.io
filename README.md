@@ -26,3 +26,21 @@ See [`Alpha 1.1 test log`](testing/alpha-1.1/TEST_LOG.md) for the dated change r
 **Planned for beta; not implemented in Alpha 1.1.1.** Each beta tester must be able to set and save their **own tire-rotation interval and oil-change/service interval**, independently **for each vehicle**, from within MileSage. Changing these settings must update the next-due mileage and reminders without requiring GitHub or code changes. Testers should be able to edit these values later; stored values should persist across app restarts and backups/restores. Validate that one tester's or vehicle's settings do not overwrite another's.
 
 The current Tacoma and Explorer intervals in `vehicles.json` are alpha test settings, **not mandatory defaults** for all beta testers. The app should distinguish user preferences from manufacturer guidance; beta testers should consult their vehicle's owner manual or maintenance schedule for appropriate intervals.
+
+## Proposed Alpha 1.2.0 — Fluid checks and air filters (feature branch)
+
+**Status:** Development proposal; not part of the Alpha 1.1.1 release until reviewed, tested, and merged. This does not deploy an APK or silently synchronize phone data.
+
+In **Service History → Fluids & Filters**, each vehicle independently tracks:
+- Windshield washer fluid: check every **5,000 miles**.
+- Engine coolant reservoir: check every **5,000 miles**.
+- Each has a **Reset to Full** button usable **at any mileage**, only after manual visual confirmation. It records the date and odometer and restarts that fluid's countdown without changing the other reminder.
+- Interior/cabin air filter: record **replacement date and mileage**.
+- Exterior/engine air-intake filter: record **replacement date and mileage**.
+- Fluid confirmations and air-filter changes appear in the Service History screen as dated records.
+
+The **Excel export** includes these entries in the **Service History** worksheet and in separate **Fluid Checks** and **Air Filters** worksheets. Dates/mileages are preserved in vehicle JSON data, backups and the phone preview's JSON export for later desktop import. Existing vehicle records without new fields load with empty histories.
+
+**Safety:** The app does not measure actual fluid levels. For coolant, only check the designated reservoir when the engine is cool; never remove a hot pressurized radiator/coolant cap. Use the correct level marks and fluid types described by the vehicle's manual.
+
+**Testing:** Run python -m unittest -v test_fluid_filters.py. GitHub Actions checks Python syntax, regression tests, and mobile JavaScript syntax. GUI and device checks remain necessary before a release.
