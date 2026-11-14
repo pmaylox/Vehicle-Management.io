@@ -37,6 +37,34 @@ class Vehicle:
             for key in FLUID_NAMES
         }
         self.fluid_check_history = []
+        # Interior = cabin filter; exterior = engine air-intake filter.
+        self.air_filter_changes = []
+
+    def record_air_filter_change(self, filter_type, changed_on, mileage=None):
+        """Log a dated replacement of a cabin or engine intake air filter."""
+        if filter_type not in ("interior", "exterior"):
+            raise ValueError("Choose interior or exterior air filter.")
+        if mileage is None:
+            mileage = self.mileage
+        if type(mileage) is not int or not self.starting_mileage <= mileage <= self.mileage:
+            raise ValueError("Filter-change mileage must be in the recorded odometer range.")
+        if isinstance(changed_on, date):
+            changed_on = changed_on.isoformat()
+        if not isinstance(changed_on, str):
+            raise ValueError("Enter a replacement date as YYYY-MM-DD.")
+        try:
+            parsed = date.fromisoformat(changed_on)
+        except ValueError:
+            raise ValueError("Enter a valid replacement date as YYYY-MM-DD.") from None
+        if parsed > date.today():
+            raise ValueError("Replacement date cannot be in the future.")
+        record = {
+            "filter_type": filter_type,
+            "date": parsed.isoformat(),
+            "mileage": mileage,
+        }
+        self.air_filter_changes.append(record)
+        return record
 
     def fluid_check_status(self, fluid):
         """Report next check without claiming to measure an actual fluid level."""
@@ -793,7 +821,8 @@ class Vehicle:
             "starting_tire_pressures": self.starting_tire_pressures,
             "tire_pressure_history": self.tire_pressure_history,
             "fluid_checks": self.fluid_checks,
-            "fluid_check_history": self.fluid_check_history
+            "fluid_check_history": self.fluid_check_history,
+            "air_filter_changes": self.air_filter_changes
         }
     @classmethod
     def from_dict(cls, data):
@@ -839,6 +868,8 @@ class Vehicle:
                     }
         history = data.get("fluid_check_history", [])
         vehicle.fluid_check_history = history if isinstance(history, list) else []
+        changes = data.get("air_filter_changes", [])
+        vehicle.air_filter_changes = changes if isinstance(changes, list) else []
 
         return vehicle
 
