@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from battery import battery_summary, battery_term_text
+
 from service_fields import service_entry, battery_fields
 from datetime import date
 from decimal import Decimal, InvalidOperation
@@ -10,9 +10,12 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 
 from formatting import format_mileage, format_date, cents_to_dollars
 from validation import parse_cost_cents
-from Vehicle_Manager import Vehicle, FLUID_NAMES, FLUID_CHECK_INTERVAL
+from Vehicle_Manager import Vehicle
 from excel_export import export_vehicle_excel
 from storage import save_vehicles, load_vehicles
+from battery import battery_summary, battery_term_text
+from dashboard_charts import DashboardChart
+
 
 # Main function
 def main():
@@ -164,33 +167,38 @@ def main():
     notebook.add(overview_tab, text="Overview")
     notebook.add(service_tab, text="Service History")
     notebook.add(fuel_tab, text="Fuel History")
+    graphs_tab = ttk.Frame(notebook, padding=15)
+    notebook.add(graphs_tab, text="Graphs")
 
-    # All added maintenance controls remain inside the Service History tab.
-    service_notebook = ttk.Notebook(service_tab)
-    service_notebook.pack(fill="both", expand=True)
-    service_records_tab = ttk.Frame(service_notebook, padding=8)
-    fluids_tab = ttk.Frame(service_notebook)
-    service_notebook.add(service_records_tab, text="Service Records")
-    service_notebook.add(fluids_tab, text="Fluids & Filters")
+    spanding_kind = tk.StringVar(value = "Fuel")
 
-    # Scrollable controls keep all four maintenance actions accessible on phones
-    # and smaller laptop windows.
-    fluid_canvas = tk.Canvas(fluids_tab, highlightthickness=0)
-    fluid_scroll = ttk.Scrollbar(fluids_tab, orient="vertical",
-                                 command=fluid_canvas.yview)
-    fluid_canvas.configure(yscrollcommand=fluid_scroll.set)
-    fluid_scroll.pack(side="right", fill="y")
-    fluid_canvas.pack(side="left", fill="both", expand=True)
-    fluid_content = ttk.Frame(fluid_canvas, padding=12)
-    fluid_window = fluid_canvas.create_window((0, 0), window=fluid_content, anchor="nw")
-    fluid_content.bind(
-        "<Configure>",
-        lambda event: fluid_canvas.configure(scrollregion=fluid_canvas.bbox("all"))
+    ttk.Combobox(
+        graphs_tab,
+        textvariable=spending_kind,
+        values=("Fuel", "Service"),
+        state="readonly"
+    ).pack(anchor="w", pady=6)
+
+    graph_status = tk.StringVar()
+    ttk.Label(
+        graphs_tab,
+        textvariable=graph_status,
+        wraplength=600
+    ).pack(anchor="w", pady=(0,6))
+    
+
+    spending_chart = DashboardChart(
+        graphs_tab,
+        "Monthly recorded spending ($)"
     )
-    fluid_canvas.bind(
-        "<Configure>",
-        lambda event: fluid_canvas.itemconfigure(fluid_window, width=event.width)
+    spending_chart.pack(fill="both", expand=True)
+
+    mpg_chart = DashboardChart(
+        graphs_tab,
+        "Fuel economy (MPG)",
+        kind="line"
     )
+    mpg_chart.pack(fill="both", expand=True)
 
     details_text = tk.StringVar(
         value="Select a vehicle to view its details."
@@ -212,216 +220,6 @@ def main():
 
     details_text.trace_add("write", refresh_overview)
     refresh_overview()
-
-    # ===== INDEPENDENT FLUID CHECK REMINDERS =====
-    ttk.Label(
-        fluid_content,
-        text=f"Check both fluids every {FLUID_CHECK_INTERVAL:,} miles. "
-             "Buttons work at any odometer reading.",
-        wraplength=590,
-    ).pack(anchor="w", pady=(0, 10))
-    fluid_status_vars = {key: tk.StringVar() for key in FLUID_NAMES}
-
-    def fluid_status_text(vehicle, fluid):
-        info = vehicle.fluid_check_status(fluid)
-        if info["miles_remaining"] is None:
-            return "CHECK NOW — no full-level confirmation recorded"
-        remaining = info["miles_remaining"]
-        if remaining <= 0:
-            return f"DUE NOW (overdue by {abs(remaining):,} miles)"
-        return f"{remaining:,} miles remaining (next at {info['next_due_mileage']:,})"
-
-    def refresh_fluid_panel(vehicle=None):
-        for fluid, label in FLUID_NAMES.items():
-            if vehicle is None:
-                fluid_status_vars[fluid].set(f"{label}: Select a vehicle first.")
-            else:
-                last = vehicle.fluid_checks[fluid]
-                detail = (
-                    f"Last confirmed full at {last['last_full_mileage']:,} miles "
-                    f"on {last['last_full_date'] or 'date unknown'}."
-                    if last["last_full_mileage"] is not None
-                    else "Level has not been confirmed."
-                )
-                fluid_status_vars[fluid].set(
-                    f"{label}: {fluid_status_text(vehicle, fluid)}\n{detail}"
-                )
-
-    def mark_fluid_full(fluid):
-        selected = vehicle_list.curselection()
-        if not selected or selected[0] >= len(visible_vehicles):
-            messagebox.showinfo("Select a vehicle", "Select a vehicle first.", parent=window)
-            return
-        vehicle = visible_vehicles[selected[0]]
-        guidance = (
-            "Only check the coolant expansion reservoir when the engine is cool. "
-            "Never open a hot radiator/pressurized coolant cap.\n\n"
-            if fluid == "coolant" else ""
-        )
-        if not messagebox.askyesno(
-            "Confirm fluid level",
-            guidance + f"Did you visually confirm that {FLUID_NAMES[fluid].lower()} "
-                       "is at the correct full mark?\n\n"
-                       f"This will log {vehicle.mileage:,} miles and restart only "
-                       "this fluid's 5,000-mile reminder.",
-            parent=window,
-        ):
-            return
-        before = vehicle.fluid_checks[fluid].copy()
-        count = len(vehicle.fluid_check_history)
-        vehicle.reset_fluid_to_full(fluid)
-        try:
-            save_vehicles(vehicles)
-        except (OSError, ValueError, TypeError) as error:
-            vehicle.fluid_checks[fluid] = before
-            del vehicle.fluid_check_history[count:]
-            messagebox.showerror("Save failed", str(error), parent=window)
-            return
-        show_vehicle()
-
-    for fluid, label in FLUID_NAMES.items():
-        section = ttk.LabelFrame(fluid_content, text=label, padding=12)
-        section.pack(fill="x", pady=(5, 10))
-        ttk.Label(section, textvariable=fluid_status_vars[fluid],
-                  justify="left", wraplength=540).pack(anchor="w", pady=(0, 8))
-        ttk.Button(section, text="Reset to Full",
-                   command=lambda key=fluid: mark_fluid_full(key)).pack(anchor="w")
-    ttk.Label(
-        fluid_content,
-        text="Manually confirmed levels only; MileSage does not measure fluids. "
-             "Follow each vehicle's owner manual for proper levels and fluid types.",
-        wraplength=590,
-    ).pack(anchor="w", pady=8)
-
-    # ===== AIR FILTER REPLACEMENT RECORDS =====
-    ttk.Separator(fluid_content).pack(fill="x", pady=(10, 8))
-    ttk.Label(fluid_content, text="Air Filter Replacement History",
-              font=("Segoe UI", 12, "bold")).pack(anchor="w", pady=(0, 5))
-    ttk.Label(
-        fluid_content,
-        text="Record a replacement date separately for each filter. "
-             "These records are included in the Excel export.",
-        wraplength=590,
-    ).pack(anchor="w", pady=(0, 8))
-
-    filter_labels = {
-        "interior": "Interior / cabin air filter",
-        "exterior": "Exterior / engine air filter",
-    }
-    filter_date_vars = {}
-    filter_mileage_vars = {}
-    filter_history_vars = {}
-
-    def refresh_filter_panel(vehicle=None):
-        for kind in filter_labels:
-            filter_mileage_vars[kind].set(str(vehicle.mileage) if vehicle else "")
-            if vehicle is None:
-                filter_history_vars[kind].set("Select a vehicle.")
-                continue
-            history = [r for r in vehicle.air_filter_changes
-                       if r.get("filter_type") == kind]
-            if history:
-                last = max(history, key=lambda r: (r.get("date", ""), r.get("mileage", 0)))
-                filter_history_vars[kind].set(
-                    f"Last replaced: {last['date']} at {last['mileage']:,} mi "
-                    f"({len(history)} total records)"
-                )
-            else:
-                filter_history_vars[kind].set("Not recorded")
-
-    def record_filter_replacement(kind):
-        selected = vehicle_list.curselection()
-        if not selected or selected[0] >= len(visible_vehicles):
-            messagebox.showinfo("Select vehicle", "Select a vehicle first.", parent=window)
-            return
-        vehicle = visible_vehicles[selected[0]]
-        replacement_date = filter_date_vars[kind].get()
-        try:
-            odometer = int(filter_mileage_vars[kind].get())
-            if odometer < vehicle.starting_mileage or odometer > vehicle.mileage:
-                raise ValueError("Mileage must be within the vehicle's recorded range.")
-        except (TypeError, ValueError):
-            messagebox.showerror("Invalid mileage",
-                                 "Enter a whole-number mileage no higher than the current odometer.",
-                                 parent=window)
-            return
-        if not messagebox.askyesno(
-            "Confirm replacement",
-            f"Was the {filter_labels[kind].lower()} replaced on "
-            f"{replacement_date} at {odometer:,} miles?",
-            parent=window,
-        ):
-            return
-        try:
-            vehicle.record_air_filter_change(kind, replacement_date, odometer)
-        except ValueError as error:
-            messagebox.showerror("Invalid replacement", str(error), parent=window)
-            return
-        try:
-            save_vehicles(vehicles)
-        except (OSError, ValueError, TypeError) as error:
-            vehicle.air_filter_changes.pop()
-            messagebox.showerror("Could not save", str(error), parent=window)
-            return
-        show_vehicle()
-
-    for kind, label in filter_labels.items():
-        section = ttk.LabelFrame(fluid_content, text=label, padding=9)
-        section.pack(fill="x", pady=(3, 8))
-        filter_date_vars[kind] = tk.StringVar(value=date.today().isoformat())
-        filter_mileage_vars[kind] = tk.StringVar(value="0")
-        filter_history_vars[kind] = tk.StringVar()
-        ttk.Label(section, textvariable=filter_history_vars[kind]).pack(anchor="w")
-        controls = ttk.Frame(section)
-        controls.pack(anchor="w", pady=(5, 0))
-        ttk.Label(controls, text="Date (YYYY-MM-DD)").pack(side="left")
-        ttk.Entry(controls, textvariable=filter_date_vars[kind], width=13).pack(
-            side="left", padx=7)
-        ttk.Label(controls, text="Mileage").pack(side="left")
-        ttk.Entry(controls, textvariable=filter_mileage_vars[kind], width=10).pack(
-            side="left", padx=7)
-        ttk.Button(
-            controls, text="Record Changed",
-            command=lambda chosen=kind: record_filter_replacement(chosen)
-        ).pack(side="left")
-
-    # Single dated history within Service History, backed by independent records.
-    events_box = ttk.LabelFrame(fluid_content, text="Fluid & Filter History", padding=8)
-    events_box.pack(fill="x", pady=(7, 10))
-    events_columns = ("date", "odometer", "item", "action")
-    maintenance_events_table = ttk.Treeview(
-        events_box, columns=events_columns, show="headings", height=6,
-    )
-    for key, label, width in (
-        ("date", "Date", 110),
-        ("odometer", "Mileage", 90),
-        ("item", "Maintenance item", 240),
-        ("action", "Action", 140),
-    ):
-        maintenance_events_table.heading(key, text=label)
-        maintenance_events_table.column(key, width=width, minwidth=65)
-    maintenance_events_table.pack(fill="x")
-
-    def refresh_maintenance_events(vehicle=None):
-        for row in maintenance_events_table.get_children():
-            maintenance_events_table.delete(row)
-        if vehicle is None:
-            return
-        items = [
-            (record.get("date", ""), record.get("mileage", 0),
-             FLUID_NAMES.get(record.get("fluid"), record.get("fluid", "Unknown fluid")),
-             "Confirmed full")
-            for record in vehicle.fluid_check_history
-        ]
-        items.extend(
-            (record.get("date", ""), record.get("mileage", 0),
-             filter_labels.get(record.get("filter_type"), "Air filter"), "Replaced")
-            for record in vehicle.air_filter_changes
-        )
-        for item in sorted(items, key=lambda row: (row[0], row[1]), reverse=True):
-            maintenance_events_table.insert(
-                "", tk.END, values=(item[0], f"{item[1]:,}", item[2], item[3]),
-            )
 
     # ===== SHARED TABLE BUILDER =====
     def make_table(parent, columns):
@@ -463,7 +261,7 @@ def main():
         return table
 
     # ===== SERVICE TABLE =====
-    service_table = make_table(service_records_tab, [
+    service_table = make_table(service_tab, [
         ("date", "Date", 110),
         ("mileage", "Mileage", 100),
         ("description", "Service Performed", 260),
@@ -475,7 +273,7 @@ def main():
     )
 
     ttk.Label(
-        service_records_tab,
+        service_tab,
         textvariable=service_status
     ).pack(anchor="w", pady=(8, 0))
 
@@ -516,15 +314,9 @@ def main():
 
             service_status.set("No vehicle selected")
             fuel_status.set("No vehicle selected")
-            refresh_fluid_panel()
-            refresh_filter_panel()
-            refresh_maintenance_events()
             return
 
         vehicle = visible_vehicles[selection[0]]
-        refresh_fluid_panel(vehicle)
-        refresh_filter_panel(vehicle)
-        refresh_maintenance_events(vehicle)
 
         # ===== MAINTENANCE STATUS =====
         def maintenance_status(remaining):
@@ -592,12 +384,6 @@ def main():
             f"MAINTENANCE\n"
             f"Oil change: {oil_status}\n"
             f"Tire rotation: {tire_status}\n\n"
-            f"FLUID CHECKS (every {FLUID_CHECK_INTERVAL:,} miles)\n"
-            f"Washer fluid: {fluid_status_text(vehicle, 'washer')}\n"
-            f"Coolant reservoir: {fluid_status_text(vehicle, 'coolant')}\n\n"
-            f"AIR FILTERS\n"
-            f"Cabin: {filter_history_vars['interior'].get()}\n"
-            f"Engine air: {filter_history_vars['exterior'].get()}\n\n"
             f"BATTERY\n{battery_summary(vehicle)}\n\n"
             f"CURRENT TIRE PRESSURE (calculated PSI)\n"
             f"Driver's front: {pressure_text('driver_front')}\n"
@@ -1472,7 +1258,7 @@ def main():
         description_entry.focus_set()
 
     ttk.Button(
-        service_records_tab,
+        service_tab,
         text="Record Service",
         command=record_service
     ).pack(anchor="w", pady=(10, 0))
@@ -1687,7 +1473,7 @@ def main():
         description_entry.focus_set()
 
     ttk.Button(
-        service_records_tab,
+        service_tab,
         text="Edit Service",
         command=edit_service
     ).pack(anchor="w", pady=(8, 0))
@@ -1756,7 +1542,7 @@ def main():
         )
 
     ttk.Button(
-        service_records_tab,
+        service_tab,
         text="Delete Service",
         command=delete_service
     ).pack(anchor="w", pady=(8, 0))
