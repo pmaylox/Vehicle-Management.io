@@ -2,7 +2,7 @@
 
 ## Current project version
 
-**MileSage Alpha 1.3.0** — service receipt photo workflow added to mobile HTML preview after the safe restore fix following the Alpha 1.2.0 maintenance features (November 14, 2026). Automated code tests passed; desktop and Android manual testing remain pending. No APK has been built or deployed.
+**MileSage Alpha 1.3.0** — service and fuel receipt photo workflows added to the mobile HTML preview after the safe restore fix following the Alpha 1.2.0 maintenance features (November 14, 2026). Automated code tests passed; desktop and Android manual testing remain pending. No APK has been built or deployed.
 
 The earlier Alpha 1.1.1 patch records the Tacoma's user-configured tire-rotation and oil-service interval changes. GitHub configuration and documentation have been updated; an Android APK has **not** been built, published, or verified, and mobile/desktop testing of the patch remains pending. The standalone mobile HTML remains a preview, and devices may retain older locally saved data until deliberately synchronized.
 
@@ -64,3 +64,12 @@ OCR uses Tesseract.js v6.0.1 in the phone browser, downloaded as needed; recogni
 This is currently **phone HTML preview functionality, not a new native Android APK**. The photo buttons do not appear if the phone continues running an older locally saved copy of the app. Importing vehicle data does not update application code.
 
 Node parser tests live at `mobile/test_receipt_parser.cjs`; real phone camera/OCR behavior requires hands-on device verification.
+
+
+### Fuel receipt photo entry (Alpha 1.3.0)
+
+In **Fuel → Record a fill-up**, users can take a pump receipt photo or choose a photo already on the phone. On-device OCR suggests **purchase date, US gallons purchased, total paid, and odometer if printed**. Missing values remain for manual entry. **Full Tank is never inferred** from the receipt; after scanning, it defaults to unchecked and must be explicitly selected if the user actually filled the tank. Odometer readings below the current vehicle mileage are not inserted; higher values remain subject to normal save-time checks. The user must review everything before saving.
+
+The shared OCR engine is downloaded when needed, and image/text are not uploaded to GitHub or stored in vehicle JSON. The Fuel History JSON and Excel export continue to store the confirmed structured transaction details rather than the receipt image. Parsing tests: `node mobile/test_fuel_receipt_parser.cjs`. Live Android camera/OCR tests are still needed.
+
+**Important:** GitHub data restoration only imports data; it does not update the installed HTML or Android app. To see both photo buttons on the phone, the user must open the updated application HTML in a compatible browser or install a newly packaged app (no APK is provided by this update).
