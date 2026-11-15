@@ -1,0 +1,71 @@
+name: Package MileSage phone HTML
+on:
+  push:
+    branches: [main]
+    paths:
+      - "mobile/MileSage_Alpha_1_3_1_All_Updates.html"
+      - ".github/workflows/build-mobile-html-bundle.yml"
+  workflow_dispatch:
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate full updated phone app
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path("mobile/MileSage_Alpha_1_3_1_All_Updates.html")
+          html = path.read_text(encoding="utf-8")
+          for required in ["Alpha 1.3.1", "Take receipt photo", "Take fuel receipt photo",
+                           "EVENING_PARITY_BEGIN", "RESTORE_GUARDS_BEGIN",
+                           "milesage-mobile-offline-v1"]:
+              assert required in html, f"Missing: {required}"
+          Path("/tmp/milesage-standalone.js").write_text(
+              html.split("<script>", 1)[1].split("</script>", 1)[0],
+              encoding="utf-8"
+          )
+          PY
+          node --check /tmp/milesage-standalone.js
+          node mobile/test_evening_insights.cjs
+          node mobile/test_restore_safety.cjs
+          node mobile/test_receipt_parser.cjs
+          node mobile/test_fuel_receipt_parser.cjs
+      - name: Assemble phone download
+        run: |
+          mkdir -p release
+          cp mobile/MileSage_Alpha_1_3_1_All_Updates.html release/
+          cat > release/READ_ME_FIRST.txt <<'TXT'
+          MileSage Alpha 1.3.1 — phone HTML preview with all mobile updates
+          
+          THIS IS AN HTML APP FILE, NOT AN ANDROID APK.
+          
+          BEFORE OPENING THIS UPDATED FILE:
+          1. In your CURRENT MileSage phone app, go to Data & backup.
+          2. Tap Full mobile backup and save its JSON in Downloads.
+          3. Do not uninstall the older MileSage or clear browser data.
+          
+          INSTALL / OPEN:
+          4. Extract this ZIP in the Files / My Files app.
+          5. Open MileSage_Alpha_1_3_1_All_Updates.html using Chrome or another compatible browser.
+          6. In Data & backup, import YOUR saved Full mobile backup, if the new copy shows no data.
+          7. Check the Tacoma and Explorer odometers, PSI and histories before logging anything.
+          8. Service > Log maintenance has Take receipt photo and Choose photo.
+          9. Fuel > Record a fill-up has separate receipt photo buttons.
+          
+          The photo reader uses a web OCR engine downloaded on demand.
+          Some content:// or file:// browser contexts may block OCR workers or storage.
+          If OCR fails, manual service/fuel entry still works.
+          
+          WARNING: Do NOT import the repo's current vehicles.json blindly.
+          It contains a demo vehicle and may not match your real mileage or tire pressure.
+          
+          GitHub source: https://github.com/pmaylox/Vehicle-Management.io
+          TXT
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MileSage-Alpha-1.3.1-All-Updates-Android-HTML
+          path: release/
+          retention-days: 90
+          compression-level: 6
