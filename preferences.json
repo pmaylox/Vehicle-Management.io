@@ -2,5 +2,6 @@
     "sort": "Mileage",
     "reverse": false,
     "width": 1074,
-    "height": 622
+    "height": 622,
+    "sidebar_width": 300
 }

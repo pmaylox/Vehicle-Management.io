@@ -16,7 +16,7 @@ from Vehicle_Manager import Vehicle
 from excel_export import export_vehicle_excel
 from storage import save_vehicles, load_vehicles
 from battery import battery_summary, battery_term_text
-from dashboard_charts import DashboardChart
+from dashboard_charts import DashboardChart, cost_per_mile_points
 
 
 # Main function
@@ -68,14 +68,22 @@ def main():
         font=("Segoe UI", 24, "bold")
     ).pack(anchor="w", pady=(0, 15))
 
-    panels = ttk.Panedwindow(container, orient="horizontal")
+    # Reserve space for the vehicle controls even when charts request more width.
+    sidebar_width = preferences.get("sidebar_width", 300)
+    if type(sidebar_width) is not int:
+        sidebar_width = 300
+    sidebar_width = min(450, max(280, sidebar_width))
+    panels = tk.PanedWindow(
+        container, orient="horizontal", sashwidth=7,
+        borderwidth=0, showhandle=False, opaqueresize=True
+    )
     panels.pack(fill="both", expand=True)
 
     list_panel = ttk.Frame(panels, padding=10)
     details_panel = ttk.Frame(panels, padding=15)
 
-    panels.add(list_panel, weight=1)
-    panels.add(details_panel, weight=2)
+    panels.add(list_panel, minsize=280, width=sidebar_width, stretch="never")
+    panels.add(details_panel, minsize=400, stretch="always")
 
     # ===== VEHICLE LIST =====
     ttk.Label(
@@ -247,6 +255,14 @@ def main():
     )
     price_chart.pack(fill="x", pady=(12, 0))
 
+    cost_chart = DashboardChart(
+        graphs_content,
+        "Fuel cost per mile ($) — full-tank intervals",
+        kind="line",
+        decimals=3
+    )
+    cost_chart.pack(fill="x", pady=(12, 0))
+
     details_text = tk.StringVar(
         value="Select a vehicle to view its details."
     )
@@ -368,6 +384,7 @@ def main():
             mpg_chart.set_data([])
             distance_chart.set_data([])
             price_chart.set_data([])
+            cost_chart.set_data([])
             graph_status.set("Select a vehicle to view its graphs.")
             return
 
@@ -401,6 +418,7 @@ def main():
         ]
 
         spending_chart.set_data(spending_points)
+        cost_chart.set_data(cost_per_mile_points(vehicle.fuel_history)[-6:])
         graph_status.set(
             f"{vehicle.year} {vehicle.name} • "
             f"{spending_kind.get()} spending • "
@@ -584,6 +602,9 @@ def main():
         mpg_chart.set_data(mpg_points[-6:])
         distance_chart.set_data(distance_points[-6:])
         price_chart.set_data(price_points[-6:])
+        cost_chart.set_data(
+            cost_per_mile_points(vehicle.fuel_history)[-6:]
+        )
 
         service_status.set(
             f"{len(vehicle.service_history)} service records"
@@ -2329,7 +2350,8 @@ def main():
             "sort": sort_var.get(),
             "reverse": reverse_var.get(),
             "width": window.winfo_width(),
-            "height": window.winfo_height()
+            "height": window.winfo_height(),
+            "sidebar_width": list_panel.winfo_width()
         }
         try:
             preferences_file.write_text(

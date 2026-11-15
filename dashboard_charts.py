@@ -1,5 +1,49 @@
 import tkinter as tk
 from tkinter import ttk
+from datetime import date
+from decimal import Decimal
+
+def cost_per_mile_points(records):
+    points = []
+    starting_mileage = None
+    interval_cents = 0
+    costs_known = True
+
+    for record in records:
+        mileage = record["mileage"]
+
+        if mileage is None:
+            starting_mileage = None
+            interval_cents = 0
+            costs_known = True
+            continue
+
+        if starting_mileage is None:
+            if record["full_tank"]:
+                starting_mileage = mileage
+            continue
+
+        cents = record.get("cost_cents")
+        if cents is None:
+            costs_known = False
+        else:
+            interval_cents += cents
+
+        if record["full_tank"]:
+            miles = mileage - starting_mileage
+
+            if miles > 0 and costs_known:
+                cost_per_mile = Decimal(interval_cents) / 100 / miles
+                points.append((
+                    date.fromisoformat(record["date"]).strftime("%m/%d/%y"),
+                    float(cost_per_mile)
+                ))
+
+            starting_mileage = mileage
+            interval_cents = 0
+            costs_known = True
+
+    return points
 
 class DashboardChart(ttk.Frame):
     def __init__(self, parent, title, kind="bar", decimals=1):
