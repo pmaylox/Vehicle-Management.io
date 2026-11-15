@@ -1,3 +1,4 @@
+from overview_panel import OverviewPanel
 from receipt_ui import ReceiptPanel, scrollable_form
 from fuel_fields import octane_field, parse_octane, fuel_type_field, parse_fuel_type, is_diesel
 import json
@@ -25,6 +26,42 @@ def main():
     window.title("Vehicle Manager")
     window.geometry("1100x650")
     window.minsize(800, 500)
+    # ===== APP COLORS =====
+    colors = {
+        "background": "#F5F1EB",
+        "text": "#292724",
+        "accent": "#B65C3A",
+        "selected_tab": "#FFFFFF"
+    }
+
+    window.configure(background=colors["background"])
+
+    style = ttk.Style(window)
+    style.theme_use("clam")
+
+    style.configure(
+        "TFrame",
+        background=colors["background"]
+    )
+    style.configure(
+        "TLabel",
+        background=colors["background"],
+        foreground=colors["text"]
+    )
+    style.configure(
+        "TNotebook",
+        background=colors["background"],
+        borderwidth=0
+    )
+    style.configure(
+        "TNotebook.Tab",
+        padding=(14, 8)
+    )
+    style.map(
+        "TNotebook.Tab",
+        background=[("selected", colors["selected_tab"])],
+        foreground=[("selected", colors["accent"])]
+    )
     preferences_file = Path(__file__).with_name("preferences.json")
     preferences = {}
 
@@ -267,6 +304,50 @@ def main():
         value="Select a vehicle to view its details."
     )
 
+    style.configure("VehicleCard.TFrame", background="#FFFFFF")
+    style.configure(
+        "VehicleTitle.TLabel",
+        background="#FFFFFF",
+        foreground=colors["text"],
+        font=("Segoe UI", 18, "bold")
+    )
+    style.configure(
+        "VehicleMileage.TLabel",
+        background="#FFFFFF",
+        foreground=colors["accent"],
+        font=("Segoe UI", 13)
+    )
+
+    vehicle_heading = tk.StringVar(value="Select a vehicle")
+    mileage_heading = tk.StringVar()
+
+    vehicle_card = ttk.Frame(
+        overview_tab,
+        style="VehicleCard.TFrame",
+        padding=16
+    )
+    vehicle_card.pack(fill="x", pady=(0, 12))
+
+    vehicle_title = ttk.Label(
+        vehicle_card,
+        textvariable=vehicle_heading,
+        style="VehicleTitle.TLabel"
+    )
+    vehicle_title.pack(anchor="w")
+
+    ttk.Label(
+        vehicle_card,
+        textvariable=mileage_heading,
+        style="VehicleMileage.TLabel"
+    ).pack(anchor="w", pady=(6, 0))
+
+    vehicle_card.bind(
+        "<Configure>",
+        lambda event: vehicle_title.configure(
+            wraplength=max(120, event.width - 32)
+        )
+    )
+
     overview_scroll = ttk.Scrollbar(overview_tab, orient="vertical")
     overview_scroll.pack(side="right", fill="y")
     overview_text = tk.Text(overview_tab, font=("Segoe UI", 12), wrap="word",
@@ -368,6 +449,8 @@ def main():
         selection = vehicle_list.curselection()
 
         if not selection:
+            vehicle_heading.set("No vehicle selected")
+            mileage_heading.set("")
             details_text.set(
                 "No matching vehicles. Try another search or click Clear."
                 if search_var.get().strip() and vehicles
@@ -389,6 +472,10 @@ def main():
             return
 
         vehicle = visible_vehicles[selection[0]]
+        vehicle_heading.set(f"{vehicle.year} {vehicle.name}")
+        mileage_heading.set(
+            f"Odometer · {format_mileage(vehicle.mileage)}"
+        )
         # ===== SPENDING DATA =====
         monthly_cents = {}
         missing_costs = 0
@@ -489,8 +576,6 @@ def main():
 
         # ===== DASHBOARD TEXT =====
         details_text.set(
-            f"{vehicle.year} {vehicle.name}\n"
-            f"Current odometer: {format_mileage(vehicle.mileage)}\n\n"
             f"MAINTENANCE\n"
             f"Oil change: {oil_status}\n"
             f"Tire rotation: {tire_status}\n\n"

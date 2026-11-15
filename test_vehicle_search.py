@@ -47,7 +47,7 @@ class VehicleSearchTests(unittest.TestCase):
     def controls(self, root):
         search = next(w for w in descendants(root) if type(w) is ttk.Entry)
         listing = next(w for w in descendants(root) if isinstance(w, tk.Listbox))
-        overview = next(w for w in descendants(root) if isinstance(w, tk.Text))
+        overview = next(w for w in descendants(root) if isinstance(w, app.OverviewPanel))
         return search, listing, overview
 
     def search(self, entry, query):
@@ -59,7 +59,7 @@ class VehicleSearchTests(unittest.TestCase):
             search, listing, overview = self.controls(root)
             self.search(search, " eXpLoReR ")
             self.assertEqual(listing.get(0, "end"), ("2025 Ford Explorer",))
-            self.assertIn("Ford Explorer", overview.get("1.0", "end"))
+            self.assertIn("Ford Explorer", overview.heading.get())
             with patch.object(app.simpledialog, "askinteger", return_value=10):
                 button(root, "Update Mileage").invoke()
             self.assertEqual([v.mileage for v in vehicles], [100, 210])
@@ -75,7 +75,7 @@ class VehicleSearchTests(unittest.TestCase):
                 button(dialog, "Cancel").invoke()
             self.search(search, "no such vehicle")
             self.assertEqual(listing.size(), 0)
-            self.assertIn("No matching vehicles", overview.get("1.0", "end"))
+            self.assertIn("No matching vehicles", overview.details.get())
             before = save.call_count
             button(root, "Remove Vehicle").invoke()
             self.assertEqual(save.call_count, before)
