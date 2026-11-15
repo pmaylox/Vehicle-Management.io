@@ -1,3 +1,5 @@
+from receipt_ui import ReceiptPanel, scrollable_form
+from fuel_fields import octane_field, parse_octane, fuel_type_field, parse_fuel_type, is_diesel
 import json
 from pathlib import Path
 
@@ -285,7 +287,9 @@ def main():
         ("cost", "Total Cost ($)", 110),
         ("full", "Full Tank", 90),
         ("mpg", "MPG", 170),
-        ("price_per_gallon", "Price/Gallon ($)", 130)
+        ("price_per_gallon", "Price/Gallon ($)", 130),
+        ("octane", "Octane", 90),
+        ("fuel_type", "Fuel type / blend", 200)
     ])
 
     fuel_status = tk.StringVar(
@@ -505,7 +509,9 @@ def main():
                 vehicle.format_service_cost(record),
                 "Yes" if full_tank else "No",
                 mpg_text,
-                f"{Decimal(record['cost_cents']) / 100 / gallons:.3f}"
+                f"{Decimal(record['cost_cents']) / 100 / gallons:.3f}",
+                "N/A (diesel)" if is_diesel(record.get("fuel_type") or "") else record.get("octane") if record.get("octane") is not None else "Not recorded",
+                record.get("fuel_type") or "Not recorded"
             ))
 
         mpg_chart.set_data(mpg_points[-6:])
@@ -1077,10 +1083,10 @@ def main():
         dialog.resizable(False, False)
         dialog.transient(window)
 
-        form = ttk.Frame(dialog, padding=20)
-        form.pack(fill="both", expand=True)
+        form = scrollable_form(dialog)
 
         date_var = tk.StringVar(value=date.today().isoformat())
+        service_mileage_var = tk.StringVar(value=str(vehicle.mileage))
         description_var = tk.StringVar()
         cost_var = tk.StringVar()
         oil_var = tk.BooleanVar(value=False)
@@ -1095,13 +1101,9 @@ def main():
             sticky="w", pady=(0, 8)
         )
 
-        ttk.Label(
-            form,
-            text=f"Service mileage: {vehicle.mileage:,}"
-        ).grid(
-            row=1, column=0, columnspan=2,
-            sticky="w", pady=(0, 12)
-        )
+        ttk.Label(form, text="Service odometer mileage:").grid(row=1, column=0, sticky="w", pady=6)
+        ttk.Entry(form, textvariable=service_mileage_var, width=20).grid(
+            row=1, column=1, sticky="w", padx=(12, 0), pady=6)
 
         ttk.Label(
             form, text="Service performed:"
@@ -1161,6 +1163,8 @@ def main():
 
         get_battery = battery_fields(form, 8, description_var, lambda: date_var.get().strip())
 
+        receipt = ReceiptPanel(form, 9, "service", {"date": date_var, "mileage": service_mileage_var, "description": description_var, "cost": cost_var})
+
         def save_service():
             try:
                 service_date = date.fromisoformat(
@@ -1182,6 +1186,18 @@ def main():
                 )
                 return
             
+            try:
+                service_mileage = int(service_mileage_var.get().strip())
+                if not vehicle.starting_mileage <= service_mileage <= vehicle.mileage:
+                    raise ValueError(f"Service mileage must be between {vehicle.starting_mileage:,} and {vehicle.mileage:,}. Update the vehicle mileage first if needed.")
+                if oil_var.get() and service_mileage < vehicle.last_service_mileage:
+                    raise ValueError("An older service cannot reset a newer oil change countdown.")
+                if tire_var.get() and service_mileage < (vehicle.last_tire_rotation_mileage or 0):
+                    raise ValueError("An older service cannot reset a newer tire rotation countdown.")
+            except ValueError as error:
+                messagebox.showerror("Invalid service mileage", str(error), parent=dialog)
+                return
+
             description = description_var.get().strip()
             cost_input = cost_var.get().strip()
 
@@ -1210,7 +1226,7 @@ def main():
             
             record = {
                 "date": service_date.isoformat(),
-                "mileage": vehicle.mileage,
+                "mileage": service_mileage,
                 "description": description,
                 "cost_cents": cost_cents,
                 "oil_reset": oil_var.get(),
@@ -1231,7 +1247,7 @@ def main():
                 "Confirm service",
                 f"{vehicle.year} {vehicle.name}\n"
                 f"Service date: {service_date:%m/%d/%Y}\n"
-                f"Mileage: {vehicle.mileage:,}\n"
+                f"Mileage: {service_mileage:,}\n"
                 f"Service: {description}\n"
                 f"Cost ($): {cost_text}\n"
                 + (f"Battery installed: {battery['installed']} — {battery_term_text(battery['months'])} ({battery['term']})\n" if battery else "")
@@ -1250,15 +1266,17 @@ def main():
             vehicle.service_history.append(record)
 
             if record["oil_reset"]:
-                vehicle.last_service_mileage = vehicle.mileage
+                vehicle.last_service_mileage = service_mileage
 
             if record["tire_reset"]:
-                vehicle.last_tire_rotation_mileage = vehicle.mileage
+                vehicle.last_tire_rotation_mileage = service_mileage
 
             try:
+                receipt.commit(record)
                 save_vehicles(vehicles)
 
             except (OSError, TypeError, ValueError) as error:
+                receipt.rollback()
                 vehicle.service_history.pop()
                 vehicle.last_service_mileage = old_oil_mileage
                 vehicle.last_tire_rotation_mileage = old_tire_mileage
@@ -1282,7 +1300,7 @@ def main():
 
         buttons = ttk.Frame(form)
         buttons.grid(
-            row=9, column=0, columnspan=2,
+            row=10, column=0, columnspan=2,
             sticky="e", pady=(20, 0)
         )
 
@@ -1331,8 +1349,7 @@ def main():
         dialog.resizable(False, False)
         dialog.transient(window)
 
-        form = ttk.Frame(dialog, padding=20)
-        form.pack(fill="both", expand=True)
+        form = scrollable_form(dialog)
 
         description_var = tk.StringVar(
             value=record["description"]
@@ -1397,6 +1414,8 @@ def main():
 
         get_battery = battery_fields(form, 5, description_var, lambda: record["date"], record.get("battery"))
 
+        receipt = ReceiptPanel(form, 6, "service", {"description": description_var, "cost": cost_var}, record.get("receipt_photo"))
+
         def save_service_changes():
             description = description_var.get().strip()
             cost_input = cost_var.get().strip()
@@ -1431,7 +1450,8 @@ def main():
                 return
 
             if (
-                description == record["description"]
+                not receipt.source
+                and description == record["description"]
                 and cost_cents == current_cents
                 and battery == record.get("battery")
             ):
@@ -1468,9 +1488,11 @@ def main():
             vehicle.service_history[index] = updated_record
 
             try:
+                receipt.commit(updated_record)
                 save_vehicles(vehicles)
 
             except (OSError, TypeError, ValueError) as error:
+                receipt.rollback()
                 vehicle.service_history[index] = record
 
                 messagebox.showerror(
@@ -1497,7 +1519,7 @@ def main():
 
         buttons = ttk.Frame(form)
         buttons.grid(
-            row=6, column=0, columnspan=2,
+            row=7, column=0, columnspan=2,
             sticky="e", pady=(20, 0)
         )
 
@@ -1612,8 +1634,7 @@ def main():
         dialog.resizable(False, False)
         dialog.transient(window)
 
-        form = ttk.Frame(dialog, padding=20)
-        form.pack(fill="both", expand=True)
+        form = scrollable_form(dialog)
 
         date_var = tk.StringVar(value=date.today().isoformat())
         mileage_var = tk.StringVar(value=str(vehicle.mileage))
@@ -1665,6 +1686,11 @@ def main():
         ).grid(
             row=6, column=0, columnspan=2, sticky="w"
         )
+
+        octane_var = octane_field(form, 7)
+        fuel_type_var = fuel_type_field(form, 9, octane_var=octane_var)
+
+        receipt = ReceiptPanel(form, 11, "fuel", {"date": date_var, "mileage": mileage_var, "gallons": gallons_var, "cost": cost_var, "octane": octane_var, "fuel_type": fuel_type_var})
 
         def save_fuel():
             try:
@@ -1725,6 +1751,13 @@ def main():
                 )
                 return
 
+            try:
+                fuel_type = parse_fuel_type(fuel_type_var.get())
+                octane = None if is_diesel(fuel_type or "") else parse_octane(octane_var.get())
+            except ValueError as error:
+                messagebox.showerror("Invalid fuel details", str(error), parent=dialog)
+                return
+
             price_per_gallon = cost / gallons
             full_tank = full_var.get()
 
@@ -1734,6 +1767,8 @@ def main():
                 f"Fill-up date: {fill_up_date:%m/%d/%Y}\n"
                 f"Odometer: {mileage:,} miles\n"
                 f"US gallons: {gallons}\n"
+                f"Octane: {'Not applicable (diesel)' if is_diesel(fuel_type or '') else octane if octane is not None else 'Not recorded'}\n"
+                f"Fuel type: {fuel_type or 'Not recorded'}\n"
                 f"Total paid: ${cost:.2f}\n"
                 f"Price per gallon: ${price_per_gallon:.3f}\n"
                 f"Full tank: {'Yes' if full_tank else 'No'}\n\n"
@@ -1749,7 +1784,9 @@ def main():
                 "mileage": mileage,
                 "gallons": str(gallons),
                 "cost_cents": cost_cents,
-                "full_tank": full_tank
+                "full_tank": full_tank,
+                "octane": octane,
+                "fuel_type": fuel_type
             }
 
             old_mileage = vehicle.mileage
@@ -1757,9 +1794,11 @@ def main():
             vehicle.mileage = mileage
 
             try:
+                receipt.commit(record)
                 save_vehicles(vehicles)
 
             except (OSError, TypeError, ValueError) as error:
+                receipt.rollback()
                 vehicle.fuel_history.pop()
                 vehicle.mileage = old_mileage
 
@@ -1789,7 +1828,7 @@ def main():
 
         buttons = ttk.Frame(form)
         buttons.grid(
-            row=7, column=0, columnspan=2,
+            row=12, column=0, columnspan=2,
             sticky="e", pady=(20, 0)
         )
 
@@ -1837,8 +1876,7 @@ def main():
         dialog.resizable(False, False)
         dialog.transient(window)
 
-        form = ttk.Frame(dialog, padding=20)
-        form.pack(fill="both", expand=True)
+        form = scrollable_form(dialog)
 
         mileage_var = tk.StringVar(
             value=str(record["mileage"])
@@ -1895,6 +1933,11 @@ def main():
             sticky="w", pady=(10, 0)
         )
 
+        octane_var = octane_field(form, 6, record.get("octane"))
+        fuel_type_var = fuel_type_field(form, 8, record.get("fuel_type"), octane_var)
+
+        receipt = ReceiptPanel(form, 10, "fuel", {"mileage": mileage_var, "gallons": gallons_var, "cost": cost_var, "octane": octane_var, "fuel_type": fuel_type_var}, record.get("receipt_photo"))
+
         def save_fuel_changes():
             try:
                 mileage = int(mileage_var.get().strip())
@@ -1942,13 +1985,23 @@ def main():
                 )
                 return
 
+            try:
+                fuel_type = parse_fuel_type(fuel_type_var.get())
+                octane = None if is_diesel(fuel_type or "") else parse_octane(octane_var.get())
+            except ValueError as error:
+                messagebox.showerror("Invalid fuel details", str(error), parent=dialog)
+                return
+
             full_tank = full_var.get()
 
             if (
-                mileage == record["mileage"]
+                not receipt.source
+                and mileage == record["mileage"]
                 and gallons == Decimal(record["gallons"])
                 and cost_cents == record["cost_cents"]
                 and full_tank == record["full_tank"]
+                and octane == record.get("octane")
+                and fuel_type == record.get("fuel_type")
             ):
                 messagebox.showinfo(
                     "No changes",
@@ -1963,6 +2016,8 @@ def main():
                 "Confirm fuel changes",
                 f"Odometer: {mileage:,} miles\n"
                 f"US gallons: {gallons}\n"
+                f"Octane: {'Not applicable (diesel)' if is_diesel(fuel_type or '') else octane if octane is not None else 'Not recorded'}\n"
+                f"Fuel type: {fuel_type or 'Not recorded'}\n"
                 f"Total paid: ${cost:.2f}\n"
                 f"Price per gallon: ${price_per_gallon:.3f}\n"
                 f"Full tank: {'Yes' if full_tank else 'No'}\n\n"
@@ -1980,15 +2035,19 @@ def main():
                 "mileage": mileage,
                 "gallons": str(gallons),
                 "cost_cents": cost_cents,
-                "full_tank": full_tank
+                "full_tank": full_tank,
+                "octane": octane,
+                "fuel_type": fuel_type
             })
 
             vehicle.fuel_history[index] = updated_record
 
             try:
+                receipt.commit(updated_record)
                 save_vehicles(vehicles)
 
             except (OSError, TypeError, ValueError) as error:
+                receipt.rollback()
                 vehicle.fuel_history[index] = record
 
                 messagebox.showerror(
@@ -2014,7 +2073,7 @@ def main():
 
         buttons = ttk.Frame(form)
         buttons.grid(
-            row=6, column=0, columnspan=2,
+            row=11, column=0, columnspan=2,
             sticky="e", pady=(20, 0)
         )
 
