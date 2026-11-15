@@ -11,6 +11,10 @@ class OverviewPanel(ttk.Frame):
         self.oil = tk.StringVar(value="Oil change: —")
         self.tires = tk.StringVar(value="Tire rotation: —")
         self.details = tk.StringVar()
+        self.battery = tk.StringVar()
+        self.pressures = tk.StringVar()
+        self.service = tk.StringVar()
+        self.fuel = tk.StringVar()
 
         style = ttk.Style(self)
         style.configure(
@@ -73,8 +77,39 @@ class OverviewPanel(ttk.Frame):
         self.add_label(maintenance_card, self.oil)
         self.add_label(maintenance_card, self.tires)
 
-        details_card = self.make_card(content)
-        self.add_label(details_card, self.details)
+        battery_card = self.make_card(content)
+        ttk.Label(
+            battery_card,
+            text="BATTERY",
+            style="CardAccent.TLabel"
+        ).pack(anchor="w", pady=(0, 8))
+        self.add_label(battery_card, self.battery)
+
+        pressure_card = self.make_card(content)
+        ttk.Label(
+            pressure_card,
+            text="TIRE PRESSURE · calculated PSI",
+            style="CardAccent.TLabel"
+        ).pack(anchor="w", pady=(0, 8))
+        self.add_label(pressure_card, self.pressures)
+
+        service_card = self.make_card(content)
+        ttk.Label(
+            service_card, text="SERVICE", style="CardAccent.TLabel"
+        ).pack(anchor="w", pady=(0, 8))
+        self.add_label(service_card, self.service)
+
+        fuel_card = self.make_card(content)
+        ttk.Label(
+            fuel_card, text="FUEL", style="CardAccent.TLabel"
+        ).pack(anchor="w", pady=(0, 8))
+        self.add_label(fuel_card, self.fuel)
+
+        status_label = ttk.Label(
+            content, textvariable=self.details, justify="left"
+        )
+        status_label.pack(anchor="w", fill="x")
+        self.wrapping_labels.append(status_label)
 
         def fit_width(event):
             self.canvas.itemconfigure(

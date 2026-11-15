@@ -395,6 +395,10 @@ def main():
             mileage_heading.set("")
             overview.oil.set("Oil change: —")
             overview.tires.set("Tire rotation: —")
+            overview.battery.set("No vehicle selected")
+            overview.pressures.set("No vehicle selected")
+            overview.service.set("No vehicle selected")
+            overview.fuel.set("No vehicle selected")
             details_text.set(
                 "No matching vehicles. Try another search or click Clear."
                 if search_var.get().strip() and vehicles
@@ -521,25 +525,28 @@ def main():
                 return "Not recorded"
             return f"{pressure:g} PSI"
 
-        # ===== DASHBOARD TEXT =====
-        details_text.set(
-            f"BATTERY\n{battery_summary(vehicle)}\n\n"
-            f"CURRENT TIRE PRESSURE (calculated PSI)\n"
+              # ===== DASHBOARD CARDS =====
+        overview.battery.set(battery_summary(vehicle))
+        overview.pressures.set(
             f"Driver's front: {pressure_text('driver_front')}\n"
             f"Driver's rear: {pressure_text('driver_rear')}\n"
             f"Passenger front: {pressure_text('passenger_front')}\n"
-            f"Passenger rear: {pressure_text('passenger_rear')}\n\n"
-            f"SERVICE\n"
+            f"Passenger rear: {pressure_text('passenger_rear')}"
+        )
+
+        overview.service.set(
             f"Records: {len(vehicle.service_history)}\n"
             f"Recorded spending: ${service_total:,.2f}\n"
             f"Records without a cost: {unknown_costs}\n"
-            f"Missing costs are excluded from spending.\n\n"
-            f"FUEL\n"
+            "Missing costs are excluded from spending."
+        )
+        overview.fuel.set(
             f"Fill-ups: {len(vehicle.fuel_history)}\n"
             f"Total fuel: {total_gallons:,.3f} US gallons\n"
             f"Total spending: ${fuel_total:,.2f}\n"
             f"Average price per gallon: {average_text}"
         )
+        details_text.set("")
 
         # ===== REFRESH HISTORY TABLES =====
         for table in (service_table, fuel_table):
