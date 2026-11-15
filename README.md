@@ -2,7 +2,7 @@
 
 ## Current project version
 
-**MileSage Alpha 1.3.0** — service and fuel receipt photo workflows added to the mobile HTML preview after the safe restore fix following the Alpha 1.2.0 maintenance features (November 14, 2026). Automated code tests passed; desktop and Android manual testing remain pending. No APK has been built or deployed.
+**MileSage Alpha 1.3.1** — mobile HTML preview updated with tonight's additional vehicle overview and fuel analytics. Alpha 1.3.0 receipt-photo features and safe restores remain. Desktop and Android manual testing remain pending. No APK has been built or deployed.
 
 The earlier Alpha 1.1.1 patch records the Tacoma's user-configured tire-rotation and oil-service interval changes. GitHub configuration and documentation have been updated; an Android APK has **not** been built, published, or verified, and mobile/desktop testing of the patch remains pending. The standalone mobile HTML remains a preview, and devices may retain older locally saved data until deliberately synchronized.
 
@@ -73,3 +73,14 @@ In **Fuel → Record a fill-up**, users can take a pump receipt photo or choose 
 The shared OCR engine is downloaded when needed, and image/text are not uploaded to GitHub or stored in vehicle JSON. The Fuel History JSON and Excel export continue to store the confirmed structured transaction details rather than the receipt image. Parsing tests: `node mobile/test_fuel_receipt_parser.cjs`. Live Android camera/OCR tests are still needed.
 
 **Important:** GitHub data restoration only imports data; it does not update the installed HTML or Android app. To see both photo buttons on the phone, the user must open the updated application HTML in a compatible browser or install a newly packaged app (no APK is provided by this update).
+
+
+## Alpha 1.3.1 — mobile parity for November 14 evening work
+
+The mobile HTML preview now includes **battery, tire PSI, service and fuel overview cards**, plus **miles between recorded fill-ups, per-gallon price and full-tank interval fuel cost per mile** charts. Fuel entries can save optional **fuel type/blend and octane rating** using the same JSON fields as the desktop application. Prior photo OCR and fluid/filter actions remain. Data visualization is based on actual local records and does not invent live readings.
+
+**Device status:** This source update is **not an installed Android update or APK**. The phone continues to use whichever HTML/app package was previously opened; importing `vehicles.json` changes data only, never the app's code. Before opening a new copy of the HTML, export a **Full mobile backup** from the old app; a different browser/file origin may have separate local storage. Import into the new copy only after reviewing the current mileage, tire PSI and history. Do not clear the original browser storage or uninstall anything until the new copy is verified.
+
+**Live-data caution:** `vehicles.json` is currently a mixed development dataset (including an Explorer demonstration vehicle) and is **not** a reliable source of the phone's latest personal readings. Use the phone's own exported backup instead of blindly replacing data with GitHub's current JSON. The older README description of the repository JSON as a fully blank template is historical and not a guarantee of current contents.
+
+**Validation:** `node mobile/test_evening_insights.cjs` tests chart calculations and verifies that original phone storage keys and restore guards remain present. GitHub Actions also checks mobile JavaScript syntax and existing OCR/restore regressions. Manual Android camera, chart and local backup checks still required.
