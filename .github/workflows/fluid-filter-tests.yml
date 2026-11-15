@@ -28,6 +28,8 @@ jobs:
         run: node mobile/test_receipt_parser.cjs
       - name: Test fuel receipt OCR parser
         run: node mobile/test_fuel_receipt_parser.cjs
+      - name: Test evening vehicle insights and storage parity
+        run: node mobile/test_evening_insights.cjs
       - name: Validate phone JavaScript syntax
         run: |
           python - <<'PY'
