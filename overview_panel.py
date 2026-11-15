@@ -92,6 +92,12 @@ class OverviewPanel(ttk.Frame):
                 scrollregion=self.canvas.bbox("all")
             )
         )
+        # Newly selected vehicles should open with their title fully visible.
+        self.heading.trace_add("write", self.reset_scroll)
+        self.canvas.bind("<Map>", self.reset_scroll)
+
+    def reset_scroll(self, *args):
+        self.after_idle(lambda: self.canvas.yview_moveto(0))
 
     def make_card(self, parent):
         card = ttk.Frame(

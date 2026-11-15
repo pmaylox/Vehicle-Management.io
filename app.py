@@ -300,70 +300,12 @@ def main():
     )
     cost_chart.pack(fill="x", pady=(12, 0))
 
-    details_text = tk.StringVar(
-        value="Select a vehicle to view its details."
-    )
+    overview = OverviewPanel(overview_tab, colors)
+    overview.pack(fill="both", expand=True)
 
-    style.configure("VehicleCard.TFrame", background="#FFFFFF")
-    style.configure(
-        "VehicleTitle.TLabel",
-        background="#FFFFFF",
-        foreground=colors["text"],
-        font=("Segoe UI", 18, "bold")
-    )
-    style.configure(
-        "VehicleMileage.TLabel",
-        background="#FFFFFF",
-        foreground=colors["accent"],
-        font=("Segoe UI", 13)
-    )
-
-    vehicle_heading = tk.StringVar(value="Select a vehicle")
-    mileage_heading = tk.StringVar()
-
-    vehicle_card = ttk.Frame(
-        overview_tab,
-        style="VehicleCard.TFrame",
-        padding=16
-    )
-    vehicle_card.pack(fill="x", pady=(0, 12))
-
-    vehicle_title = ttk.Label(
-        vehicle_card,
-        textvariable=vehicle_heading,
-        style="VehicleTitle.TLabel"
-    )
-    vehicle_title.pack(anchor="w")
-
-    ttk.Label(
-        vehicle_card,
-        textvariable=mileage_heading,
-        style="VehicleMileage.TLabel"
-    ).pack(anchor="w", pady=(6, 0))
-
-    vehicle_card.bind(
-        "<Configure>",
-        lambda event: vehicle_title.configure(
-            wraplength=max(120, event.width - 32)
-        )
-    )
-
-    overview_scroll = ttk.Scrollbar(overview_tab, orient="vertical")
-    overview_scroll.pack(side="right", fill="y")
-    overview_text = tk.Text(overview_tab, font=("Segoe UI", 12), wrap="word",
-                            width=1, height=1, relief="flat", state="disabled",
-                            yscrollcommand=overview_scroll.set)
-    overview_text.pack(fill="both", expand=True)
-    overview_scroll.configure(command=overview_text.yview)
-
-    def refresh_overview(*args):
-        overview_text.configure(state="normal")
-        overview_text.delete("1.0", "end")
-        overview_text.insert("1.0", details_text.get())
-        overview_text.configure(state="disabled")
-
-    details_text.trace_add("write", refresh_overview)
-    refresh_overview()
+    vehicle_heading = overview.heading
+    mileage_heading = overview.mileage
+    details_text = overview.details
 
     # ===== SHARED TABLE BUILDER =====
     def make_table(parent, columns):
@@ -451,6 +393,8 @@ def main():
         if not selection:
             vehicle_heading.set("No vehicle selected")
             mileage_heading.set("")
+            overview.oil.set("Oil change: —")
+            overview.tires.set("Tire rotation: —")
             details_text.set(
                 "No matching vehicles. Try another search or click Clear."
                 if search_var.get().strip() and vehicles
@@ -538,6 +482,9 @@ def main():
             )
             tire_status = maintenance_status(tire_remaining)
 
+        overview.oil.set(f"Oil change: {oil_status}")
+        overview.tires.set(f"Tire rotation: {tire_status}")
+
         # ===== SERVICE SPENDING =====
         service_cents = 0
         unknown_costs = 0
@@ -576,9 +523,6 @@ def main():
 
         # ===== DASHBOARD TEXT =====
         details_text.set(
-            f"MAINTENANCE\n"
-            f"Oil change: {oil_status}\n"
-            f"Tire rotation: {tire_status}\n\n"
             f"BATTERY\n{battery_summary(vehicle)}\n\n"
             f"CURRENT TIRE PRESSURE (calculated PSI)\n"
             f"Driver's front: {pressure_text('driver_front')}\n"
