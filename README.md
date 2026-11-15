@@ -2,9 +2,20 @@
 
 ## Current project version
 
-**MileSage Alpha 1.3.1** — mobile HTML preview updated with tonight's additional vehicle overview and fuel analytics. Alpha 1.3.0 receipt-photo features and safe restores remain. Desktop and Android manual testing remain pending. No APK has been built or deployed.
+**MileSage Alpha 1.3.2** — mobile HTML preview adds VIN lookup through NHTSA vPIC with an explicit review-before-save screen. Prior vehicle overview, fuel analytics, receipt-photo features and safe restores remain. Desktop and Android manual testing remain pending. No APK has been built or deployed.
 
 The earlier Alpha 1.1.1 patch records the Tacoma's user-configured tire-rotation and oil-service interval changes. GitHub configuration and documentation have been updated; an Android APK has **not** been built, published, or verified, and mobile/desktop testing of the patch remains pending. The standalone mobile HTML remains a preview, and devices may retain older locally saved data until deliberately synchronized.
+
+
+## Add a vehicle using its VIN (Alpha 1.3.2)
+
+The mobile garage now includes **+ By VIN** beside **+ Manual**. Enter the 17-character VIN, select **Look up VIN** while online, and review the NHTSA-decoded model year, make and model. Edit the suggested name or year if needed, enter the actual odometer reading and confirm **Save new vehicle**. VIN input excludes the letters I, O and Q, checks NHTSA decoder errors, and rejects a duplicate VIN. **No vehicle is written until final confirmation**. The VIN is stored in the record, displayed on its vehicle card and exported in both JSON backup formats.
+
+This uses the public [NHTSA vPIC VIN Decoder](https://vpic.nhtsa.dot.gov/api/) (an external service) and therefore sends the entered VIN to NHTSA. It is not an ownership check or a vehicle-history report. On a mobile browser that blocks remote network requests from a local HTML file, or when offline, the VIN lookup reports an error and does not change the garage. The **+ Manual** button still works without the decoder.
+
+The desktop Python model now preserves the optional \`vin\` field on save/load, so the mobile export does not silently lose it. Older JSON files without a VIN still load normally. Existing vehicles, including named test vehicles, are not automatically merged, removed or renamed. This update does not insert the user's phone data into GitHub's sample \`vehicles.json\`.
+
+**Upgrading phones safely:** In the currently installed version, export **Full mobile backup**. Download and open the new \`mobile/MileSage_Alpha_1_3_2_VIN_Lookup.html\` file; local browser files can have different storage origins and thus appear blank. Use **Data & backup → Import JSON file** to review/import the user's own saved backup if needed. Do **not** clear the old browser storage or import repository demo data over live records. Inspect all vehicle cards, tester labels, odometers and histories before logging new work. There is no automatic phone app replacement or APK deployment.
 
 ## MileSage — configured maintenance intervals
 
