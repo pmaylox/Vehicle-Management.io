@@ -23,11 +23,28 @@ label.field{display:block;font-size:13px;font-weight:700;margin:13px 0 7px}input
 </style>
 </head>
 <body>
-<header class="top"><div class="topline"><div class="brand"><div class="logo" aria-hidden="true"><svg width="37" height="37" viewBox="0 0 40 40" fill="none"><path d="M8 31 L12 9 L20 20 L28 9 L32 31" stroke="#f4cfb2" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 4 V10 M20 14 V18 M20 25 V29 M20 33 V37" stroke="#fff" stroke-width="2" stroke-dasharray="3 4"/></svg></div><div><h1>MileSage</h1><small>Vehicle intelligence · Alpha 1.3.1 mobile insights</small></div></div><button class="top-action" id="dataButton" type="button">Data & backup</button></div></header>
+<header class="top"><div class="topline"><div class="brand"><div class="logo" aria-hidden="true"><svg width="37" height="37" viewBox="0 0 40 40" fill="none"><path d="M8 31 L12 9 L20 20 L28 9 L32 31" stroke="#f4cfb2" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 4 V10 M20 14 V18 M20 25 V29 M20 33 V37" stroke="#fff" stroke-width="2" stroke-dasharray="3 4"/></svg></div><div><h1>MileSage</h1><small>Vehicle intelligence · Alpha 1.3.2 VIN lookup</small></div></div><button class="top-action" id="dataButton" type="button">Data & backup</button></div></header>
 <main>
 <div id="notice" class="notice" role="status"></div>
 <section id="home" class="section active" aria-label="Home">
-<div class="section-head"><h2>Your garage</h2><button type="button" id="addVehicleButton" class="btn secondary">+ Vehicle</button></div>
+<div class="section-head"><h2>Your garage</h2><div class="button-row"><button type="button" id="addVinButton" class="btn">+ By VIN</button><button type="button" id="addVehicleButton" class="btn secondary">+ Manual</button></div></div>
+<div id="vinEntryCard" class="card feature-card" hidden>
+<h3 style="margin-top:0">Add vehicle by VIN</h3>
+<p class="small muted">Enter a 17-character VIN. MileSage checks the NHTSA vehicle decoder over the internet. Review the suggested details and your actual odometer before saving. Nothing in your garage changes until you choose Save new vehicle.</p>
+<form id="vinLookupForm">
+<label class="field" for="vinInput">Vehicle Identification Number (VIN)</label>
+<input id="vinInput" type="text" inputmode="text" autocapitalize="characters" spellcheck="false" autocomplete="off" maxlength="23" placeholder="17-character VIN" required>
+<button class="btn full" id="vinLookupButton" type="submit" style="margin-top:10px">Look up VIN</button>
+</form>
+<p class="small muted" id="vinLookupStatus" role="status" aria-live="polite"></p>
+<form id="vinConfirmForm" hidden>
+<label class="field" for="vinVehicleName">Vehicle name (review or edit)</label><input id="vinVehicleName" type="text" maxlength="100" required>
+<label class="field" for="vinVehicleYear">Model year</label><input id="vinVehicleYear" type="number" min="1981" max="2100" step="1" required>
+<label class="field" for="vinVehicleMileage">Current odometer (miles)</label><input id="vinVehicleMileage" type="number" min="0" step="1" inputmode="numeric" value="0" required>
+<p class="small muted">VIN: <strong id="vinPreview"></strong></p>
+<button class="btn full" type="submit">Save new vehicle</button>
+</form>
+</div>
 <div class="vehicle-grid" id="vehicleCards"></div>
 <div id="homeDetails"></div>
 </section>
@@ -52,7 +69,7 @@ label.field{display:block;font-size:13px;font-weight:700;margin:13px 0 7px}input
 <div class="card feature-card"><h3 style="margin-top:0">Recover or import your data safely</h3><p class="small muted">Your phone data is stored locally. GitHub is checked read-only and will <strong>never</strong> replace it automatically. GitHub vehicles.json may contain incomplete or demo records, not your live phone readings; all-zero placeholder imports are blocked. Importing a JSON file requires review and saves a local recovery snapshot first.</p>
 <div class="button-row"><button id="githubBackupRecovery" class="btn" type="button">Recover from saved GitHub backup</button><button id="fileImportButton" class="btn secondary" type="button">Import JSON file</button></div><button id="githubImport" class="btn secondary" type="button" style="margin-top:8px">Review GitHub vehicles.json</button><input id="jsonFile" type="file" accept=".json,application/json" hidden><p class="note">The saved GitHub backup is older (November 2026), but has recorded odometer and tire pressure data. Recovery fills only currently missing readings and empty histories, retaining your phone settings. Check mileage against your actual odometer after recovery. This will not update the app code or install an APK.</p></div>
 <div class="card"><h3 style="margin-top:0">Save a backup</h3><p class="small muted">Phone edits are saved in this browser, not uploaded to GitHub or your laptop. Export regularly before clearing browser data or changing phones.</p><div class="button-row"><button id="exportPython" class="btn" type="button">Export vehicles.json</button><button id="exportFull" class="btn secondary" type="button">Full mobile backup</button><button id="undoImport" class="btn secondary" type="button">Restore pre-import snapshot</button></div><p class="small muted" style="margin-bottom:0">The Python export uses the same vehicle JSON structure as your desktop app. Mobile-only expense and mileage-log details are included in the full backup.</p></div>
-<div class="card"><h3 style="margin-top:0">About this version</h3><p class="small muted">MileSage Alpha 1.3.1 preview • Mobile Preview v7 • Fluid & filter buttons on the Service tab • Safe manual data restore • GitHub checks never overwrite records • Works with locally saved data offline. Added vehicle overview cards, fuel-type and octane fields, and three fuel insights charts. Full two-way cloud sync, push alerts, OBD-II and APK packaging are not implemented.</p><p class="small muted" id="storageNote"></p></div>
+<div class="card"><h3 style="margin-top:0">About this version</h3><p class="small muted">MileSage Alpha 1.3.2 preview • Mobile Preview v8 • VIN-based vehicle entry using the NHTSA decoder (internet required), with review before saving • Fluid & filter buttons on the Service tab • Safe manual data restore • GitHub checks never overwrite records • Works with locally saved data offline. Added vehicle overview cards, fuel-type and octane fields, and three fuel insights charts. Full two-way cloud sync, push alerts, OBD-II and APK packaging are not implemented.</p><p class="small muted" id="storageNote"></p></div>
 </section>
 </main>
 <nav class="bottom" aria-label="Main tabs"><div class="tabs">
@@ -109,7 +126,7 @@ function load(){try{const raw=localStorage.getItem(KEY);if(raw){const o=JSON.par
 function updateBanner(){let text='';if(!hasStorage)text='<div class="note" role="alert"><strong>Warning:</strong> This browser is not keeping changes. Export a JSON backup after every change.</div>';else if(!vehicles.length)text='<div class="note info"><strong>Get started:</strong> In <strong>Data & backup</strong>, use <strong>Recover from saved GitHub backup</strong> for earlier recorded mileage and tire pressures. Avoid importing incomplete or demonstration GitHub records over your real odometer and pressure readings.</div>';else text='<div class="note info" style="margin-top:0"><strong>GitHub check:</strong> '+esc(syncStatus)+'<div style="margin-top:5px">GitHub checks do not change your phone data. Always export a full backup before restoring.</div></div>';$('notice').innerHTML=text;$('storageNote').textContent=hasStorage?'Browser storage is available. Keep an exported backup in case browser data is cleared.':'Browser storage is blocked/unavailable. Make a backup immediately.'}
 function status(val,inter){if(!Number.isFinite(val))return ['Unknown','warn'];if(val<=0)return ['Due now','due'];if(val<=Math.max(500,inter*.12))return [`${num(val)} mi left`,'warn'];return [`${num(val)} mi left`,'good']}
 function vehicleTag(obj){const remain=Number(obj.service_interval)-Math.max(0,Number(obj.mileage)-Number(obj.last_service_mileage));const [s,cls]=status(remain,Number(obj.service_interval));return `<span class="pill ${cls}">Oil: ${esc(s)}</span>`}
-function renderVehicles(){const root=$('vehicleCards');root.innerHTML=vehicles.length?vehicles.map((a,i)=>`<button class="vehicle-card ${i===current?'selected':''}" type="button" data-vehicle="${i}" aria-pressed="${i===current}"><div class="vehicle-title">${esc(a.name)} <span class="vehicle-year">${esc(a.year)}</span></div><div class="vehicle-mileage">${num(a.mileage)} <small>miles</small></div><div style="margin-top:9px">${vehicleTag(a)}</div></button>`).join(''):empty('No vehicles loaded yet. Import your GitHub data or add a vehicle.');
+function renderVehicles(){const root=$('vehicleCards');root.innerHTML=vehicles.length?vehicles.map((a,i)=>`<button class="vehicle-card ${i===current?'selected':''}" type="button" data-vehicle="${i}" aria-pressed="${i===current}"><div class="vehicle-title">${esc(a.name)} <span class="vehicle-year">${esc(a.year)}</span></div><div class="vehicle-mileage">${num(a.mileage)} <small>miles</small></div>${a.vin?'<div class="small muted" style="margin-top:4px">VIN: '+esc(a.vin)+'</div>':''}<div style="margin-top:9px">${vehicleTag(a)}</div></button>`).join(''):empty('No vehicles loaded yet. Import your GitHub data or add a vehicle.');
 root.querySelectorAll('[data-vehicle]').forEach(el=>el.addEventListener('click',()=>{current=Number(el.dataset.vehicle);save();renderAll()}));}
 function mileageForm(obj){return `<div class="card"><h3 style="margin:0 0 8px">Update odometer</h3><p class="small muted" style="margin-top:0">${esc(obj.year)} ${esc(obj.name)} • Current: ${num(obj.mileage)} miles</p><form id="mileageForm"><label class="field" for="mileageNew">New odometer reading</label><input type="number" id="mileageNew" min="${Number(obj.mileage)}" step="1" inputmode="numeric" required placeholder="Miles" value="${Number(obj.mileage)}"><div style="margin-top:12px"><button class="btn full" type="submit">Save mileage</button></div></form></div>`}
 
@@ -538,7 +555,7 @@ function filename(prefix){return `${prefix}-${localDate()}.json`}
 function download(name,data){const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);message('Backup prepared. Check Downloads on your phone.');}
 function pythonExport(){return vehicles.map(({mobile_expenses,mobile_mileage_log,...obj})=>obj)}
 /* RESTORE_GUARDS_BEGIN */
-function vehicleID(a){return String(a.year)+'|'+String(a.name).trim().toLowerCase();}
+function vehicleID(a){return a.vin?'vin:'+String(a.vin).toUpperCase():'name:'+String(a.year)+'|'+String(a.name).trim().toLowerCase();}
 function isBlankSeed(recs){
  return recs.length>0 && recs.every(a=>
    Number(a.mileage)===0 &&
@@ -722,12 +739,92 @@ async function autoRefreshGitHub(){
  }catch(e){syncStatus='GitHub status unavailable; phone data has not changed.';}
  finally{checkingGitHub=false;updateBanner();}
 }
+/* VIN_LOOKUP_BEGIN */
+function normalizeVIN(raw){
+ const vin=String(raw??'').toUpperCase().replace(/[\s-]/g,'');
+ if(!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin))
+  throw Error('A VIN must contain 17 letters or digits, excluding I, O, and Q.');
+ return vin;
+}
+function parseVINDecode(payload){
+ const details=payload?.Results?.[0];
+ if(!details || typeof details!=='object')throw Error('The VIN decoder returned no vehicle information.');
+ const errors=String(details.ErrorCode??'0').split(',').map(x=>x.trim()).filter(Boolean);
+ if(errors.some(x=>x!=='0'))throw Error('NHTSA could not verify this VIN. '+String(details.ErrorText||'').slice(0,160));
+ const year=Number(details.ModelYear);
+ const make=String(details.Make||'').trim(), model=String(details.Model||'').trim();
+ if(!Number.isInteger(year)||year<1981||year>new Date().getFullYear()+2||!make||!model)
+  throw Error('NHTSA did not return a complete model year, make and model.');
+ return {year,make,model,trim:String(details.Trim||'').trim()};
+}
+function vinAlreadyExists(records,vin){
+ return records.some(a=>String(a.vin||'').toUpperCase()===vin);
+}
+/* VIN_LOOKUP_END */
+let decodedVIN=null;
+function showVINEntry(){
+ const panel=$('vinEntryCard');
+ panel.hidden=!panel.hidden;
+ if(!panel.hidden)$('vinInput').focus();
+}
+async function lookUpVIN(event){
+ event.preventDefault();
+ let vin;
+ try{vin=normalizeVIN($('vinInput').value);}
+ catch(error){alert(error.message);return;}
+ if(vinAlreadyExists(vehicles,vin)){alert('This VIN is already saved in your garage. No duplicate was added.');return;}
+ const button=$('vinLookupButton'),status=$('vinLookupStatus');
+ button.disabled=true;button.textContent='Looking up VIN…';
+ decodedVIN=null;$('vinConfirmForm').hidden=true;
+ status.textContent='Contacting NHTSA. No vehicle data has been changed.';
+ try{
+  const response=await fetch('https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/'+encodeURIComponent(vin)+'?format=json',{cache:'no-store'});
+  if(!response.ok)throw Error('NHTSA returned HTTP '+response.status);
+  const result=parseVINDecode(await response.json());
+  decodedVIN={vin,...result};
+  $('vinVehicleName').value=result.make+' '+result.model;
+  $('vinVehicleYear').value=result.year;
+  $('vinVehicleMileage').value='0';
+  $('vinPreview').textContent=vin;
+  $('vinConfirmForm').hidden=false;
+  status.textContent='NHTSA suggests '+result.year+' '+result.make+' '+result.model+
+   (result.trim?' ('+result.trim+')':'')+'. Verify the details and enter the actual odometer.';
+ }catch(error){
+  status.textContent='VIN lookup failed: '+error.message+' Your garage is unchanged. Use + Manual if the decoder is unavailable.';
+ }finally{button.disabled=false;button.textContent='Look up VIN';}
+}
+function saveVINVehicle(event){
+ event.preventDefault();
+ if(!decodedVIN){alert('Look up a VIN first.');return;}
+ if(vinAlreadyExists(vehicles,decodedVIN.vin)){alert('That VIN is already in your garage.');return;}
+ let year,miles;
+ const name=$('vinVehicleName').value.trim();
+ try{
+  if(!name||name.length>100)throw Error('Enter a vehicle name (up to 100 characters).');
+  year=whole($('vinVehicleYear').value,'Model year',1981);
+  if(year>new Date().getFullYear()+2)throw Error('Check the model year.');
+  miles=whole($('vinVehicleMileage').value,'Odometer mileage',0);
+ }catch(error){alert(error.message);return;}
+ if(!confirm('Add '+year+' '+name+'?\nVIN: '+decodedVIN.vin+'\nOdometer: '+num(miles)+' miles\n\nExisting vehicles and histories will not change.'))return;
+ const record=normalize([{name,year,mileage:miles,starting_mileage:miles,
+  last_service_mileage:miles,service_interval:5000,vin:decodedVIN.vin}])[0];
+ vehicles.push(record);current=vehicles.length-1;
+ save();renderAll();$('vinEntryCard').hidden=true;
+ $('vinLookupForm').reset();$('vinConfirmForm').hidden=true;
+ $('vinLookupStatus').textContent='';decodedVIN=null;
+ message('Vehicle added using its VIN.');
+}
+
 function addVehicle(){const name=prompt('Vehicle name (example: Toyota Tacoma)');if(name===null)return;if(!name.trim()){alert('Enter a vehicle name.');return}const yearText=prompt('Model year',String(new Date().getFullYear()));if(yearText===null)return;const milesText=prompt('Current odometer mileage','0');if(milesText===null)return;let year,miles;try{year=whole(yearText,'Year',1900);miles=whole(milesText,'Mileage',0);if(year>new Date().getFullYear()+2)throw Error('Check the vehicle year.')}catch(error){alert(error.message);return}const first=normalize([{name:name.trim(),year,mileage:miles,starting_mileage:miles,last_service_mileage:miles,service_interval:5000}])[0];vehicles.push(first);current=vehicles.length-1;save();renderAll();message('Vehicle added.');}
 function init(){
  load();renderAll();
  for(const b of document.querySelectorAll('[data-tab]'))b.onclick=()=>switchTab(b.dataset.tab);
  $('dataButton').onclick=()=>switchTab('data');
  $('addVehicleButton').onclick=addVehicle;
+ $('addVinButton').onclick=showVINEntry;
+ $('vinLookupForm').onsubmit=lookUpVIN;
+ $('vinConfirmForm').onsubmit=saveVINVehicle;
+ $('vinInput').oninput=()=>{decodedVIN=null;$('vinConfirmForm').hidden=true;$('vinLookupStatus').textContent='';};
  $('githubImport').onclick=githubImport;
  $('githubBackupRecovery').onclick=recoverFromGitHubBackup;
  $('undoImport').onclick=undoImport;
