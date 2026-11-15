@@ -5,7 +5,7 @@ const assert=require('node:assert/strict');
 
 const paths=[
  'mobile/MileSage_Mobile_Auto_Refresh.html',
- 'mobile/MileSage_Alpha_1_3_1_All_Updates.html'
+ 'mobile/MileSage_Alpha_1_3_2_VIN_Lookup.html'
 ];
 const contents=paths.map(p=>fs.readFileSync(p,'utf8'));
 assert.equal(contents[0],contents[1],'Both distributed mobile builds must match');
