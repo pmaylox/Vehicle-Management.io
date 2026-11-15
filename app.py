@@ -232,6 +232,13 @@ def main():
     )
     mpg_chart.pack(fill="x")
 
+    distance_chart = DashboardChart(
+        graphs_content,
+        "Miles between recorded fill-ups",
+        kind="line"
+    )
+    distance_chart.pack(fill="x", pady=(12, 0))
+
     details_text = tk.StringVar(
         value="Select a vehicle to view its details."
     )
@@ -313,6 +320,7 @@ def main():
     fuel_table = make_table(fuel_tab, [
         ("date", "Date", 110),
         ("mileage", "Mileage", 100),
+        ("distance", "Distance (miles)", 200),
         ("gallons", "US Gallons", 100),
         ("cost", "Total Cost ($)", 110),
         ("full", "Full Tank", 90),
@@ -350,6 +358,7 @@ def main():
             fuel_status.set("No vehicle selected")
             spending_chart.set_data([])
             mpg_chart.set_data([])
+            distance_chart.set_data([])
             graph_status.set("Select a vehicle to view its graphs.")
             return
 
@@ -491,32 +500,45 @@ def main():
 
         previous_full_mileage = None
         gallons_since_full = Decimal("0")
+        previous_fill_mileage = None
+        distance_points = []
 
         for record in vehicle.fuel_history:
+            current_mileage = record["mileage"]
+
+            if current_mileage is None:
+                distance_text = "Mileage not recorded"
+            elif previous_fill_mileage is None:
+                distance_text = "No previous mileage"
+            elif current_mileage < previous_fill_mileage:
+                distance_text = "Check odometer order"
+            else:
+                distance = current_mileage - previous_fill_mileage
+                distance_text = f"{distance:,} miles"
+                distance_points.append((
+                    date.fromisoformat(record["date"]).strftime("%m/%d/%y"),
+                    distance
+                ))
+
+            previous_fill_mileage = current_mileage
             gallons = Decimal(record["gallons"])
             full_tank = record["full_tank"]
 
-            if record["mileage"] is None:
+            if current_mileage is None:
                 previous_full_mileage = None
                 gallons_since_full = Decimal("0")
                 mpg_text = "Mileage not recorded"
-
             elif previous_full_mileage is None:
                 if full_tank:
-                    previous_full_mileage = record["mileage"]
+                    previous_full_mileage = current_mileage
                     gallons_since_full = Decimal("0")
                     mpg_text = "Starting full tank"
                 else:
                     mpg_text = "Need starting full tank"
-
             else:
                 gallons_since_full += gallons
-
                 if full_tank:
-                    miles = (
-                        record["mileage"] - previous_full_mileage
-                    )
-
+                    miles = current_mileage - previous_full_mileage
                     if miles > 0 and gallons_since_full > 0:
                         mpg = Decimal(miles) / gallons_since_full
                         mpg_text = f"{mpg:.2f}"
@@ -526,8 +548,7 @@ def main():
                         ))
                     else:
                         mpg_text = "Insufficient distance"
-
-                    previous_full_mileage = record["mileage"]
+                    previous_full_mileage = current_mileage
                     gallons_since_full = Decimal("0")
                 else:
                     mpg_text = "Waiting for full tank"
@@ -535,6 +556,7 @@ def main():
             fuel_table.insert("", tk.END, values=(
                 format_date(record["date"]),
                 format_mileage(record["mileage"]),
+                distance_text,
                 record["gallons"],
                 vehicle.format_service_cost(record),
                 "Yes" if full_tank else "No",
@@ -545,6 +567,7 @@ def main():
             ))
 
         mpg_chart.set_data(mpg_points[-6:])
+        distance_chart.set_data(distance_points[-6:])
 
         service_status.set(
             f"{len(vehicle.service_history)} service records"
