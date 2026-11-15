@@ -2,11 +2,12 @@ import tkinter as tk
 from tkinter import ttk
 
 class DashboardChart(ttk.Frame):
-    def __init__(self, parent, title, kind="bar"):
+    def __init__(self, parent, title, kind="bar", decimals=1):
         super().__init__(parent, padding=12)
 
         self.kind = kind
         self.points = []
+        self.decimals = decimals
 
         ttk.Label(
             self,
@@ -61,7 +62,7 @@ class DashboardChart(ttk.Frame):
             )
             canvas.create_text(
                 left - 8, y,
-                text=f"{fraction * scale_max:,.1f}",
+                text=f"{fraction * scale_max:,.{self.decimals}f}",
                 anchor="e",
                 fill="#666666"
             )
@@ -99,7 +100,7 @@ class DashboardChart(ttk.Frame):
 
             canvas.create_text(
                 x, y - 12,
-                text=f"{value:,.1f}",
+                text=f"{value:,.{self.decimals}f}",
                 fill="#333333"
             )
             canvas.create_text(

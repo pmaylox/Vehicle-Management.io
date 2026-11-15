@@ -239,6 +239,14 @@ def main():
     )
     distance_chart.pack(fill="x", pady=(12, 0))
 
+    price_chart = DashboardChart(
+        graphs_content,
+        "Fuel price per US gallon ($)",
+        kind="line",
+        decimals=3
+    )
+    price_chart.pack(fill="x", pady=(12, 0))
+
     details_text = tk.StringVar(
         value="Select a vehicle to view its details."
     )
@@ -359,6 +367,7 @@ def main():
             spending_chart.set_data([])
             mpg_chart.set_data([])
             distance_chart.set_data([])
+            price_chart.set_data([])
             graph_status.set("Select a vehicle to view its graphs.")
             return
 
@@ -502,6 +511,7 @@ def main():
         gallons_since_full = Decimal("0")
         previous_fill_mileage = None
         distance_points = []
+        price_points = []
 
         for record in vehicle.fuel_history:
             current_mileage = record["mileage"]
@@ -553,6 +563,11 @@ def main():
                 else:
                     mpg_text = "Waiting for full tank"
 
+            price_points.append((
+                date.fromisoformat(record["date"]).strftime("%m/%d/%y"),
+                float(Decimal(record["cost_cents"]) / 100 / gallons)
+            ))
+
             fuel_table.insert("", tk.END, values=(
                 format_date(record["date"]),
                 format_mileage(record["mileage"]),
@@ -568,6 +583,7 @@ def main():
 
         mpg_chart.set_data(mpg_points[-6:])
         distance_chart.set_data(distance_points[-6:])
+        price_chart.set_data(price_points[-6:])
 
         service_status.set(
             f"{len(vehicle.service_history)} service records"
