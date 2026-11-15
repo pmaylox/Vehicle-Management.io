@@ -1,0 +1,85 @@
+[
+    {
+        "name": "Toyota Tacoma",
+        "year": 2026,
+        "mileage": 4605,
+        "starting_mileage": 0,
+        "last_service_mileage": 0,
+        "service_interval": 10000,
+        "service_history": [
+            {
+                "date": "2026-11-14",
+                "mileage": 4605,
+                "description": "Tire rotation",
+                "cost_cents": 0,
+                "oil_reset": false,
+                "tire_reset": true
+            }
+        ],
+        "tire_rotation_interval": 5000,
+        "last_tire_rotation_mileage": 4605,
+        "fuel_history": [],
+        "tire_pressures": {
+            "driver_front": null,
+            "driver_rear": null,
+            "passenger_front": null,
+            "passenger_rear": null
+        },
+        "starting_tire_pressures": {
+            "driver_front": null,
+            "driver_rear": null,
+            "passenger_front": null,
+            "passenger_rear": null
+        },
+        "tire_pressure_history": [],
+        "fluid_checks": {
+            "washer": {
+                "last_full_mileage": null,
+                "last_full_date": null
+            },
+            "coolant": {
+                "last_full_mileage": null,
+                "last_full_date": null
+            }
+        },
+        "fluid_check_history": [],
+        "air_filter_changes": []
+    },
+    {
+        "name": "Ford Explorer",
+        "year": 2025,
+        "mileage": 0,
+        "starting_mileage": 0,
+        "last_service_mileage": 0,
+        "service_interval": 5000,
+        "service_history": [],
+        "tire_rotation_interval": 5000,
+        "last_tire_rotation_mileage": null,
+        "fuel_history": [],
+        "tire_pressures": {
+            "driver_front": null,
+            "driver_rear": null,
+            "passenger_front": null,
+            "passenger_rear": null
+        },
+        "starting_tire_pressures": {
+            "driver_front": null,
+            "driver_rear": null,
+            "passenger_front": null,
+            "passenger_rear": null
+        },
+        "tire_pressure_history": [],
+        "fluid_checks": {
+            "washer": {
+                "last_full_mileage": null,
+                "last_full_date": null
+            },
+            "coolant": {
+                "last_full_mileage": null,
+                "last_full_date": null
+            }
+        },
+        "fluid_check_history": [],
+        "air_filter_changes": []
+    }
+]

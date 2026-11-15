@@ -171,11 +171,42 @@ def main():
     notebook.add(fuel_tab, text="Fuel History")
     graphs_tab = ttk.Frame(notebook, padding=15)
     notebook.add(graphs_tab, text="Graphs")
+    graphs_scroll = ttk.Scrollbar(graphs_tab, orient="vertical")
+    graphs_scroll.pack(side="right", fill="y")
+
+    graphs_canvas = tk.Canvas(
+        graphs_tab,
+        highlightthickness=0,
+        yscrollcommand=graphs_scroll.set
+    )
+    graphs_canvas.pack(side="left", fill="both", expand=True)
+    graphs_scroll.configure(command=graphs_canvas.yview)
+
+    graphs_content = ttk.Frame(graphs_canvas)
+    graphs_window = graphs_canvas.create_window(
+        0, 0,
+        window=graphs_content,
+        anchor="nw"
+    )
+
+    def resize_graphs(event=None):
+        graphs_canvas.configure(
+            scrollregion=graphs_canvas.bbox("all")
+        )
+
+    def fit_graph_width(event):
+        graphs_canvas.itemconfigure(
+            graphs_window,
+            width=event.width
+        )
+
+    graphs_content.bind("<Configure>", resize_graphs)
+    graphs_canvas.bind("<Configure>", fit_graph_width)
 
     spending_kind = tk.StringVar(value="Fuel")
 
     ttk.Combobox(
-        graphs_tab,
+        graphs_content,
         textvariable=spending_kind,
         values=("Fuel", "Service"),
         state="readonly"
@@ -183,24 +214,23 @@ def main():
 
     graph_status = tk.StringVar()
     ttk.Label(
-        graphs_tab,
+        graphs_content,
         textvariable=graph_status,
         wraplength=600
-    ).pack(anchor="w", pady=(0,6))
-    
+    ).pack(anchor="w", pady=(0, 6))
 
     spending_chart = DashboardChart(
-        graphs_tab,
+        graphs_content,
         "Monthly recorded spending ($)"
     )
-    spending_chart.pack(fill="both", expand=True)
+    spending_chart.pack(fill="x", pady=(0, 12))
 
     mpg_chart = DashboardChart(
-        graphs_tab,
+        graphs_content,
         "Fuel economy (MPG)",
         kind="line"
     )
-    mpg_chart.pack(fill="both", expand=True)
+    mpg_chart.pack(fill="x")
 
     details_text = tk.StringVar(
         value="Select a vehicle to view its details."

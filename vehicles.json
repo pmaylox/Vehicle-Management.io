@@ -81,5 +81,293 @@
         },
         "fluid_check_history": [],
         "air_filter_changes": []
+    },
+    {
+        "name": "Ford Explorer — Demo (sample data)",
+        "year": 2025,
+        "mileage": 14640,
+        "starting_mileage": 10000,
+        "last_service_mileage": 13600,
+        "service_interval": 5000,
+        "service_history": [
+            {
+                "date": "2026-06-12",
+                "mileage": 10290,
+                "description": "Oil change",
+                "cost_cents": 7495,
+                "oil_reset": true,
+                "tire_reset": false,
+                "sample_data": true
+            },
+            {
+                "date": "2026-07-12",
+                "mileage": 11045,
+                "description": "Tire rotation",
+                "cost_cents": 0,
+                "oil_reset": false,
+                "tire_reset": true,
+                "sample_data": true
+            },
+            {
+                "date": "2026-08-12",
+                "mileage": 11930,
+                "description": "Brake service",
+                "cost_cents": 32500,
+                "oil_reset": false,
+                "tire_reset": false,
+                "sample_data": true
+            },
+            {
+                "date": "2026-09-12",
+                "mileage": 12690,
+                "description": "Air filter replaced",
+                "cost_cents": 3299,
+                "oil_reset": false,
+                "tire_reset": false,
+                "sample_data": true
+            },
+            {
+                "date": "2026-10-12",
+                "mileage": 13600,
+                "description": "Oil change and tire rotation",
+                "cost_cents": 9995,
+                "oil_reset": true,
+                "tire_reset": true,
+                "sample_data": true
+            },
+            {
+                "date": "2026-11-08",
+                "mileage": 14310,
+                "description": "Battery replaced",
+                "cost_cents": 18999,
+                "oil_reset": false,
+                "tire_reset": false,
+                "sample_data": true,
+                "battery": {
+                    "installed": "2026-11-08",
+                    "months": 48,
+                    "term": "Expected life",
+                    "maker": "Sample brand"
+                }
+            },
+            {
+                "date": "2026-11-14",
+                "mileage": 14640,
+                "description": "Inspection — cost not recorded",
+                "cost_cents": null,
+                "oil_reset": false,
+                "tire_reset": false,
+                "sample_data": true
+            }
+        ],
+        "tire_rotation_interval": 5000,
+        "last_tire_rotation_mileage": 13600,
+        "fuel_history": [
+            {
+                "date": "2026-06-01",
+                "mileage": 10000,
+                "gallons": "15.2",
+                "cost_cents": 4849,
+                "full_tank": true,
+                "octane": 87,
+                "fuel_type": "E0 — Non-ethanol",
+                "sample_data": true
+            },
+            {
+                "date": "2026-06-12",
+                "mileage": 10290,
+                "gallons": "13.7",
+                "cost_cents": 4453,
+                "full_tank": true,
+                "octane": 89,
+                "fuel_type": "E10 — gasoline",
+                "sample_data": true
+            },
+            {
+                "date": "2026-06-24",
+                "mileage": 10615,
+                "gallons": "14.8",
+                "cost_cents": 4662,
+                "full_tank": true,
+                "octane": 93,
+                "fuel_type": "E10 — gasoline",
+                "sample_data": true
+            },
+            {
+                "date": "2026-07-01",
+                "mileage": 10885,
+                "gallons": "13.5",
+                "cost_cents": 4577,
+                "full_tank": true,
+                "octane": 87,
+                "fuel_type": "E10 — gasoline",
+                "sample_data": true
+            },
+            {
+                "date": "2026-07-12",
+                "mileage": 11045,
+                "gallons": "7.0",
+                "cost_cents": 2345,
+                "full_tank": false,
+                "octane": 89,
+                "fuel_type": "E0 — Non-ethanol",
+                "sample_data": true
+            },
+            {
+                "date": "2026-07-24",
+                "mileage": 11295,
+                "gallons": "12.8",
+                "cost_cents": 4211,
+                "full_tank": true,
+                "octane": 93,
+                "fuel_type": "E10 — gasoline",
+                "sample_data": true
+            },
+            {
+                "date": "2026-08-01",
+                "mileage": 11630,
+                "gallons": "15.1",
+                "cost_cents": 5270,
+                "full_tank": true,
+                "octane": 87,
+                "fuel_type": "E10 — gasoline",
+                "sample_data": true
+            },
+            {
+                "date": "2026-08-12",
+                "mileage": 11930,
+                "gallons": "14.5",
+                "cost_cents": 5148,
+                "full_tank": true,
+                "octane": 89,
+                "fuel_type": "E10 — gasoline",
+                "sample_data": true
+            },
+            {
+                "date": "2026-08-24",
+                "mileage": 12240,
+                "gallons": "13.9",
+                "cost_cents": 4796,
+                "full_tank": true,
+                "octane": 93,
+                "fuel_type": "E0 — Non-ethanol",
+                "sample_data": true
+            },
+            {
+                "date": "2026-09-01",
+                "mileage": 12520,
+                "gallons": "14.0",
+                "cost_cents": 4606,
+                "full_tank": true,
+                "octane": 87,
+                "fuel_type": "E10 — gasoline",
+                "sample_data": true
+            },
+            {
+                "date": "2026-09-12",
+                "mileage": 12690,
+                "gallons": "7.5",
+                "cost_cents": 2393,
+                "full_tank": false,
+                "octane": 89,
+                "fuel_type": "E10 — gasoline",
+                "sample_data": true
+            },
+            {
+                "date": "2026-09-24",
+                "mileage": 12940,
+                "gallons": "12.1",
+                "cost_cents": 3933,
+                "full_tank": true,
+                "octane": 93,
+                "fuel_type": "E10 — gasoline",
+                "sample_data": true
+            },
+            {
+                "date": "2026-10-01",
+                "mileage": 13280,
+                "gallons": "15.8",
+                "cost_cents": 4882,
+                "full_tank": true,
+                "octane": 87,
+                "fuel_type": "E0 — Non-ethanol",
+                "sample_data": true
+            },
+            {
+                "date": "2026-10-12",
+                "mileage": 13600,
+                "gallons": "14.1",
+                "cost_cents": 4442,
+                "full_tank": true,
+                "octane": 89,
+                "fuel_type": "E10 — gasoline",
+                "sample_data": true
+            },
+            {
+                "date": "2026-10-24",
+                "mileage": 13895,
+                "gallons": "13.6",
+                "cost_cents": 4243,
+                "full_tank": true,
+                "octane": 93,
+                "fuel_type": "E10 — gasoline",
+                "sample_data": true
+            },
+            {
+                "date": "2026-11-01",
+                "mileage": 14055,
+                "gallons": "7.2",
+                "cost_cents": 2441,
+                "full_tank": false,
+                "octane": 87,
+                "fuel_type": "E10 — gasoline",
+                "sample_data": true
+            },
+            {
+                "date": "2026-11-08",
+                "mileage": 14310,
+                "gallons": "12.0",
+                "cost_cents": 4140,
+                "full_tank": true,
+                "octane": 89,
+                "fuel_type": "E0 — Non-ethanol",
+                "sample_data": true
+            },
+            {
+                "date": "2026-11-14",
+                "mileage": 14640,
+                "gallons": "15.0",
+                "cost_cents": 4935,
+                "full_tank": true,
+                "octane": 93,
+                "fuel_type": "E10 — gasoline",
+                "sample_data": true
+            }
+        ],
+        "tire_pressures": {
+            "driver_front": 35.0,
+            "driver_rear": 35.0,
+            "passenger_front": 35.0,
+            "passenger_rear": 35.0
+        },
+        "starting_tire_pressures": {
+            "driver_front": 35.0,
+            "driver_rear": 35.0,
+            "passenger_front": 35.0,
+            "passenger_rear": 35.0
+        },
+        "tire_pressure_history": [],
+        "fluid_checks": {
+            "washer": {
+                "last_full_mileage": null,
+                "last_full_date": null
+            },
+            "coolant": {
+                "last_full_mileage": null,
+                "last_full_date": null
+            }
+        },
+        "fluid_check_history": [],
+        "air_filter_changes": []
     }
 ]
