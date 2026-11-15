@@ -19,9 +19,9 @@ jobs:
       - name: Install export dependency
         run: python -m pip install openpyxl
       - name: Check Python syntax
-        run: python -m compileall -q Vehicle_Manager.py app.py excel_export.py storage.py test_fluid_filters.py
+        run: python -m compileall -q Vehicle_Manager.py app.py excel_export.py storage.py test_fluid_filters.py test_vin_persistence.py
       - name: Run fluid/filter and export regression tests
-        run: python -m unittest -v test_fluid_filters.py
+        run: python -m unittest -v test_fluid_filters.py test_vin_persistence.py
       - name: Exercise phone restore safety checks
         run: node mobile/test_restore_safety.cjs
       - name: Test service photo OCR parser
@@ -30,6 +30,8 @@ jobs:
         run: node mobile/test_fuel_receipt_parser.cjs
       - name: Test evening vehicle insights and storage parity
         run: node mobile/test_evening_insights.cjs
+      - name: Test VIN lookup and local garage preservation
+        run: node mobile/test_vin_lookup.cjs
       - name: Validate phone JavaScript syntax
         run: |
           python - <<'PY'

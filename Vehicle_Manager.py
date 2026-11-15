@@ -21,6 +21,7 @@ class Vehicle:
         self.starting_tire_pressures = self.tire_pressures.copy()
         self.tire_pressure_history = []
         self.name = name
+        self.vin = None  # Optional VIN from NHTSA mobile lookup; older records need no VIN.
         self.year = year
         self.mileage = mileage
         self.starting_mileage = mileage
@@ -808,6 +809,7 @@ class Vehicle:
     def to_dict(self):
         return {
             "name": self.name,
+            "vin": self.vin,
             "year": self.year,
             "mileage": self.mileage,
             "starting_mileage": self.starting_mileage,
@@ -834,6 +836,7 @@ class Vehicle:
 
         )
 
+        vehicle.vin = data.get("vin") or None
         vehicle.mileage = data["mileage"]
         vehicle.last_service_mileage = data["last_service_mileage"]
         vehicle.service_history = data.get("service_history", [])
