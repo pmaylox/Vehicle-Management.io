@@ -50,4 +50,7 @@ assert.ok(html.includes('capture="environment"'));
 assert.ok(html.includes('wireFuelReceiptPhoto(a)'));
 assert.ok(html.includes("if(od>a.mileage)throw Error"), 'fuel save must retain odometer safety validation');
 assert.ok(html.includes("$('fullTank').checked=false"), 'OCR may not claim a full tank');
+assert.ok(html.includes('id="fuelPhotoPreview"'), 'fuel photo must show a temporary preview');
+assert.ok(html.includes("showReceiptPreview('fuel',file)"), 'fuel must preview the received photo before OCR starts');
+assert.ok(html.includes('Photo preview is shown, but fuel receipt scanning failed:'), 'fuel must report OCR failures without hiding the photo');
 console.log('Fuel receipt OCR parsing tests passed');
