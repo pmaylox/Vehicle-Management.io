@@ -34,6 +34,42 @@ if(!files.length)files.push('mobile/MileSage_Mobile_Auto_Refresh.html','mobile/M
      assert.ok(!visible.includes('${')&&!visible.includes('function render'),tab+' leaked application code');
      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),tab+' overflows phone width');
     }
+    // End-to-end expense receipt attachment: use a small camera/gallery image,
+    // save the expense, check persisted compressed JPEG and full JSON backup.
+    await page.locator('[data-tab="expenses"]').click();
+    assert.equal(await page.locator('#expenseCameraButton').isVisible(),true);
+    assert.equal(await page.locator('#expenseGalleryButton').isVisible(),true);
+    await page.locator('#expenseGalleryInput').setInputFiles({name:'parking.png',mimeType:'image/png',buffer:png});
+    assert.equal(await page.locator('#expensePhotoPreview').isVisible(),true);
+    await page.locator('#extraDesc').fill('Parking receipt — TEST');
+    await page.locator('#extraCost').fill('11.20');
+    await page.locator('#saveOtherExpense').click();
+    await page.waitForFunction(()=>{
+      const a=JSON.parse(localStorage.getItem('milesage-mobile-offline-v1')).vehicles[0];
+      return a.mobile_expenses?.length===1&&!!a.mobile_expenses[0].receipt_photo?.data_url;
+    });
+    const expenseSaved=JSON.parse(await page.evaluate(()=>localStorage.getItem('milesage-mobile-offline-v1'))).vehicles[0];
+    assert.equal(expenseSaved.mobile_expenses[0].description,'Parking receipt — TEST');
+    assert.equal(expenseSaved.mobile_expenses[0].cost_cents,1120);
+    assert.ok(expenseSaved.mobile_expenses[0].receipt_photo.data_url.startsWith('data:image/jpeg;base64,'));
+    assert.equal(await page.locator('[data-photo-download="expense:0"]').count(),1);
+    assert.ok((await page.locator('#expensesBody').innerText()).includes('Parking receipt — TEST'));
+    await page.locator('#dataButton').click();
+    const downloadPromise=page.waitForEvent('download');
+    await page.locator('#exportFull').click();
+    const receiptBackup=JSON.parse(fs.readFileSync(await (await downloadPromise).path(),'utf8'));
+    assert.equal(receiptBackup.format,'MileSage-Mobile-v1');
+    assert.equal(receiptBackup.vehicles[0].mobile_expenses[0].receipt_photo.data_url,
+      expenseSaved.mobile_expenses[0].receipt_photo.data_url,'Full mobile backup lost expense receipt');
+    await page.locator('#jsonFile').setInputFiles({
+      name:'expense-backup.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(receiptBackup))
+    });
+    await page.waitForTimeout(200);
+    assert.equal(JSON.parse(await page.evaluate(()=>localStorage.getItem('milesage-mobile-offline-v1')))
+      .vehicles[0].mobile_expenses[0].receipt_photo.data_url,
+      expenseSaved.mobile_expenses[0].receipt_photo.data_url,'Expense receipt lost on restore');
+    await page.locator('[data-tab="expenses"]').click();
+    assert.equal(await page.locator('[data-photo-download="expense:0"]').count(),1);
     await page.locator('[data-tab="home"]').click();
     await page.locator('#vehiclePhotoFile').setInputFiles({name:'vehicle.png',mimeType:'image/png',buffer:png});
     await page.locator('.vehicle-photo').waitFor();
@@ -52,7 +88,7 @@ if(!files.length)files.push('mobile/MileSage_Mobile_Auto_Refresh.html','mobile/M
     await page.reload();
     await page.locator('.vehicle-photo').waitFor();
     assert.deepEqual(errors,[],'Uncaught browser errors');
-    console.log('PASS: browser startup, JSON import, all phone tabs, photo save/reload and invalid-import preservation:',filename);
+    console.log('PASS: browser startup, full expense-photo backup/restore, all tabs, vehicle photo and invalid-import preservation:',filename);
    }finally{await context.close();}
   }
  }finally{await browser.close();}
