@@ -55,7 +55,8 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           s=Path("android/app/src/main/assets/index.html").read_text(encoding="utf-8")
-          for phrase in ("milesage-mobile-offline-v1","+ By VIN","Take receipt photo","Take fuel receipt photo","choosePhotoDir","odometer-controls","receipt_photo",'id="editVehicle"','id="removeVehicle"','id="scanServicePdf"','function parseGallonsInput('):
+          assert s.rstrip().endswith("</body></html>"), "Unexpected trailing content after HTML document"
+          for phrase in ("mobile_photo","chooseVehiclePhoto","takeVehiclePhoto","removeVehiclePhoto","milesage-mobile-offline-v1","+ By VIN","Take receipt photo","Take fuel receipt photo","choosePhotoDir","odometer-controls","receipt_photo",'id="editVehicle"','id="removeVehicle"','id="scanServicePdf"','function parseGallonsInput('):
               assert phrase in s, phrase
           Path("/tmp/milesage-inline.js").write_text(s.split("<script>",1)[1].split("</script>",1)[0],encoding="utf-8")
           PY
@@ -63,6 +64,7 @@ jobs:
           node mobile/test_restore_safety.cjs
           node mobile/test_vin_lookup.cjs
           node mobile/test_vehicle_management.cjs
+          node mobile/test_vehicle_photos.cjs
           node mobile/test_service_pdf_scanner.cjs
           node mobile/test_evening_insights.cjs
           node mobile/test_receipt_parser.cjs
