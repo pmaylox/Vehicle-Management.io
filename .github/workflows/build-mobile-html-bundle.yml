@@ -33,6 +33,7 @@ jobs:
           node mobile/test_restore_safety.cjs
           node mobile/test_receipt_parser.cjs
           node mobile/test_fuel_receipt_parser.cjs
+          node mobile/test_vehicle_photos.cjs
       - name: Assemble phone download
         run: |
           mkdir -p release
@@ -56,6 +57,8 @@ jobs:
           9. Fuel > Record a fill-up has separate receipt photo buttons.
           10. Home > + By VIN decodes a VIN online using the NHTSA vPIC service.
           11. Review the model, year and current odometer before saving.
+          12. Home > select a vehicle > Choose vehicle photo or Take vehicle photo.
+          Photos are stored locally and included in Full mobile backup.
           
           The photo reader uses a web OCR engine downloaded on demand.
           Some content:// or file:// browser contexts may block OCR workers, VIN network lookup or storage.

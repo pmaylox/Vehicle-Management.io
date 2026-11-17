@@ -66,6 +66,14 @@ The phone's **Data & backup → Review GitHub vehicles.json** no longer imports 
 The HTML preview itself must be updated to see these features; importing JSON only replaces **data**, never the app's code. No Android APK has been rebuilt. Test via `node mobile/test_restore_safety.cjs`.
 
 
+## Vehicle photos on mobile
+
+Home now displays a photo on each vehicle card. Select a vehicle, then use **Choose vehicle photo** or **Take vehicle photo** below the cards; **Remove photo** leaves its histories intact. Camera capture depends on the phone/browser. Both current distributed HTML copies include this feature.
+
+Images are resized to fit within 900 pixels and stored as PNG data in `mobile_photo`, retaining transparency. Photos remain on the device and are included in **Full mobile backup**. Failed storage writes leave existing records unchanged. Desktop `photo_path` values are preserved but cannot open Windows files on a phone; choose the image on the phone instead. Export your current phone backup before opening the updated HTML, and import that backup if the new copy has separate browser storage. Opening the older installed HTML will not show these controls. No APK update is provided.
+
+Validation: `node mobile/test_vehicle_photos.cjs` checks image preparation, card rendering, backup persistence, failed-save rollback, vehicle isolation and removal. Actual camera/device testing remains manual.
+
 ## Alpha 1.3.0 — Service receipt photo entry (phone HTML preview)
 
 In **Service → Log maintenance**, users can tap **Take receipt photo** (rear camera on supported mobile browsers) or **Choose photo** (existing image), then have MileSage suggest entries for **work performed, service date, odometer, total cost, oil/tire countdown resets and cabin/engine air filter replacement** from OCR text. All suggested values are editable before save. A receipt scan never automatically saves or increases vehicle mileage; saving still validates dates, odometer and cost.

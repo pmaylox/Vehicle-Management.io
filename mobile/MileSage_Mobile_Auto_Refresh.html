@@ -20,6 +20,9 @@ label.field{display:block;font-size:13px;font-weight:700;margin:13px 0 7px}input
 .chart-bars{display:flex;align-items:end;gap:16px;height:186px;padding:18px 4px 0}.chart-col{flex:1;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:end;height:100%;gap:7px;font-size:12px;font-weight:700}.chart-bar{background:#315979;border-radius:7px 7px 2px 2px;width:min(100%,74px);min-height:3px}.chart-col:nth-child(2) .chart-bar{background:#bb6b4a}.chart-col:nth-child(3) .chart-bar{background:#838e9d}.chart-col .muted{font-weight:500;font-size:11px}.linechart{width:100%;height:auto;max-height:210px;display:block}.lock{background:#fcf8f6;border-radius:12px;border:1px solid #ead9d3;padding:12px;font-size:13px;color:#684737}
 #toast{position:fixed;left:15px;right:15px;bottom:calc(94px + env(safe-area-inset-bottom));z-index:30;max-width:500px;margin:auto;background:#18344a;color:white;border-radius:10px;padding:12px 15px;text-align:center;font-size:14px;box-shadow:0 6px 20px #0004;display:none}
 @media(min-width:620px){main{padding:23px}.vehicle-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.vehicle-card{margin:0}.triple{grid-template-columns:repeat(3,1fr)}}
+.vehicle-photo[hidden],.vehicle-photo-placeholder[hidden]{display:none}
+.vehicle-photo{display:block;width:100%;height:150px;object-fit:contain;margin-bottom:12px}
+.vehicle-photo-placeholder{display:grid;place-items:center;height:150px;margin-bottom:12px;border-radius:12px;background:#F5F1EB;color:#6B655E;font-size:14px}
 </style>
 </head>
 <body>
@@ -48,6 +51,10 @@ label.field{display:block;font-size:13px;font-weight:700;margin:13px 0 7px}input
 <div class="vehicle-grid" id="vehicleCards"></div>
 <div id="manageVehicle" class="card" hidden>
 <p class="small muted" style="margin:0 0 9px">Selected vehicle: <strong id="manageVehicleName"></strong></p>
+<div class="button-row"><button id="chooseVehiclePhoto" type="button" class="btn secondary">Choose vehicle photo</button><button id="takeVehiclePhoto" type="button" class="btn secondary">Take vehicle photo</button><button id="removeVehiclePhoto" type="button" class="btn outline">Remove photo</button></div>
+<input id="vehiclePhotoFile" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+<input id="vehiclePhotoCamera" type="file" accept="image/*" capture="environment" hidden>
+<p id="vehiclePhotoStatus" class="small muted" role="status">Photos stay on this device and are included in Full mobile backup.</p>
 <div class="button-row"><button id="editVehicle" type="button" class="btn secondary">Edit vehicle</button><button id="removeVehicle" type="button" class="btn outline">Remove vehicle</button></div>
 <form id="editVehicleForm" hidden>
 <h3 class="section-title">Edit selected vehicle</h3>
@@ -139,7 +146,67 @@ function load(){try{const raw=localStorage.getItem(KEY);if(raw){const o=JSON.par
 function updateBanner(){let text='';if(!hasStorage)text='<div class="note" role="alert"><strong>Warning:</strong> This browser is not keeping changes. Export a JSON backup after every change.</div>';else if(!vehicles.length)text='<div class="note info"><strong>Get started:</strong> In <strong>Data & backup</strong>, use <strong>Recover from saved GitHub backup</strong> for earlier recorded mileage and tire pressures. Avoid importing incomplete or demonstration GitHub records over your real odometer and pressure readings.</div>';else text='<div class="note info" style="margin-top:0"><strong>GitHub check:</strong> '+esc(syncStatus)+'<div style="margin-top:5px">GitHub checks do not change your phone data. Always export a full backup before restoring.</div></div>';$('notice').innerHTML=text;$('storageNote').textContent=hasStorage?'Browser storage is available. Keep an exported backup in case browser data is cleared.':'Browser storage is blocked/unavailable. Make a backup immediately.'}
 function status(val,inter){if(!Number.isFinite(val))return ['Unknown','warn'];if(val<=0)return ['Due now','due'];if(val<=Math.max(500,inter*.12))return [`${num(val)} mi left`,'warn'];return [`${num(val)} mi left`,'good']}
 function vehicleTag(obj){const remain=Number(obj.service_interval)-Math.max(0,Number(obj.mileage)-Number(obj.last_service_mileage));const [s,cls]=status(remain,Number(obj.service_interval));return `<span class="pill ${cls}">Oil: ${esc(s)}</span>`}
-function renderVehicles(){const root=$('vehicleCards');root.innerHTML=vehicles.length?vehicles.map((a,i)=>`<button class="vehicle-card ${i===current?'selected':''}" type="button" data-vehicle="${i}" aria-pressed="${i===current}"><div class="vehicle-title">${esc(a.name)} <span class="vehicle-year">${esc(a.year)}</span></div><div class="vehicle-mileage">${num(a.mileage)} <small>miles</small></div>${a.vin?'<div class="small muted" style="margin-top:4px">VIN: '+esc(a.vin)+'</div>':''}<div style="margin-top:9px">${vehicleTag(a)}</div></button>`).join(''):empty('No vehicles loaded yet. Import your GitHub data or add a vehicle.');
+/* VEHICLE_PHOTOS_BEGIN */
+function safeVehiclePhoto(value){
+ return typeof value==='string'&&value.length<=1400000&&/^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(value)?value:'';
+}
+function vehiclePhotoHTML(vehicle){
+ const photo=safeVehiclePhoto(vehicle.mobile_photo);
+ return photo?`<img class="vehicle-photo" src="${photo}" alt="${esc(vehicle.name)}" decoding="async"><div class="vehicle-photo-placeholder" hidden>Photo unavailable — choose another photo</div>`:
+  '<div class="vehicle-photo-placeholder">Choose a photo below for this vehicle</div>';
+}
+function prepareVehiclePhoto(file){
+ return new Promise((resolve,reject)=>{
+  if(!file||!file.type.startsWith('image/')){reject(Error('Choose an image file.'));return;}
+  if(file.size>20*1024*1024){reject(Error('Choose a photo smaller than 20 MB.'));return;}
+  const url=URL.createObjectURL(file),image=new Image();
+  image.onload=()=>{
+   URL.revokeObjectURL(url);
+   try{
+    const scale=Math.min(1,900/Math.max(image.naturalWidth,image.naturalHeight));
+    const canvas=document.createElement('canvas');
+    canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));
+    canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
+    canvas.getContext('2d').drawImage(image,0,0,canvas.width,canvas.height);
+    // PNG retains transparency in vehicle cutouts.
+    const photo=canvas.toDataURL('image/png');
+    if(!safeVehiclePhoto(photo))throw Error('This photo is too detailed to store. Choose a smaller image.');
+    resolve(photo);
+   }catch(error){reject(error);}
+  };
+  image.onerror=()=>{URL.revokeObjectURL(url);reject(Error('This image could not be opened. Try a JPG or PNG.'));};
+  image.src=url;
+ });
+}
+function wireVehiclePhotos(){
+ let busy=false;
+ $('chooseVehiclePhoto').onclick=()=>$('vehiclePhotoFile').click();
+ $('takeVehiclePhoto').onclick=()=>$('vehiclePhotoCamera').click();
+ async function selected(event){
+  const file=event.target.files[0],original=v();event.target.value='';
+  if(!file||!original||busy)return;
+  busy=true;$('vehiclePhotoStatus').textContent='Preparing photo…';
+  try{
+   const photo=await prepareVehiclePhoto(file),index=vehicles.indexOf(original);
+   if(index<0||v()!==original)throw Error('Vehicle selection changed. Choose the photo again for the intended vehicle.');
+   const updated=vehicles.map((vehicle,i)=>i===index?{...vehicle,mobile_photo:photo}:vehicle);
+   if(!commitImport(updated,current,'Vehicle photo saved.'))throw Error('Photo was not saved. Export a backup and free browser storage before trying again.');
+  }catch(error){$('vehiclePhotoStatus').textContent=error.message;alert(error.message);}
+  finally{busy=false;}
+ }
+ $('vehiclePhotoFile').onchange=selected;
+ $('vehiclePhotoCamera').onchange=selected;
+ $('removeVehiclePhoto').onclick=()=>{
+  const original=v();
+  if(busy||!original||!original.mobile_photo)return;
+  if(!confirm('Remove the photo for '+original.name+'? Vehicle history will be kept.'))return;
+  const updated=vehicles.map((vehicle,i)=>i===current?{...vehicle,mobile_photo:''}:vehicle);
+  commitImport(updated,current,'Vehicle photo removed.');
+ };
+}
+/* VEHICLE_PHOTOS_END */
+function renderVehicles(){const root=$('vehicleCards');root.innerHTML=vehicles.length?vehicles.map((a,i)=>`<button class="vehicle-card ${i===current?'selected':''}" type="button" data-vehicle="${i}" aria-pressed="${i===current}">${vehiclePhotoHTML(a)}<div class="vehicle-title">${esc(a.name)} <span class="vehicle-year">${esc(a.year)}</span></div><div class="vehicle-mileage">${num(a.mileage)} <small>miles</small></div>${a.vin?'<div class="small muted" style="margin-top:4px">VIN: '+esc(a.vin)+'</div>':''}<div style="margin-top:9px">${vehicleTag(a)}</div></button>`).join(''):empty('No vehicles loaded yet. Import your GitHub data or add a vehicle.');
+root.querySelectorAll('.vehicle-photo').forEach(image=>image.addEventListener('error',()=>{image.hidden=true;image.nextElementSibling.hidden=false;}));
 root.querySelectorAll('[data-vehicle]').forEach(el=>el.addEventListener('click',()=>{current=Number(el.dataset.vehicle);save();renderAll()}));}
 function odometerNext(current,operator,amount){
  if(!Number.isSafeInteger(current)||current<0)throw Error('Current mileage must be a non-negative whole number.');
@@ -1062,6 +1129,8 @@ function renderVehicleControls(){
  if(!vehicle)return;
  $('manageVehicleName').textContent=vehicle.year+' '+vehicle.name+' · '+num(vehicle.mileage)+' miles';
  $('editVehicleForm').hidden=true;
+ $('removeVehiclePhoto').disabled=!safeVehiclePhoto(vehicle.mobile_photo);
+ $('vehiclePhotoStatus').textContent=safeVehiclePhoto(vehicle.mobile_photo)?'Photo saved on this device. Full mobile backup includes it.':'Choose a photo from this phone. Desktop file paths cannot be opened here.';
  $('editVehicleName').value=vehicle.name;
  $('editVehicleYear').value=String(vehicle.year);
  $('editVehicleVIN').value=vehicle.vin||'';
@@ -1111,6 +1180,7 @@ function init(){
  $('dataButton').onclick=()=>switchTab('data');
  $('addVehicleButton').onclick=addVehicle;
  wireVehicleControls();
+ wireVehiclePhotos();
  $('addVinButton').onclick=showVINEntry;
  $('vinLookupForm').onsubmit=lookUpVIN;
  $('vinConfirmForm').onsubmit=saveVINVehicle;
