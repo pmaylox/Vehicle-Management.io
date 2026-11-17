@@ -15,7 +15,7 @@ on:
 jobs:
   build:
     concurrency:
-      group: milesage-verify2-debug-signing
+      group: milesage-alpha138-debug-signing
       cancel-in-progress: false
     runs-on: ubuntu-latest
     permissions:
@@ -33,7 +33,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.android/debug.keystore
-          key: milesage-alpha137verify2-debug-signing-v1
+          key: milesage-alpha138-debug-signing-v1
       - name: Prepare SDK
         run: |
           export ANDROID_HOME="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
@@ -51,9 +51,9 @@ jobs:
           sed -i 's/Alpha 1.3.2/Alpha 1.3.7 Verify 2/g' android/app/src/main/assets/index.html
           cp android/app/src/main/assets/index.html release/MileSage_Alpha_1_3_8_Expense_Photos.html
           printf '%s\n' "MileSage Alpha 1.3.8 - expense receipt photos with camera, gallery, date/cost OCR suggestions and full backup" \
-            "Do NOT uninstall or clear the original MileSage APK or previous repair test; this is a separately installed TEST copy." \
+            "Do NOT uninstall or clear existing MileSage apps. This separately installed test copy has independent storage." \
             "Back up your existing phone data before importing anything into the test copy." \
-            "This APK uses io.reddirtcode.milesage.alpha137verify2 so it can install separately from earlier MileSage and Repair Test builds." \
+            "This APK has its own application ID and cannot overwrite previous MileSage test apps. Import a Full mobile backup to copy data into it." \
             "Use Data & backup > Import JSON file with YOUR full phone backup." \
             "Confirm the real Tacoma and Explorer plus their histories after import." \
             "This build adds Other Expenses receipt photos and retains Service-only multi-page PDF scanning and Fuel autofill." \
