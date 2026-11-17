@@ -434,7 +434,7 @@ function wireTirePressureForm(a){
  $('tireNext').onclick=()=>{try{readStep();step++;showStep();measured.focus();}catch(e){alert(e.message);}};
  form.onsubmit=e=>{e.preventDefault();try{
   readStep();
-  const old={...a.tire_pressures},next={...old},baselines={...a.starting_tire_pressures},increases={};
+  const old={...a.tire_pressures},oldBaselines={...a.starting_tire_pressures},next={...old},baselines={...oldBaselines},increases={};
   let changed=false;
   for(const [key,label] of TIRES_LOCAL){
    const answer=draft[key]||{},m=safePsi(answer.measured||'',label+' measured PSI'),air=safePsi(answer.added||'',label+' air added PSI');
@@ -449,12 +449,10 @@ function wireTirePressureForm(a){
   }
   if(!changed){message('No tire pressure changes to save.');return;}
   const event={recorded_at:new Date().toISOString(),mileage:a.mileage,before:old,starting:{...baselines},added_psi:increases,current:{...next}};
-  const snapshot=JSON.stringify({vehicles,current});
   a.tire_pressures=next;a.starting_tire_pressures=baselines;a.tire_pressure_history.push(event);
   try{localStorage.setItem(KEY,JSON.stringify({vehicles,current}));hasStorage=true;updateBanner();}
   catch(err){
-   const recovered=JSON.parse(snapshot), restored=recovered.vehicles[current];
-   a.tire_pressures=old;a.starting_tire_pressures={...baselines,...(event.starting||{})};
+   a.tire_pressures=old;a.starting_tire_pressures=oldBaselines;
    a.tire_pressure_history.pop();
    throw Error('Tire readings NOT saved: '+err.message);
   }
