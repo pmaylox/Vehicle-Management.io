@@ -7,10 +7,10 @@ android {
     compileSdk 35
 
     defaultConfig {
-        applicationId 'io.reddirtcode.milesage.alpha137verify2'
+        applicationId 'io.reddirtcode.milesage.alpha138test'
         minSdk 26
         targetSdk 35
-        versionCode 139
+        versionCode 138
         versionName '1.3.8-expense-photos'
     }
     buildTypes {
