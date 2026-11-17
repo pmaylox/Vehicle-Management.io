@@ -96,10 +96,10 @@ jobs:
         run: gradle --no-daemon :app:assembleDebug
       - name: Collect build files
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk release/MileSage_Alpha_1_3_7_Verify_2.apk
-          python mobile/validate_mobile_html.py release/MileSage_Alpha_1_3_7_Verify_2.apk
-          unzip -t release/MileSage_Alpha_1_3_7_Verify_2.apk | tail -1
-          sha256sum release/MileSage_Alpha_1_3_7_Verify_2.apk > release/APK_SHA256.txt
+          cp android/app/build/outputs/apk/debug/app-debug.apk release/MileSage_Alpha_1_3_8_Expense_Photos.apk
+          python mobile/validate_mobile_html.py release/MileSage_Alpha_1_3_8_Expense_Photos.apk
+          unzip -t release/MileSage_Alpha_1_3_8_Expense_Photos.apk | tail -1
+          sha256sum release/MileSage_Alpha_1_3_8_Expense_Photos.apk > release/APK_SHA256.txt
       - uses: actions/upload-artifact@v4
         with:
           name: MileSage-Alpha-1.3.8-Expense-Photos
