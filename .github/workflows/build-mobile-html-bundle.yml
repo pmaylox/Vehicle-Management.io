@@ -34,6 +34,7 @@ jobs:
           node mobile/test_receipt_parser.cjs
           node mobile/test_fuel_receipt_parser.cjs
           node mobile/test_vehicle_photos.cjs
+          node mobile/test_service_cancel_layout.cjs
       - name: Assemble phone download
         run: |
           mkdir -p release
