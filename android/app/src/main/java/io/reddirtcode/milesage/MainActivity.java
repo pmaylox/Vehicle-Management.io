@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.DownloadManager;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -26,10 +27,20 @@ import androidx.webkit.WebViewAssetLoader;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.IOException;
+import java.util.UUID;
+
+import org.json.JSONObject;
+import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions;
+import com.google.mlkit.vision.documentscanner.GmsDocumentScanning;
+import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult;
 import java.io.OutputStream;
 
 public class MainActivity extends Activity {
     private static final int FILE_CHOOSER_CODE = 218;
+    private static final int SERVICE_DOCUMENT_SCAN_CODE = 219;
+    private boolean serviceScanOpen = false;
     private WebView web;
     private ValueCallback<Uri[]> pendingFileChooser;
     private Uri cameraUri;
@@ -126,6 +137,48 @@ public class MainActivity extends Activity {
 
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == SERVICE_DOCUMENT_SCAN_CODE) {
+            serviceScanOpen = false;
+            if (resultCode != RESULT_OK) {
+                serviceScanResult(null, "Scan cancelled. No service record changed.");
+                return;
+            }
+            try {
+                GmsDocumentScanningResult scan = GmsDocumentScanningResult.fromActivityResultIntent(data);
+                if (scan == null || scan.getPdf() == null || scan.getPdf().getPageCount() < 1) {
+                    throw new IOException("No PDF pages returned.");
+                }
+                File directory = new File(getFilesDir(), "service_invoices");
+                if (!directory.exists() && !directory.mkdirs()) throw new IOException("Cannot create PDF folder.");
+                String id = UUID.randomUUID().toString();
+                File file = new File(directory, id + ".pdf");
+                try (InputStream in = getContentResolver().openInputStream(scan.getPdf().getUri());
+                     OutputStream out = new FileOutputStream(file)) {
+                    if (in == null) throw new IOException("Cannot open scanner PDF.");
+                    byte[] buf = new byte[32 * 1024];
+                    int n;
+                    long total = 0;
+                    while ((n = in.read(buf)) != -1) {
+                        total += n;
+                        if (total > 30_000_000) throw new IOException("PDF exceeds 30 MB.");
+                        out.write(buf, 0, n);
+                    }
+                    if (total < 100) throw new IOException("Scanned PDF is empty.");
+                } catch (Exception e) {
+                    file.delete();
+                    throw e;
+                }
+                JSONObject payload = new JSONObject();
+                payload.put("id", id);
+                payload.put("pages", scan.getPdf().getPageCount());
+                payload.put("name", "MileSage-Service-" + id + ".pdf");
+                serviceScanResult(payload, null);
+            } catch (Exception e) {
+                serviceScanResult(null, "Could not save scanned PDF: " + e.getMessage());
+            }
+            return;
+        }
         if (requestCode == FILE_CHOOSER_CODE && pendingFileChooser != null) {
             Uri[] result = null;
             if (resultCode == RESULT_OK) {
@@ -142,7 +195,80 @@ public class MainActivity extends Activity {
         runOnUiThread(() -> Toast.makeText(this,message,Toast.LENGTH_LONG).show());
     }
 
+
+    private void serviceScanResult(JSONObject data, String error) {
+        try {
+            JSONObject payload = data == null ? new JSONObject() : data;
+            if (error != null) payload.put("error", error);
+            if (web != null) {
+                String js = "if(window.milesageServiceScannerComplete)window.milesageServiceScannerComplete(" +
+                    payload.toString() + ");";
+                runOnUiThread(() -> web.evaluateJavascript(js, null));
+            }
+        } catch (Exception ignored) {
+            showToast("Unable to report document scanner result.");
+        }
+    }
+
+    private void beginServiceDocumentScan() {
+        if (serviceScanOpen) return;
+        serviceScanOpen = true;
+        try {
+            GmsDocumentScannerOptions options = new GmsDocumentScannerOptions.Builder()
+                .setGalleryImportAllowed(true)
+                .setPageLimit(30)
+                .setResultFormats(GmsDocumentScannerOptions.RESULT_FORMAT_PDF)
+                .setScannerMode(GmsDocumentScannerOptions.SCANNER_MODE_FULL)
+                .build();
+            GmsDocumentScanning.getClient(options).getStartScanIntent(this)
+                .addOnSuccessListener(intentSender -> {
+                    try {
+                        startIntentSenderForResult(intentSender, SERVICE_DOCUMENT_SCAN_CODE,
+                            null, 0, 0, 0);
+                    } catch (IntentSender.SendIntentException e) {
+                        serviceScanOpen = false;
+                        serviceScanResult(null, "Unable to start document scanner: " + e.getMessage());
+                    }
+                })
+                .addOnFailureListener(error -> {
+                    serviceScanOpen = false;
+                    serviceScanResult(null, "Scanner unavailable: " + error.getMessage());
+                });
+        } catch (Exception error) {
+            serviceScanOpen = false;
+            serviceScanResult(null, "Scanner unavailable: " + error.getMessage());
+        }
+    }
+
+    private void openSavedServiceDocument(String id) {
+        if (id == null || !id.matches("[a-f0-9-]{36}")) {
+            showToast("Invalid service document reference.");
+            return;
+        }
+        File file = new File(new File(getFilesDir(), "service_invoices"), id + ".pdf");
+        if (!file.isFile()) {
+            showToast("This service PDF is not on this device. Keep the original PDF when moving phones.");
+            return;
+        }
+        try {
+            Uri uri = FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", file);
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setDataAndType(uri, "application/pdf");
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivity(Intent.createChooser(intent, "Open service invoice"));
+        } catch (Exception e) {
+            showToast("No compatible PDF viewer installed.");
+        }
+    }
+
     private class DownloadBridge {
+        @JavascriptInterface public void scanServiceInvoice() {
+            runOnUiThread(() -> beginServiceDocumentScan());
+        }
+        @JavascriptInterface public void openServiceInvoice(String id) {
+            runOnUiThread(() -> openSavedServiceDocument(id));
+        }
+
         @JavascriptInterface public void saveBase64(String filename, String mimeType, String base64) {
             // Only printable safe filenames, never arbitrary filesystem paths.
             String name = filename == null ? "MileSage-backup.json" :
