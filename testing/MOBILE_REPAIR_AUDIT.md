@@ -12,6 +12,18 @@ Reviewed GitHub main `0a9723d`, Android PR #14 head `0b6c898`, the APK attached 
 
 ## Known limits and deployment instructions
 
+## Completed build verification
+
+- Repair source commit: `360f14cedd87f9a05727e886381642f83b998ed2` on `codex/mobile-repair-audit`.
+- GitHub Actions run [44142923743](https://github.com/pmaylox/Vehicle-Management.io/actions/runs/44142923743) succeeded, including all mobile regression suites, Python document-validator tests, three full-page browser tests (both sources and Android asset), Gradle APK compilation and final embedded-document validation.
+- Local repair suite: 31 Python tests and 11 mobile CJS scripts passed. Current desktop main separately passed its 31 Python tests and 9 mobile scripts.
+- Downloaded the actual Actions artifact, verified its ZIP SHA-256 and APK SHA-256, extracted the APK page and compared it byte-for-byte with the release HTML. Confirmed compiled Android manifest has the separate `alpha137repair` ID. Re-ran browser tests on the page extracted from the final APK: startup, all tabs, JSON import, photo save/reload, invalid JSON/history preservation passed.
+- Final APK SHA-256: `d6ab450f233261fc53498b2cdcc0afe4925189b60ddd6943d29a5b85679922a4`.
+- Local download: `../MileSage-repair-downloads/MileSage_Alpha_1_3_7_Repair_Test.apk` (sibling of this checkout, inside the OneDrive workspace). Bundle includes matching standalone HTML, checksum and installation notes.
+- No phone installation or user-data replacement performed. Native device interactions remain manual tests.
+
+## Installation and remaining limits
+
 - HTML/desktop `main` and Android PR #14 are different branches. Do not replace main with the older Android branch: it predates recent desktop photo, VIN and export work. Repair changes are isolated on `codex/mobile-repair-audit`.
 - The repair test installs alongside older apps and starts with separate empty storage. Export **Full mobile backup** from the app holding the real records; import that own backup into **MileSage Repair Test**, review replacement warnings, verify both real vehicles and odometers. A desktop export may have stale phone values; never blindly import repository demonstration records.
 - Scanned PDF files are not embedded in JSON. Share/back up the PDFs separately and retain the original app.
