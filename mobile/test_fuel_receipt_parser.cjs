@@ -42,9 +42,49 @@ assert.equal(third.gallons,null,'price per gallon should not become volume');
 assert.equal(third.total,null,'subtotal should not become final total');
 
 const fourth=parse('Fuel Volume: 9.45 US GAL\nGrand Total: $28.35\nDate 2026-11-13');
-assert.equal(fourth.gallons,'9.45');
+assert.equal(fourth.gallons,'9.450');
 assert.equal(fourth.total,'28.35');
 assert.equal(fourth.date,'2026-11-13');
+
+
+const actualPump=sandbox.parseFuelReceiptText([
+ 'ALLSUPS #20483',
+ 'DATE 11/16/26 4:47',
+ 'PUMP 02',
+ 'PRODUCT RU',
+ 'GALLONS 10.882',
+ 'PRICE/G 3.599',
+ 'FUEL SALE $39.16',
+ 'CREDIT $39.16',
+].join('\n'),'2026-11-16');
+assert.equal(actualPump.gallons,'10.882','Allsup fuel receipt quantity must autofill');
+assert.equal(actualPump.total,'39.16','Fuel sale, not pump price, must become total');
+assert.equal(actualPump.date,'2026-11-16');
+
+const wrapped=sandbox.parseFuelReceiptText([
+ 'GALLONS','10.882','PRICE/GALLON','3.599','FUEL SALE','$39.16'
+].join('\n'),'2026-11-16');
+assert.equal(wrapped.gallons,'10.882','OCR line-wrapped gallons must autofill');
+assert.equal(wrapped.total,'39.16','OCR line-wrapped fuel sale must autofill');
+
+const damaged=sandbox.parseFuelReceiptText([
+ 'GALL0NS: 10,882', 'FUEL 5ALE 39.16'
+].join('\n'),'2026-11-16');
+assert.equal(damaged.gallons,'10.882','Common OCR zero/comma substitutions must be recognized');
+assert.equal(damaged.total,'39.16','Common OCR 5/sale substitution must be recognized');
+
+const unitPriceOnly=sandbox.parseFuelReceiptText('PRICE/GALLON 3.599\nSUBTOTAL 39.16\nTAX 0.00','2026-11-16');
+assert.equal(unitPriceOnly.gallons,null,'Never infer volume from price-per-gallon');
+assert.equal(unitPriceOnly.total,null,'Never infer total from subtotal or tax');
+
+assert.equal(sandbox.parseGallonsInput('12.5'),'12.500');
+assert.equal(sandbox.parseGallonsInput('10.882'),'10.882');
+assert.equal(sandbox.parseGallonsInput('9'),'9.000');
+assert.throws(()=>sandbox.parseGallonsInput('10.8825'),/3 decimal places/);
+assert.throws(()=>sandbox.parseGallonsInput('0'),/valid US gallon amount/);
+assert.ok(html.includes('step="0.001" placeholder="12.500"'));
+assert.ok(html.includes("const gal=parseGallonsInput($('fuelGallons').value)"));
+assert.ok(html.includes("mileage:od,gallons:gal,cost_cents:cost"));
 
 assert.ok(html.includes('capture="environment"'));
 assert.ok(html.includes('wireFuelReceiptPhoto(a)'));

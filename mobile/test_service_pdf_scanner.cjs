@@ -17,7 +17,7 @@ for(const html of htmls){
   assert.ok(html.includes(required),'Missing service scanner integration: '+required);
  }
  assert.ok(html.includes("wireFuelReceiptPhoto(a)"),'Existing fuel photo UI must remain intact');
- assert.ok(!html.includes('parseGallonsInput('),'Fuel precision changes must not ship with this Service-only build');
+ assert.ok(html.includes('function parseGallonsInput('),'Combined build must include the fuel precision fix');
  const fuelStart=html.indexOf('function renderFuel()');
  const fuelEnd=html.indexOf('function expenseSummary(',fuelStart);
  assert.ok(fuelStart>0&&fuelEnd>fuelStart);
@@ -42,6 +42,6 @@ for(const fragment of [
 assert.ok(provider.includes('name="service_invoices" path="service_invoices/"'),
  'The app-private PDF folder must be accessible through FileProvider');
 assert.ok(build.includes('play-services-mlkit-document-scanner:16.0.0'));
-assert.ok(build.includes("applicationId 'io.reddirtcode.milesage.alpha135service'"),
+assert.ok(build.includes("applicationId 'io.reddirtcode.milesage.alpha136all'"),
  'This test build must not overwrite the existing alpha app');
-console.log('PASS: Service-only multi-page PDF controls, attachment metadata, native hooks, Fuel isolation, JS syntax.');
+console.log('PASS: Service multi-page PDF, Fuel autofill/3-decimal, native hooks, Fuel scan isolation, JS syntax.');
