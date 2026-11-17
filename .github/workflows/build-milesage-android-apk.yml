@@ -78,6 +78,7 @@ jobs:
           node mobile/test_vehicle_management.cjs
           node mobile/test_vehicle_photos.cjs
           node mobile/test_service_pdf_scanner.cjs
+          node mobile/test_service_cancel_layout.cjs
           node mobile/test_evening_insights.cjs
           node mobile/test_receipt_parser.cjs
           node mobile/test_fuel_receipt_parser.cjs
