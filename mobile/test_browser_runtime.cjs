@@ -34,6 +34,39 @@ if(!files.length)files.push('mobile/MileSage_Mobile_Auto_Refresh.html','mobile/M
      assert.ok(!visible.includes('${')&&!visible.includes('function render'),tab+' leaked application code');
      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),tab+' overflows phone width');
     }
+    // Four-step tire wizard; driver front MUST occupy diagram's upper-left wheel.
+    await page.locator('[data-tab="service"]').click();
+    assert.ok((await page.locator('#tirePrompt').innerText()).includes('Driver front (front left)'));
+    const tireSVG=page.locator('#tireDiagram svg');
+    assert.ok((await tireSVG.getAttribute('aria-label')).includes('driver front at upper left'));
+    const beforeTires=JSON.parse(await page.evaluate(()=>localStorage.getItem('milesage-mobile-offline-v1')))
+      .vehicles[0].tire_pressure_history.length;
+    await page.locator('#tireMeasured').fill('35');
+    await page.locator('#tireNext').click();
+    assert.ok((await page.locator('#tirePrompt').innerText()).includes('Passenger front (front right)'));
+    assert.ok((await tireSVG.locator('g[aria-label^="Driver front"]').getAttribute('aria-label')).includes('35 PSI'));
+    await page.locator('#tireBack').click();
+    assert.equal(await page.locator('#tireMeasured').inputValue(),'35','Previous step must retain entered PSI');
+    await page.locator('#tireNext').click();
+    await page.locator('#tireMeasured').fill('36');
+    await page.locator('#tireNext').click();
+    assert.ok((await page.locator('#tirePrompt').innerText()).includes('Driver rear (rear left)'));
+    await page.locator('#tireMeasured').fill('34');
+    await page.locator('#tireNext').click();
+    assert.ok((await page.locator('#tirePrompt').innerText()).includes('Passenger rear (rear right)'));
+    assert.equal(await page.locator('#tireFinish').isVisible(),true);
+    assert.equal(JSON.parse(await page.evaluate(()=>localStorage.getItem('milesage-mobile-offline-v1')))
+      .vehicles[0].tire_pressure_history.length,beforeTires,'Wizard must not save before final confirmation');
+    await page.locator('#tireMeasured').fill('35.5');
+    await page.locator('#tireFinish').click();
+    await page.waitForFunction(()=>JSON.parse(localStorage.getItem('milesage-mobile-offline-v1'))
+      .vehicles[0].tire_pressure_history.length===1);
+    const tires=JSON.parse(await page.evaluate(()=>localStorage.getItem('milesage-mobile-offline-v1'))).vehicles[0];
+    assert.equal(tires.tire_pressures.driver_front,35);
+    assert.equal(tires.tire_pressures.passenger_front,36);
+    assert.equal(tires.tire_pressures.driver_rear,34);
+    assert.equal(tires.tire_pressures.passenger_rear,35.5);
+
     // End-to-end expense receipt attachment: use a small camera/gallery image,
     // save the expense, check persisted compressed JPEG and full JSON backup.
     await page.locator('[data-tab="expenses"]').click();
