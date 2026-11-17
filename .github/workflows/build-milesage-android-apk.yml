@@ -56,6 +56,12 @@ jobs:
           from pathlib import Path
           s=Path("android/app/src/main/assets/index.html").read_text(encoding="utf-8")
           assert s.rstrip().endswith("</body></html>"), "Unexpected trailing content after HTML document"
+          assert s.count("<script>") == 1, "Expected exactly one script opening"
+          assert s.count("</script>") == 1, "Raw JavaScript escaped its script block"
+          assert s.count("</body>") == 1 and s.count("</html>") == 1, "Duplicate HTML document markup"
+          script, trailing = s.split("</script>", 1)
+          assert "function renderFuel()" in script and "function renderExpenses()" in script and "function renderGraphs()" in script, "Application code missing from executable script"
+          assert trailing.strip() == "</body></html>", "JavaScript or HTML appended after the application script"
           for phrase in ("mobile_photo","chooseVehiclePhoto","takeVehiclePhoto","removeVehiclePhoto","milesage-mobile-offline-v1","+ By VIN","Take receipt photo","Take fuel receipt photo","choosePhotoDir","odometer-controls","receipt_photo",'id="editVehicle"','id="removeVehicle"','id="scanServicePdf"','function parseGallonsInput('):
               assert phrase in s, phrase
           Path("/tmp/milesage-inline.js").write_text(s.split("<script>",1)[1].split("</script>",1)[0],encoding="utf-8")
