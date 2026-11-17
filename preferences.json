@@ -1,6 +1,6 @@
 {
     "sort": "Mileage",
-    "reverse": false,
+    "reverse": true,
     "width": 1074,
     "height": 622,
     "sidebar_width": 300

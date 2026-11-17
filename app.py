@@ -928,6 +928,16 @@ def main():
         name_var = tk.StringVar()
         year_var = tk.StringVar()
         mileage_var = tk.StringVar()
+        photo_var = tk.StringVar()
+
+        def choose_vehicle_photo():
+            filename = filedialog.askopenfilename(
+                parent=dialog,
+                title="Choose Vehicle Photo",
+                filetypes=[("Vehicle photos", "*.jpg *.jpeg *.png"), ("All files", "*.*")]
+            )
+            if filename:
+                photo_var.set(filename)
 
         fields = [
             ("Vehicle name:", name_var),
@@ -952,7 +962,12 @@ def main():
             if row == 0:
                 name_entry = entry
 
-        profile_fields = VehicleProfileFields(form, 3, name_var, year_var)
+        photo_row = ttk.Frame(form)
+        photo_row.grid(row=3, column=0, columnspan=2, sticky="ew", pady=(10, 0))
+        ttk.Button(photo_row, text="Choose Vehicle Photo", command=choose_vehicle_photo).pack(anchor="w")
+        ttk.Label(photo_row, textvariable=photo_var, wraplength=500).pack(anchor="w", pady=(4, 0))
+
+        profile_fields = VehicleProfileFields(form, 4, name_var, year_var)
 
         def save_new_vehicle():
             name = name_var.get().strip()
@@ -1004,6 +1019,7 @@ def main():
 
             new_vehicle = Vehicle(name, year, mileage)
             new_vehicle.profile = profile
+            new_vehicle.photo_path = photo_var.get()
             vehicles.append(new_vehicle)
 
             try:
@@ -1031,7 +1047,7 @@ def main():
 
         buttons = ttk.Frame(form)
         buttons.grid(
-            row=4, column=0, columnspan=2,
+            row=5, column=0, columnspan=2,
             sticky="e", pady=(15, 0)
         )
 
@@ -1083,7 +1099,19 @@ def main():
         name_var = tk.StringVar(value=vehicle.name)
         year_var = tk.StringVar(value=str(vehicle.year))
         mileage_var = tk.StringVar(value=str(vehicle.mileage))
+        photo_var = tk.StringVar(value=vehicle.photo_path)
 
+        def choose_vehicle_photo():
+            filename = filedialog.askopenfilename(
+                parent=dialog,
+                title="Choose vehicle photo",
+                filetypes=[
+                    ("Vehicle photos", "*.jpg *.jpeg *.png"),
+                    ("All files", "*.*")
+                ]
+            )
+            if filename:
+                photo_var.set(filename)
         fields = [
             ("Vehicle name:", name_var),
             ("Model year:", year_var),
@@ -1101,7 +1129,25 @@ def main():
                 row=row, column=1, padx=(12, 0), pady=6
             )
 
-        profile_fields = VehicleProfileFields(form, 3, name_var, year_var, vehicle.profile)
+        photo_row = ttk.Frame(form)
+        photo_row.grid(
+            row=3, column=0, columnspan=2,
+            sticky="ew", pady=(10, 0)
+        )
+
+        ttk.Button(
+            photo_row,
+            text="Choose Vehicle Photo",
+            command=choose_vehicle_photo
+        ).pack(anchor="w")
+
+        ttk.Label(
+            photo_row,
+            textvariable=photo_var,
+            wraplength=500
+        ).pack(anchor="w", pady=(4, 0))
+
+        profile_fields = VehicleProfileFields(form, 4, name_var, year_var, vehicle.profile)
 
         def save_changes():
             name = name_var.get().strip()
@@ -1160,8 +1206,12 @@ def main():
             )
 
             old_profile = vehicle.profile.copy()
-
-            if (name, year, mileage) == old_values and profile == old_profile:
+            old_photo = vehicle.photo_path
+            if (
+                (name, year, mileage) == old_values
+                and profile == old_profile
+                and photo_var.get() == old_photo
+            ):
                 messagebox.showinfo(
                     "No changes",
                     "The vehicle details are unchanged.",
@@ -1180,6 +1230,7 @@ def main():
                 return
 
             vehicle.profile = profile
+            vehicle.photo_path = photo_var.get()
             vehicle.name = name
             vehicle.year = year
             vehicle.mileage = mileage
@@ -1189,6 +1240,7 @@ def main():
 
             except (OSError, TypeError, ValueError) as error:
                 vehicle.profile = old_profile
+                vehicle.photo_path = old_photo
                 (
                     vehicle.name,
                     vehicle.year,
