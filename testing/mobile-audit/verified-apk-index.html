@@ -611,6 +611,7 @@ function wireServiceReceiptPhoto(a){
  const read=async input=>{
   const file=input.files?.[0];
   if(!file)return;
+  const requestEpoch=serviceDraftEpoch;
   if(!file.type.startsWith('image/')){alert('Choose an image of the receipt.');input.value='';return;}
   if(file.size>15_000_000){alert('Receipt photo is too large. Use an image under 15 MB.');input.value='';return;}
   showReceiptPreview('service',file);
@@ -620,9 +621,11 @@ function wireServiceReceiptPhoto(a){
   let worker=null;
   try{
    const engine=await ensureReceiptOCR();
+   if(requestEpoch!==serviceDraftEpoch)return;
    status.textContent='Reading receipt on this device…';
    worker=await engine.createWorker('eng');
    const result=await worker.recognize(file);
+   if(requestEpoch!==serviceDraftEpoch)return;
    const text=String(result?.data?.text||'').trim();
    if(v()!==a)throw Error('Selected vehicle changed during scanning. Select the correct vehicle and rescan.');
    if(!text)throw Error('No readable text found. Try retaking the photo in better light.');
@@ -659,6 +662,7 @@ function wireServiceReceiptPhoto(a){
     status.textContent+=' Photo mileage exceeds the current odometer. Update mileage on Home first, then rescan.';
    message('Receipt scanned; review the suggested service fields.');
   }catch(error){
+   if(requestEpoch!==serviceDraftEpoch)return;
    status.textContent='Photo preview is shown, but receipt scanning failed: '+error.message+
       ' You can still enter the service details manually.';
   }finally{
@@ -719,9 +723,11 @@ function wireServicePdfHistory(){
 }
 /* SERVICE_MULTIPAGE_PDF_END */
 
+let serviceDraftEpoch=0;
 function cancelServiceEntry(a){
  const form=$('serviceForm');
  if(!form)return;
+ serviceDraftEpoch++;
  form.reset();
  $('serviceDate').value=localDate();
  $('serviceOdo').value=String(a.mileage);
