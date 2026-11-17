@@ -1,4 +1,4 @@
-name: Build MileSage Alpha 1.3.7 Verify 2 APK
+name: Build MileSage Alpha 1.3.8 Expense Photos APK
 on:
   push:
     branches:
@@ -15,7 +15,7 @@ on:
 jobs:
   build:
     concurrency:
-      group: milesage-verify2-debug-signing
+      group: milesage-alpha138-debug-signing
       cancel-in-progress: false
     runs-on: ubuntu-latest
     permissions:
@@ -33,7 +33,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.android/debug.keystore
-          key: milesage-alpha137verify2-debug-signing-v1
+          key: milesage-alpha138-debug-signing-v1
       - name: Prepare SDK
         run: |
           export ANDROID_HOME="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
@@ -49,17 +49,17 @@ jobs:
           mkdir -p android/app/src/main/assets release
           cp mobile/MileSage_Alpha_1_3_2_VIN_Lookup.html android/app/src/main/assets/index.html
           sed -i 's/Alpha 1.3.2/Alpha 1.3.7 Verify 2/g' android/app/src/main/assets/index.html
-          cp android/app/src/main/assets/index.html release/MileSage_Alpha_1_3_7_Verify_2.html
-          printf '%s\n' "MileSage Alpha 1.3.7 Verify 2 - separate Android installation to avoid prior signing-key conflict" \
-            "Do NOT uninstall or clear the original MileSage APK or previous repair test; this is a separately installed TEST copy." \
+          cp android/app/src/main/assets/index.html release/MileSage_Alpha_1_3_8_Expense_Photos.html
+          printf '%s\n' "MileSage Alpha 1.3.8 - expense receipt photos with camera, gallery, date/cost OCR suggestions and full backup" \
+            "Do NOT uninstall or clear existing MileSage apps. This separately installed test copy has independent storage." \
             "Back up your existing phone data before importing anything into the test copy." \
-            "This APK uses io.reddirtcode.milesage.alpha137verify2 so it can install separately from earlier MileSage and Repair Test builds." \
+            "This APK has its own application ID and cannot overwrite previous MileSage test apps. Import a Full mobile backup to copy data into it." \
             "Use Data & backup > Import JSON file with YOUR full phone backup." \
             "Confirm the real Tacoma and Explorer plus their histories after import." \
-            "This build combines Service-only multi-page PDF scanning with fixed Fuel autofill and 3-decimal US gallons." \
+            "This build adds Other Expenses receipt photos and retains Service-only multi-page PDF scanning and Fuel autofill." \
             "Scan up to 30 service invoice pages; the scanner makes one PDF." \
             "Tap Share / backup PDF in Service history; JSON backups do not include PDF bytes." \
-            "Test with disposable Service and Fuel records first; preserve original MileSage." \
+            "Test with disposable Expense, Service and Fuel records first; preserve original MileSage." \
             "This APK is DEBUG-SIGNED for testing and not for production distribution." \
             "Scanning, PDF opening/sharing and attachments require manual phone testing." > release/READ_ME_FIRST.txt
       - name: Validate JavaScript and mobile regression tests
@@ -102,6 +102,6 @@ jobs:
           sha256sum release/MileSage_Alpha_1_3_7_Verify_2.apk > release/APK_SHA256.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: MileSage-Alpha-1.3.7-Verify-2
+          name: MileSage-Alpha-1.3.8-Expense-Photos
           path: release/
           retention-days: 90

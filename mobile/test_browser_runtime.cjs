@@ -34,6 +34,75 @@ if(!files.length)files.push('mobile/MileSage_Mobile_Auto_Refresh.html','mobile/M
      assert.ok(!visible.includes('${')&&!visible.includes('function render'),tab+' leaked application code');
      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),tab+' overflows phone width');
     }
+    // Four-step tire wizard; driver front MUST occupy diagram's upper-left wheel.
+    await page.locator('[data-tab="service"]').click();
+    assert.ok((await page.locator('#tirePrompt').innerText()).includes('Driver front (front left)'));
+    const tireSVG=page.locator('#tireDiagram svg');
+    assert.ok((await tireSVG.getAttribute('aria-label')).includes('driver front at upper left'));
+    const beforeTires=JSON.parse(await page.evaluate(()=>localStorage.getItem('milesage-mobile-offline-v1')))
+      .vehicles[0].tire_pressure_history.length;
+    await page.locator('#tireMeasured').fill('35');
+    await page.locator('#tireNext').click();
+    assert.ok((await page.locator('#tirePrompt').innerText()).includes('Passenger front (front right)'));
+    assert.ok((await tireSVG.locator('g[aria-label^="Driver front"]').getAttribute('aria-label')).includes('35 PSI'));
+    await page.locator('#tireBack').click();
+    assert.equal(await page.locator('#tireMeasured').inputValue(),'35','Previous step must retain entered PSI');
+    await page.locator('#tireNext').click();
+    await page.locator('#tireMeasured').fill('36');
+    await page.locator('#tireNext').click();
+    assert.ok((await page.locator('#tirePrompt').innerText()).includes('Driver rear (rear left)'));
+    await page.locator('#tireMeasured').fill('34');
+    await page.locator('#tireNext').click();
+    assert.ok((await page.locator('#tirePrompt').innerText()).includes('Passenger rear (rear right)'));
+    assert.equal(await page.locator('#tireFinish').isVisible(),true);
+    assert.equal(JSON.parse(await page.evaluate(()=>localStorage.getItem('milesage-mobile-offline-v1')))
+      .vehicles[0].tire_pressure_history.length,beforeTires,'Wizard must not save before final confirmation');
+    await page.locator('#tireMeasured').fill('35.5');
+    await page.locator('#tireFinish').click();
+    await page.waitForFunction(()=>JSON.parse(localStorage.getItem('milesage-mobile-offline-v1'))
+      .vehicles[0].tire_pressure_history.length===1);
+    const tires=JSON.parse(await page.evaluate(()=>localStorage.getItem('milesage-mobile-offline-v1'))).vehicles[0];
+    assert.equal(tires.tire_pressures.driver_front,35);
+    assert.equal(tires.tire_pressures.passenger_front,36);
+    assert.equal(tires.tire_pressures.driver_rear,34);
+    assert.equal(tires.tire_pressures.passenger_rear,35.5);
+
+    // End-to-end expense receipt attachment: use a small camera/gallery image,
+    // save the expense, check persisted compressed JPEG and full JSON backup.
+    await page.locator('[data-tab="expenses"]').click();
+    assert.equal(await page.locator('#expenseCameraButton').isVisible(),true);
+    assert.equal(await page.locator('#expenseGalleryButton').isVisible(),true);
+    await page.locator('#expenseGalleryInput').setInputFiles({name:'parking.png',mimeType:'image/png',buffer:png});
+    assert.equal(await page.locator('#expensePhotoPreview').isVisible(),true);
+    await page.locator('#extraDesc').fill('Parking receipt — TEST');
+    await page.locator('#extraCost').fill('11.20');
+    await page.locator('#saveOtherExpense').click();
+    await page.waitForFunction(()=>{
+      const a=JSON.parse(localStorage.getItem('milesage-mobile-offline-v1')).vehicles[0];
+      return a.mobile_expenses?.length===1&&!!a.mobile_expenses[0].receipt_photo?.data_url;
+    });
+    const expenseSaved=JSON.parse(await page.evaluate(()=>localStorage.getItem('milesage-mobile-offline-v1'))).vehicles[0];
+    assert.equal(expenseSaved.mobile_expenses[0].description,'Parking receipt — TEST');
+    assert.equal(expenseSaved.mobile_expenses[0].cost_cents,1120);
+    assert.ok(expenseSaved.mobile_expenses[0].receipt_photo.data_url.startsWith('data:image/jpeg;base64,'));
+    assert.equal(await page.locator('[data-photo-download="expense:0"]').count(),1);
+    assert.ok((await page.locator('#expensesBody').innerText()).includes('Parking receipt — TEST'));
+    await page.locator('#dataButton').click();
+    const downloadPromise=page.waitForEvent('download');
+    await page.locator('#exportFull').click();
+    const receiptBackup=JSON.parse(fs.readFileSync(await (await downloadPromise).path(),'utf8'));
+    assert.equal(receiptBackup.format,'MileSage-Mobile-v1');
+    assert.equal(receiptBackup.vehicles[0].mobile_expenses[0].receipt_photo.data_url,
+      expenseSaved.mobile_expenses[0].receipt_photo.data_url,'Full mobile backup lost expense receipt');
+    await page.locator('#jsonFile').setInputFiles({
+      name:'expense-backup.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(receiptBackup))
+    });
+    await page.waitForTimeout(200);
+    assert.equal(JSON.parse(await page.evaluate(()=>localStorage.getItem('milesage-mobile-offline-v1')))
+      .vehicles[0].mobile_expenses[0].receipt_photo.data_url,
+      expenseSaved.mobile_expenses[0].receipt_photo.data_url,'Expense receipt lost on restore');
+    await page.locator('[data-tab="expenses"]').click();
+    assert.equal(await page.locator('[data-photo-download="expense:0"]').count(),1);
     await page.locator('[data-tab="home"]').click();
     await page.locator('#vehiclePhotoFile').setInputFiles({name:'vehicle.png',mimeType:'image/png',buffer:png});
     await page.locator('.vehicle-photo').waitFor();
@@ -52,7 +121,7 @@ if(!files.length)files.push('mobile/MileSage_Mobile_Auto_Refresh.html','mobile/M
     await page.reload();
     await page.locator('.vehicle-photo').waitFor();
     assert.deepEqual(errors,[],'Uncaught browser errors');
-    console.log('PASS: browser startup, JSON import, all phone tabs, photo save/reload and invalid-import preservation:',filename);
+    console.log('PASS: browser startup, full expense-photo backup/restore, all tabs, vehicle photo and invalid-import preservation:',filename);
    }finally{await context.close();}
   }
  }finally{await browser.close();}

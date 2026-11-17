@@ -23,6 +23,13 @@ label.field{display:block;font-size:13px;font-weight:700;margin:13px 0 7px}input
 .vehicle-photo[hidden],.vehicle-photo-placeholder[hidden]{display:none}
 .vehicle-photo{display:block;width:100%;height:150px;object-fit:contain;margin-bottom:12px}
 .vehicle-photo-placeholder{display:grid;place-items:center;height:150px;margin-bottom:12px;border-radius:12px;background:#F5F1EB;color:#6B655E;font-size:14px}
+
+/* Compact sequential tire entry and top-down drivetrain overview */
+.tire-map{background:#f7f9fb;border:1px solid var(--line);border-radius:13px;padding:9px 5px 6px;margin:8px 0 11px}
+#tirePressureForm .button-row{margin-top:12px}
+#tirePressureForm .button-row>.btn{min-width:0}
+#tirePressureForm .btn[hidden]{display:none!important}
+
 </style>
 </head>
 <body>
@@ -88,7 +95,7 @@ label.field{display:block;font-size:13px;font-weight:700;margin:13px 0 7px}input
 <div class="section-head"><h2>Data & backup</h2></div>
 <div class="card feature-card"><h3 style="margin-top:0">Recover or import your data safely</h3><p class="small muted">Your phone data is stored locally. GitHub is checked read-only and will <strong>never</strong> replace it automatically. GitHub vehicles.json may contain incomplete or demo records, not your live phone readings; all-zero placeholder imports are blocked. Importing a JSON file requires review and saves a local recovery snapshot first.</p>
 <div class="button-row"><button id="githubBackupRecovery" class="btn" type="button">Recover from saved GitHub backup</button><button id="fileImportButton" class="btn secondary" type="button">Import JSON file</button></div><button id="githubImport" class="btn secondary" type="button" style="margin-top:8px">Review GitHub vehicles.json</button><input id="jsonFile" type="file" accept=".json,application/json" hidden><p id="jsonImportStatus" class="small muted" role="status" aria-live="polite">No backup selected.</p><p class="note">The saved GitHub backup is older (November 2026), but has recorded odometer and tire pressure data. Recovery fills only currently missing readings and empty histories, retaining your phone settings. Check mileage against your actual odometer after recovery. This will not update the app code or install an APK.</p></div>
-<div class="card"><h3 style="margin-top:0">Phone receipt photo folder</h3><p class="small muted">Choose a location on your phone; MileSage will create <strong>MileSage/Photos</strong> inside it and copy new fuel and service receipts. This requires browser permission and may not work when opening HTML from Downloads. If unavailable, use Download photo in history and move it with Files.</p><button class="btn secondary" type="button" id="choosePhotoDir">Choose phone photo folder</button><p class="small muted" id="photoDirStatus">Phone photo folder not selected.</p></div><div class="card"><h3 style="margin-top:0">Save a backup</h3><p class="small muted">Phone edits are saved in this browser, not uploaded to GitHub or your laptop. Export regularly before clearing browser data or changing phones.</p><div class="button-row"><button id="exportPython" class="btn" type="button">Export vehicles.json</button><button id="exportFull" class="btn secondary" type="button">Full mobile backup</button><button id="undoImport" class="btn secondary" type="button">Restore previous local snapshot</button></div><p class="small muted" style="margin-bottom:0">The Python export uses the same vehicle JSON structure as your desktop app. Mobile-only expense and mileage-log details are included in the full backup.</p></div>
+<div class="card"><h3 style="margin-top:0">Phone receipt photo folder</h3><p class="small muted">Choose a location on your phone; MileSage will create <strong>MileSage/Photos</strong> inside it and copy new fuel, service and other-expense receipts. This requires browser permission and may not work when opening HTML from Downloads. If unavailable, use Download photo in history and move it with Files.</p><button class="btn secondary" type="button" id="choosePhotoDir">Choose phone photo folder</button><p class="small muted" id="photoDirStatus">Phone photo folder not selected.</p></div><div class="card"><h3 style="margin-top:0">Save a backup</h3><p class="small muted">Phone edits are saved in this browser, not uploaded to GitHub or your laptop. Export regularly before clearing browser data or changing phones.</p><div class="button-row"><button id="exportPython" class="btn" type="button">Export vehicles.json</button><button id="exportFull" class="btn secondary" type="button">Full mobile backup</button><button id="undoImport" class="btn secondary" type="button">Restore previous local snapshot</button></div><p class="small muted" style="margin-bottom:0">The Python export uses the same vehicle JSON structure as your desktop app. Mobile-only expense and mileage-log details are included in the full backup.</p></div>
 <div class="card"><h3 style="margin-top:0">About this version</h3><p class="small muted">MileSage Alpha 1.3.2 preview • Mobile Preview v8 • VIN-based vehicle entry using the NHTSA decoder (internet required), with review before saving • Fluid & filter buttons on the Service tab • Safe manual data restore • GitHub checks never overwrite records • Works with locally saved data offline. Added vehicle overview cards, fuel-type and octane fields, and three fuel insights charts. Full two-way cloud sync, push alerts, OBD-II and APK packaging are not implemented.</p><p class="small muted" id="storageNote"></p></div>
 </section>
 </main>
@@ -336,40 +343,122 @@ function safePsi(raw,label,allowBlank=true){
   return n;
 }
 function psiText(n){return n===null||n===undefined||!Number.isFinite(Number(n))?'—':Number(n).toLocaleString('en-US',{maximumFractionDigits:2})+' PSI'}
+function tireDiagram(a,draft={},activeKey='driver_front'){
+ const p=a.tire_pressures||{};
+ const positions=[
+  ['driver_front','DF','Driver front · front left',90,83],
+  ['passenger_front','PF','Passenger front · front right',270,83],
+  ['driver_rear','DR','Driver rear · rear left',90,215],
+  ['passenger_rear','PR','Passenger rear · rear right',270,215]
+ ];
+ const wheel=(key,abbr,label,x,y)=>{
+  const amount=Object.prototype.hasOwnProperty.call(draft,key)?draft[key]:p[key];
+  const active=key===activeKey,psi=amount==null?'—':Number(amount).toLocaleString('en-US',{maximumFractionDigits:2});
+  return '<g aria-label="'+esc(label+': '+psiText(amount))+'">'+
+   '<rect x="'+(x<180?x+20:x-44)+'" y="'+(y-23)+'" width="24" height="46" rx="7" fill="'+(active?'#9e3b1b':'#253b50')+'"/>'+
+   '<rect x="'+(x<180?x+25:x-39)+'" y="'+(y-18)+'" width="14" height="36" rx="4" fill="#354f66"/>'+
+   '<text x="'+x+'" y="'+(y-25)+'" text-anchor="middle" font-size="11" fill="#546473" font-weight="700">'+abbr+'</text>'+
+   '<text x="'+x+'" y="'+(y+6)+'" text-anchor="middle" font-size="16" fill="#182f43" font-weight="800">'+esc(psi)+'</text>'+
+   '<text x="'+x+'" y="'+(y+20)+'" text-anchor="middle" font-size="9" fill="#5d6972">PSI</text></g>';
+ };
+ return '<div class="tire-map"><div class="eyebrow" style="text-align:center">FRONT OF VEHICLE ↑ · DRIVER ON LEFT</div>'+
+  '<svg role="img" aria-label="Top-down vehicle drivetrain and four tire readings; driver front at upper left, passenger front upper right, driver rear lower left, passenger rear lower right" viewBox="0 0 360 290" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;max-width:355px;height:auto;margin:0 auto">'+
+  '<path d="M130 62 Q130 39 157 35 L203 35 Q230 39 230 62 L230 227 Q230 253 202 256 L158 256 Q130 253 130 227 Z" fill="#e9edf1" stroke="#62798d" stroke-width="3"/>'+
+  '<path d="M145 85 L215 85 L210 123 L150 123 Z" fill="#c1d8e6" stroke="#62798d" stroke-width="2"/>'+
+  '<path d="M149 184 L211 184 L218 219 L142 219 Z" fill="#c1d8e6" stroke="#62798d" stroke-width="2"/>'+
+  '<path d="M126 109 L234 109 M126 209 L234 209" stroke="#657584" stroke-width="6" stroke-linecap="round"/>'+
+  '<path d="M180 121 L180 207" stroke="#9e3b1b" stroke-width="5" stroke-linecap="round"/>'+
+  '<circle cx="180" cy="109" r="13" fill="#9e3b1b" stroke="#fff" stroke-width="3"/>'+
+  '<circle cx="180" cy="209" r="13" fill="#9e3b1b" stroke="#fff" stroke-width="3"/>'+
+  positions.map(v=>wheel(...v)).join('')+'</svg>'+
+  '<p class="small muted" style="margin:2px 0 0;text-align:center">Diagram values are saved readings plus any unsaved entries you have confirmed in this sequence.</p></div>';
+}
 function tirePressureCard(a){
- const p=a.tire_pressures||{},hist=a.tire_pressure_history||[];
+ const hist=a.tire_pressure_history||[];
  const latest=hist.length?hist[hist.length-1]:null;
- const cards=TIRES.map(([k,label])=>`<div class="stat"><div class="eyebrow">${esc(label)}</div><strong>${esc(psiText(p[k]))}</strong></div>`).join('');
- const fields=TIRES.map(([k,label])=>`<div class="pressure-row"><div class="tire-name">${esc(label)}<small>Last: ${esc(psiText(p[k]))}</small></div><input id="pressure-${k}" type="number" min="0" max="200" step="0.01" inputmode="decimal" placeholder="PSI" aria-label="${esc(label)} measured PSI"><input id="added-${k}" type="number" min="0" max="200" step="0.01" inputmode="decimal" placeholder="0" aria-label="${esc(label)} PSI air added"></div>`).join('');
- return `<div id="tirePressureCard" class="card feature-card"><h3 style="margin:0 0 4px">Tire pressures</h3>${formVehicleName(a)}<div class="tire-values">${cards}</div><p class="small muted">${latest?'Last logged: '+esc(latest.recorded_at||'date unknown')+' at '+num(latest.mileage??a.mileage)+' miles':'No pressure readings logged yet.'}</p><form id="tirePressureForm"><h4 style="margin-bottom:3px">Record tire readings / added air</h4><div class="pressure-head"><span>Tire</span><span>Measured PSI</span><span>Air added PSI</span></div>${fields}<p class="small muted">Leave a field empty to keep that value unchanged. A measured reading replaces the previous calculated PSI; air added increases the measured or previously logged PSI. These are manually entered values, not live TPMS readings.</p><button type="submit" class="btn full">Save tire pressures</button></form><p class="small muted" style="margin-bottom:0">Use your vehicle's door-jamb tire placard for recommended <strong>cold</strong> inflation pressure; MileSage does not prescribe a pressure.</p></div>`;
+ return '<div id="tirePressureCard" class="card feature-card">'+
+  '<h3 style="margin:0 0 4px">Tire pressures</h3>'+formVehicleName(a)+
+  '<div id="tireDiagram">'+tireDiagram(a)+'</div>'+
+  '<p class="small muted">'+(latest?'Last logged: '+esc(latest.recorded_at||'date unknown')+' at '+num(latest.mileage??a.mileage)+' miles':'No pressure readings logged yet.')+'</p>'+
+  '<form id="tirePressureForm"><div class="note info" style="margin-top:8px"><strong id="tirePrompt">Tire 1 of 4 · Driver front (front left)</strong>'+
+  '<div class="small" id="tirePreviousReading">Saved: '+esc(psiText(a.tire_pressures?.driver_front))+'</div></div>'+
+  '<div class="grid2"><div><label class="field" for="tireMeasured">Measured PSI</label>'+
+  '<input id="tireMeasured" type="number" min="0" max="200" step="0.01" inputmode="decimal" placeholder="e.g. 35"></div>'+
+  '<div><label class="field" for="tireAdded">Air added PSI</label>'+
+  '<input id="tireAdded" type="number" min="0" max="200" step="0.01" inputmode="decimal" placeholder="Optional"></div></div>'+
+  '<p class="small muted" id="tireStepNote">Enter a measured reading and/or air added. Leaving both blank retains the last saved pressure.</p>'+
+  '<div class="button-row"><button id="tireBack" type="button" class="btn secondary" hidden>Previous tire</button>'+
+  '<button id="tireNext" type="button" class="btn">Next tire</button>'+
+  '<button id="tireFinish" type="submit" class="btn" hidden>Save tire readings</button></div>'+
+  '</form><p class="small muted" style="margin-bottom:0">Measurements are entered manually, not live TPMS. Refer to the door-jamb placard for recommended <strong>cold</strong> tire pressure.</p></div>';
 }
 function wireTirePressureForm(a){
- const form=$('tirePressureForm');
- form.onsubmit=e=>{e.preventDefault();try{
-   const old={...a.tire_pressures};
-   const next={...old};
-   const baselines={...a.starting_tire_pressures};
-   const increases={};
-   let changed=false;
-   for(const [k,label] of TIRES){
-     const measured=safePsi($('pressure-'+k).value,label+' reading');
-     const added=safePsi($('added-'+k).value,label+' air added');
-     increases[k]=added??0;
-     if(measured!==null){next[k]=measured;baselines[k]=measured;}
-     if(added!==null && added>0){
-       if(next[k]===null || next[k]===undefined)throw Error(label+': enter a measured PSI first, then add air.');
-       next[k]=Math.round((Number(next[k])+added)*100)/100;
-       if(next[k]>200)throw Error(label+': combined PSI exceeds 200.');
-     }
-     if(next[k]!==old[k] || baselines[k]!==a.starting_tire_pressures[k])changed=true;
+ const form=$('tirePressureForm'),draft={},TIRES_LOCAL=TIRES;
+ let step=0;
+ const measured=$('tireMeasured'),added=$('tireAdded');
+ function preview(){
+  const computed={};
+  for(const [key,label] of TIRES_LOCAL){
+   if(!Object.prototype.hasOwnProperty.call(draft,key))continue;
+   const values=draft[key],m=safePsi(values.measured,label+' measured PSI'),air=safePsi(values.added,label+' air added PSI');
+   let psi=m??a.tire_pressures?.[key]??null;
+   if(air!==null&&air>0){
+    if(psi===null)throw Error(label+': measure the tire before adding air.');
+    psi=Math.round((Number(psi)+air)*100)/100;
+    if(psi>200)throw Error(label+': combined PSI exceeds 200.');
    }
-   if(!changed){message('No new tire-pressure values entered.');return;}
-   const ev={recorded_at:new Date().toISOString(),mileage:a.mileage,before:old,starting:{...baselines},added_psi:increases,current:{...next}};
-   a.tire_pressures=next;
-   a.starting_tire_pressures=baselines;
-   a.tire_pressure_history.push(ev);
-   save();renderAll();message('Tire-pressure readings saved.');
- }catch(error){alert(error.message)}};
+   computed[key]=psi;
+  }
+  $('tireDiagram').innerHTML=tireDiagram(a,computed,TIRES_LOCAL[step][0]);
+ }
+ function readStep(){
+  const [key,label]=TIRES_LOCAL[step],m=safePsi(measured.value,label+' measured PSI'),air=safePsi(added.value,label+' air added PSI');
+  const start=m??a.tire_pressures?.[key]??null;
+  if(air!==null&&air>0&&start===null)throw Error(label+': enter a measured PSI before adding air.');
+  if(air!==null&&start!==null&&Number(start)+air>200)throw Error(label+': pressure exceeds 200 PSI.');
+  draft[key]={measured:measured.value.trim(),added:added.value.trim()};
+  preview();
+ }
+ function showStep(){
+  const [key,label]=TIRES_LOCAL[step],previous=draft[key]||{};
+  $('tirePrompt').textContent='Tire '+(step+1)+' of 4 · '+label+(key==='driver_front'?' (front left)':key==='passenger_front'?' (front right)':key==='driver_rear'?' (rear left)':' (rear right)');
+  $('tirePreviousReading').textContent='Last saved: '+psiText(a.tire_pressures?.[key]);
+  measured.value=previous.measured||'';
+  added.value=previous.added||'';
+  $('tireBack').hidden=step===0;
+  $('tireNext').hidden=step===TIRES_LOCAL.length-1;
+  $('tireFinish').hidden=step!==TIRES_LOCAL.length-1;
+  preview();
+ }
+ $('tireBack').onclick=()=>{try{readStep();step--;showStep();}catch(e){alert(e.message);}};
+ $('tireNext').onclick=()=>{try{readStep();step++;showStep();measured.focus();}catch(e){alert(e.message);}};
+ form.onsubmit=e=>{e.preventDefault();try{
+  readStep();
+  const old={...a.tire_pressures},oldBaselines={...a.starting_tire_pressures},next={...old},baselines={...oldBaselines},increases={};
+  let changed=false;
+  for(const [key,label] of TIRES_LOCAL){
+   const answer=draft[key]||{},m=safePsi(answer.measured||'',label+' measured PSI'),air=safePsi(answer.added||'',label+' air added PSI');
+   increases[key]=air??0;
+   if(m!==null){next[key]=m;baselines[key]=m;}
+   if(air!==null&&air>0){
+    if(next[key]==null)throw Error(label+': enter a measured PSI before adding air.');
+    next[key]=Math.round((Number(next[key])+air)*100)/100;
+    if(next[key]>200)throw Error(label+': pressure exceeds 200 PSI.');
+   }
+   if(next[key]!==old[key]||baselines[key]!==a.starting_tire_pressures?.[key])changed=true;
+  }
+  if(!changed){message('No tire pressure changes to save.');return;}
+  const event={recorded_at:new Date().toISOString(),mileage:a.mileage,before:old,starting:{...baselines},added_psi:increases,current:{...next}};
+  a.tire_pressures=next;a.starting_tire_pressures=baselines;a.tire_pressure_history.push(event);
+  try{localStorage.setItem(KEY,JSON.stringify({vehicles,current}));hasStorage=true;updateBanner();}
+  catch(err){
+   a.tire_pressures=old;a.starting_tire_pressures=oldBaselines;
+   a.tire_pressure_history.pop();
+   throw Error('Tire readings NOT saved: '+err.message);
+  }
+  renderAll();message('Tire-pressure readings saved for '+a.name+'.');
+ }catch(error){alert(error.message);}};
+ showStep();
 }
 
 const fluidNames={washer:'Windshield washer fluid',coolant:'Engine coolant reservoir'};
@@ -585,7 +674,7 @@ function ensureReceiptOCR(){
 }
 // Show a temporary receipt thumbnail before OCR starts, including when OCR fails.
 // Object URLs are short-lived and never written to localStorage, JSON or GitHub.
-const receiptPreviewUrls={service:null,fuel:null};
+const receiptPreviewUrls={service:null,fuel:null,expense:null};
 function showReceiptPreview(kind,file){
  receiptFiles[kind]=file;
  const panel=$(kind+'PhotoPreview'),img=$(kind+'PhotoImage'),info=$(kind+'PhotoInfo');
@@ -596,7 +685,7 @@ function showReceiptPreview(kind,file){
  img.src=url;
  panel.hidden=false;
  info.textContent='Photo received ('+(file.size/1048576).toFixed(1)+
-   ' MB). Photo selected. It will be attached to the fuel or service entry when you save; phone-folder copies require folder permission.';
+   ' MB). Photo selected. It will be attached to the selected entry when you save; phone-folder copies require folder permission.';
 }
 function clearReceiptPreview(kind){
  receiptFiles[kind]=null;
@@ -863,13 +952,76 @@ $('fuelForm').onsubmit=async e=>{
 };
 }
 function expenseSummary(a){let service=a.service_history.reduce((s,r)=>s+(Number(r.cost_cents)||0),0);let fuel=a.fuel_history.reduce((s,r)=>s+(Number(r.cost_cents)||0),0);let extra=a.mobile_expenses.reduce((s,r)=>s+(Number(r.cost_cents)||0),0);return {service,fuel,extra,total:service+fuel+extra}}
-function renderExpenses(){const a=v(),el=$('expensesBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}const totals=expenseSummary(a);el.innerHTML=`<div class="card"><div class="eyebrow">Recorded spending · ${esc(a.name)}</div><h2 style="font-size:31px;margin:4px 0 13px">${usd(totals.total)}</h2><div class="grid2 triple"><div class="stat"><div class="eyebrow">Service</div><strong style="font-size:18px">${usd(totals.service)}</strong></div><div class="stat"><div class="eyebrow">Fuel</div><strong style="font-size:18px">${usd(totals.fuel)}</strong></div><div class="stat"><div class="eyebrow">Other</div><strong style="font-size:18px">${usd(totals.extra)}</strong></div></div><p class="small muted" style="margin-bottom:0">Totals cover recorded expenses only; missing service costs are excluded.</p></div><div class="card"><h3 style="margin-top:0">Add other expense</h3>${formVehicleName(a)}<form id="extraForm"><label class="field" for="extraDesc">Description</label><input id="extraDesc" required type="text" maxlength="180" placeholder="Registration, parking, detailing…"><div class="grid2"><div><label class="field" for="extraDate">Date</label><input id="extraDate" required type="date" value="${localDate()}"></div><div><label class="field" for="extraCost">Cost ($)</label><input id="extraCost" required type="text" inputmode="decimal" placeholder="25.00"></div></div><button type="submit" class="btn full" style="margin-top:12px">Save other expense</button></form><p class="small muted">Other-expense entries are mobile-only until merged into the desktop app. Use <strong>Full mobile backup</strong> to preserve them.</p></div><div class="card"><h3 style="margin-top:0">Other expense history</h3>${recordList(a.mobile_expenses,'expense')}</div>`;
-$('extraForm').onsubmit=e=>{e.preventDefault();try{const desc=$('extraDesc').value.trim(),date=$('extraDate').value;if(!desc)throw Error('Description is required.');if(!validDate(date))throw Error('Enter a valid date.');a.mobile_expenses.push({date,description:desc,mileage:a.mileage,cost_cents:costCents($('extraCost').value)});save();renderAll();message('Other expense saved.')}catch(error){alert(error.message)}};}
+
+let expensePhotoDraftEpoch=0;
+function wireExpenseReceiptPhoto(a){
+ const camera=$('expenseCameraInput'),gallery=$('expenseGalleryInput');
+ const buttons=[$('expenseCameraButton'),$('expenseGalleryButton')];
+ $('expenseCameraButton').onclick=()=>{$('expenseReceiptProgress').textContent='Opening camera… Take a photo and confirm Use photo to return to MileSage.';camera.click();};
+ $('expenseGalleryButton').onclick=()=>gallery.click();
+ const read=async input=>{
+  const file=input.files?.[0];
+  if(!file)return;
+  if(!file.type.startsWith('image/')){alert('Choose an image of the expense receipt.');input.value='';return;}
+  if(file.size>15000000){alert('Expense photo exceeds 15 MB. Choose a smaller photo.');input.value='';return;}
+  const epoch=expensePhotoDraftEpoch;
+  showReceiptPreview('expense',file);
+  const status=$('expenseReceiptProgress');
+  status.textContent='Photo selected. Reading the receipt for suggested date and cost… (internet needed for first scan).';
+  buttons.forEach(button=>button.disabled=true);
+  let worker=null;
+  try{
+   const engine=await ensureReceiptOCR();
+   if(epoch!==expensePhotoDraftEpoch||v()!==a)return;
+   worker=await engine.createWorker('eng');
+   const detected=await worker.recognize(file);
+   if(epoch!==expensePhotoDraftEpoch||v()!==a)return;
+   const text=String(detected?.data?.text||'').trim();
+   if(!text)throw Error('No readable receipt text detected.');
+   $('expenseReceiptTextReview').style.display='';
+   $('expenseReceiptOcrText').textContent=text.slice(0,12000);
+   const fuel=parseFuelReceiptText(text,localDate()),service=parseServiceReceiptText(text,localDate());
+   const detectedDate=fuel.date||service.date, detectedTotal=fuel.total||service.cost;
+   const fields=[];
+   if(detectedDate){$('extraDate').value=detectedDate;fields.push('date');}
+   if(detectedTotal){
+    if(!$('extraCost').value.trim()){$('extraCost').value=detectedTotal;fields.push('total cost');}
+    else fields.push('cost available in recognized text; existing entry kept');
+   }
+   status.textContent=(fields.length?'Suggested: '+fields.join(', ')+'.':'No reliable date or total detected.')+
+    ' Confirm the expense description, date and cost before saving. The photo is ready to attach.';
+  }catch(err){
+   if(epoch!==expensePhotoDraftEpoch)return;
+   status.textContent='Photo ready to attach. Automatic text reading unavailable: '+err.message+
+    ' Enter expense details manually, then Save other expense.';
+  }finally{
+   if(worker){try{await worker.terminate();}catch(e){}}
+   buttons.forEach(button=>button.disabled=false);
+   input.value='';
+  }
+ };
+ camera.onchange=()=>read(camera);
+ gallery.onchange=()=>read(gallery);
+}
+function renderExpenses(){expensePhotoDraftEpoch++;clearReceiptPreview('expense');const a=v(),el=$('expensesBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}const totals=expenseSummary(a);el.innerHTML=`<div class="card"><div class="eyebrow">Recorded spending · ${esc(a.name)}</div><h2 style="font-size:31px;margin:4px 0 13px">${usd(totals.total)}</h2><div class="grid2 triple"><div class="stat"><div class="eyebrow">Service</div><strong style="font-size:18px">${usd(totals.service)}</strong></div><div class="stat"><div class="eyebrow">Fuel</div><strong style="font-size:18px">${usd(totals.fuel)}</strong></div><div class="stat"><div class="eyebrow">Other</div><strong style="font-size:18px">${usd(totals.extra)}</strong></div></div><p class="small muted" style="margin-bottom:0">Totals cover recorded expenses only; missing service costs are excluded.</p></div><div class="card"><h3 style="margin-top:0">Add other expense</h3>${formVehicleName(a)}<form id="extraForm"><div class="note info"><strong>Expense receipt photo</strong><div class="small">Take a photo or choose an existing receipt. MileSage will suggest a date and total when text is readable; review the description, date and cost before saving. The compressed photo stays attached to this expense and is included in Full mobile backup.</div></div><div class="button-row"><button id="expenseCameraButton" class="btn secondary" type="button">Take expense photo</button><button id="expenseGalleryButton" class="btn secondary" type="button">Choose photo</button></div><input id="expenseCameraInput" type="file" accept="image/*" capture="environment" hidden><input id="expenseGalleryInput" type="file" accept="image/*" hidden><p id="expenseReceiptProgress" class="small muted" role="status" aria-live="polite">No receipt selected.</p><div id="expensePhotoPreview" class="note info" hidden><strong>Photo ready to attach</strong><img id="expensePhotoImage" alt="Selected expense receipt" style="display:block;max-width:100%;max-height:230px;object-fit:contain;margin:8px auto;border-radius:8px"><div id="expensePhotoInfo" class="small"></div></div><details id="expenseReceiptTextReview" style="display:none"><summary>View recognized text</summary><pre id="expenseReceiptOcrText" style="white-space:pre-wrap;word-wrap:break-word;max-height:180px;overflow:auto"></pre></details><label class="field" for="extraDesc">Description</label><input id="extraDesc" required type="text" maxlength="180" placeholder="Registration, parking, detailing…"><div class="grid2"><div><label class="field" for="extraDate">Date</label><input id="extraDate" required type="date" value="${localDate()}"></div><div><label class="field" for="extraCost">Cost ($)</label><input id="extraCost" required type="text" inputmode="decimal" placeholder="25.00"></div></div><button id="saveOtherExpense" type="submit" class="btn full" style="margin-top:12px">Save other expense</button></form><p class="small muted">Other-expense entries and their photos are mobile-only until merged into the desktop app. Use <strong>Full mobile backup</strong> to preserve them.</p></div><div class="card"><h3 style="margin-top:0">Other expense history</h3>${recordList(a.mobile_expenses,'expense')}</div>`;
+wireExpenseReceiptPhoto(a);wirePhotoHistory('expense');
+$('extraForm').onsubmit=async e=>{
+ e.preventDefault();
+ const submit=$('saveOtherExpense');submit.disabled=true;
+ try{
+  const desc=$('extraDesc').value.trim(),date=$('extraDate').value;
+  if(!desc)throw Error('Description is required.');
+  if(!validDate(date))throw Error('Enter a valid date.');
+  const record={date,description:desc,mileage:a.mileage,cost_cents:costCents($('extraCost').value)};
+  await storeReceipt(a,'expense',record,()=>a.mobile_expenses.push(record));
+ }catch(error){alert(error.message);}
+ finally{submit.disabled=false;}
+};}
 function mpgSeries(a){let start=null,gallons=0;let values=[];for(const r of a.fuel_history){if(r.mileage==null){start=null;gallons=0;continue}let current=Number(r.mileage),g=Number(r.gallons);if(!Number.isFinite(current)||!Number.isFinite(g))continue;if(start==null){if(r.full_tank){start=current;gallons=0;}continue;}gallons+=g;if(r.full_tank){let miles=current-start;if(miles>0&&gallons>0)values.push({label:r.date||'',mpg:miles/gallons});start=current;gallons=0;}}return values;}
 function mpgChart(values){if(values.length<2)return `<p class="muted small">At least 2 completed MPG calculations are needed to draw a trend. A starting full tank and a later full tank establish the first result.</p>`;const vals=values.slice(-8),min=Math.min(...vals.map(x=>x.mpg)),max=Math.max(...vals.map(x=>x.mpg));const hi=max===min?max+1:max;const lo=max===min?Math.max(0,min-1):Math.max(0,min-1);let pts=vals.map((x,i)=>`${(15+i*270/Math.max(1,vals.length-1)).toFixed(1)},${(145-120*(x.mpg-lo)/(hi-lo)).toFixed(1)}`).join(' ');return `<svg viewBox="0 0 300 170" class="linechart" role="img" aria-label="Recent fuel economy trend from ${min.toFixed(1)} to ${max.toFixed(1)} miles per gallon"><path d="M15 15V145H285" stroke="#cbd6df" stroke-width="2" fill="none"/><polyline points="${pts}" fill="none" stroke="#9e3b1b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>${vals.map((x,i)=>`<circle cx="${(15+i*270/Math.max(1,vals.length-1)).toFixed(1)}" cy="${(145-120*(x.mpg-lo)/(hi-lo)).toFixed(1)}" r="4" fill="#9e3b1b"/>`).join('')}<text x="18" y="12" font-size="11" fill="#5d6972">${max.toFixed(1)} MPG</text><text x="18" y="163" font-size="11" fill="#5d6972">${min.toFixed(1)} MPG</text></svg>`}
 function renderGraphs(){const a=v(),el=$('graphsBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}const t=expenseSummary(a),arr=[['Service',t.service],['Fuel',t.fuel],['Other',t.extra]],max=Math.max(1,...arr.map(x=>x[1])),mpgs=mpgSeries(a);const oilRem=Number(a.service_interval)-(Number(a.mileage)-Number(a.last_service_mileage));el.innerHTML=`<div class="card"><h3 style="margin-top:0">Recorded spending by category</h3><div class="chart-bars">${arr.map(([name,c])=>`<div class="chart-col"><div>${usd(c)}</div><div class="chart-bar" style="height:${Math.max(2,Math.round(c/max*130))}px"></div><div class="muted">${name}</div></div>`).join('')}</div></div><div class="card"><h3 style="margin-top:0">Fuel economy trend</h3>${mpgChart(mpgs)}${mpgs.length?`<p class="small muted">Most recent calculated MPG: <strong>${mpgs[mpgs.length-1].mpg.toFixed(2)}</strong> (${mpgs.length} valid full-tank cycle${mpgs.length===1?'':'s'} recorded)</p>`:''}</div><div class="card"><h3 style="margin-top:0">Explainable health snapshot</h3><p><strong>Oil service:</strong> ${oilRem<=0?'Due now or overdue by '+num(-oilRem)+' miles':num(oilRem)+' miles remaining until the next scheduled oil service'}.</p><p><strong>Last oil-service mileage:</strong> ${num(a.last_service_mileage)}. <strong>Interval:</strong> ${num(a.service_interval)} miles.</p><div class="note info">These are mileage-based tracking indicators, not mechanical diagnostics. Follow the vehicle manufacturer’s maintenance guidance.</div></div>`;el.innerHTML+=additionalGraphCards(a);}
 
-const receiptFiles={fuel:null,service:null};
+const receiptFiles={fuel:null,service:null,expense:null};
 let photoDir=null;
 async function choosePhotoDir(){
  if(!window.showDirectoryPicker){
@@ -927,13 +1079,16 @@ function photoHistory(r,kind,index){
  '<div class="button-row"><button class="btn secondary" type="button" data-photo-save="'+kind+':'+index+'">Save to MileSage/Photos</button>'+
  '<button class="btn secondary" type="button" data-photo-download="'+kind+':'+index+'">Download photo</button></div></details>';
 }
+function historyPhotoRecords(vehicle,kind){
+ return kind==='expense'?vehicle?.mobile_expenses:vehicle?.[kind+'_history'];
+}
 function wirePhotoHistory(kind){
- const root=$(kind==='fuel'?'fuelBody':'serviceBody');
+ const root=$(kind==='fuel'?'fuelBody':kind==='expense'?'expensesBody':'serviceBody');
  root.querySelectorAll('[data-photo-download]').forEach(b=>b.onclick=()=>{
-  const i=Number(b.dataset.photoDownload.split(':')[1]);downloadPhonePhoto(v()[kind+'_history'][i].receipt_photo);
+  const i=Number(b.dataset.photoDownload.split(':')[1]),record=historyPhotoRecords(v(),kind)?.[i];if(record?.receipt_photo)downloadPhonePhoto(record.receipt_photo);
  });
  root.querySelectorAll('[data-photo-save]').forEach(b=>b.onclick=async()=>{
-  const i=Number(b.dataset.photoSave.split(':')[1]),vehicle=v(),p=vehicle?.[kind+'_history']?.[i]?.receipt_photo;
+  const i=Number(b.dataset.photoSave.split(':')[1]),vehicle=v(),p=historyPhotoRecords(vehicle,kind)?.[i]?.receipt_photo;
   if(!p)return;
   if(!photoDir&&!(await choosePhotoDir()))return;
   try{await writePhonePhoto(p);p.folder_saved=true;localStorage.setItem(KEY,JSON.stringify({vehicles,current}));renderAll();message('Receipt photo copied into MileSage/Photos.');}
@@ -954,7 +1109,7 @@ async function storeReceipt(vehicle,kind,record,mutate){
    catch(e){note='Photo attached in MileSage, but folder copy failed: '+e.message+'. Use Save to MileSage/Photos in history.';}
   }else note='Photo attached to the record and Full mobile backup. To copy it into a phone folder, select the folder in Data & backup, then tap Save to MileSage/Photos in history.';
  }
- renderAll();message(kind==='fuel'?'Fuel entry saved.':'Service entry saved.');
+ renderAll();message(kind==='fuel'?'Fuel entry saved.':kind==='expense'?'Other expense saved.':'Service entry saved.');
  if(note)alert(note);
 }
 

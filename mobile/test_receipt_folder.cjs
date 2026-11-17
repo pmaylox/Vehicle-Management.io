@@ -7,8 +7,8 @@ for(const phrase of [
  'function choosePhotoDir()','showDirectoryPicker({mode:',
  "getDirectoryHandle('MileSage',{create:true})","getDirectoryHandle('Photos',{create:true})",
  'function writePhonePhoto(p)', 'createWritable()', 'function downloadPhonePhoto(p)',
- "storeReceipt(a,'fuel'", "storeReceipt(a,'service'",
- "wirePhotoHistory('fuel')", "wirePhotoHistory('service')",
+ "storeReceipt(a,'expense'", "storeReceipt(a,'fuel'", "storeReceipt(a,'service'",
+ "wirePhotoHistory('expense')", "wirePhotoHistory('fuel')", "wirePhotoHistory('service')",
  "receipt_photo={data_url:await photoData(file)",
  'Entry NOT saved: phone storage failed.',
  'data-photo-save', 'data-photo-download',
@@ -27,4 +27,4 @@ const photo={data_url:'data:image/jpeg;base64,'+Buffer.from('photo bytes').toStr
 const got=sandbox.photoBlob(photo);
 assert.equal(got.type,'image/jpeg');assert.equal(got.size,11);
 assert.throws(()=>sandbox.photoBlob({data_url:'javascript:alert(1)'}),/Invalid saved photo/);
-console.log('Fuel and service receipt folder regression tests passed.');
+console.log('Fuel, service and expense receipt folder regression tests passed.');
