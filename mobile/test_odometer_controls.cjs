@@ -6,7 +6,7 @@ const vm = require('node:vm');
 const path = require('node:path');
 const htmlFile = path.join(__dirname, 'MileSage_Mobile_Auto_Refresh.html');
 const html = fs.readFileSync(htmlFile, 'utf8');
-const fn = html.match(/function odometerNext\(current,operator,amount\)\{[\s\S]*?\n\}\n(?=function mileageForm)/);
+const fn = html.match(/function odometerNext\(current,operator,amount\)\{[\s\S]*?\r?\n\}\r?\n(?=function mileageForm)/);
 assert.ok(fn, 'Pure +, -, = odometer calculator must exist');
 const sandbox = {};
 vm.runInNewContext(fn[0]+'\nthis.compute=odometerNext;', sandbox);

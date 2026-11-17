@@ -98,7 +98,7 @@ public class MainActivity extends Activity {
                     for (String accept : params.getAcceptTypes()) {
                         if (accept != null && accept.contains("image")) imageInput = true;
                     }
-                    Intent chooser = Intent.createChooser(base, imageInput ? "Take or choose receipt photo" : "Choose MileSage file");
+                    Intent chooser = Intent.createChooser(base, imageInput ? "Take or choose photo" : "Choose MileSage file");
                     if (imageInput) {
                         File dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
                         if (dir != null) {
