@@ -42,6 +42,8 @@ for(const fragment of [
 assert.ok(provider.includes('name="service_invoices" path="service_invoices/"'),
  'The app-private PDF folder must be accessible through FileProvider');
 assert.ok(build.includes('play-services-mlkit-document-scanner:16.0.0'));
-assert.ok(build.includes("applicationId 'io.reddirtcode.milesage.alpha137repair'"),
- 'This test build must not overwrite the existing alpha app');
+assert.ok(build.includes("applicationId 'io.reddirtcode.milesage.alpha137verify2'"),
+ 'Verification 2 must install separately from existing MileSage and Repair Test apps');
+assert.ok(!build.includes("applicationId 'io.reddirtcode.milesage.alpha137repair'"),
+ 'Never reuse the prior Repair Test identity with a different debug signing certificate');
 console.log('PASS: Service multi-page PDF, Fuel autofill/3-decimal, native hooks, Fuel scan isolation, JS syntax.');
