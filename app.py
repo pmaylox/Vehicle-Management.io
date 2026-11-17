@@ -1,3 +1,4 @@
+from mobile_export import build_mobile_backup
 from vehicle_profile_ui import VehicleProfileFields
 from vin_lookup import profile_summary
 from overview_panel import OverviewPanel
@@ -2527,6 +2528,70 @@ def main():
         overview_tab,
         text="Export to Excel",
         command=export_selected_vehicle
+    ).pack(anchor="w", pady=(8, 0))
+
+        # ===== EXPORT FOR MOBILE =====
+    def export_for_mobile():
+        if not vehicles:
+            messagebox.showinfo(
+                "No vehicles",
+                "Add a vehicle before exporting.",
+                parent=window
+            )
+            return
+
+        filename = filedialog.asksaveasfilename(
+            parent=window,
+            title="Export vehicles and photos for mobile",
+            defaultextension=".json",
+            filetypes=[("Mobile backup", "*.json")],
+            initialfile="MileSage_mobile_backup.json"
+        )
+
+        if not filename:
+            return
+
+        destination = Path(filename)
+
+        if destination.resolve() in {
+            Path(__file__).with_name("vehicles.json").resolve(),
+            Path(__file__).with_name("vehicles_backup.json").resolve()
+        }:
+            messagebox.showerror(
+                "Choose another filename",
+                "Keep the mobile export separate from your desktop data.",
+                parent=window
+            )
+            return
+
+        try:
+            backup = build_mobile_backup(vehicles)
+            destination.write_text(
+                json.dumps(backup, indent=2),
+                encoding="utf-8"
+            )
+
+        except (OSError, ValueError, TypeError) as error:
+            messagebox.showerror(
+                "Export failed",
+                str(error),
+                parent=window
+            )
+            return
+
+        messagebox.showinfo(
+            "Mobile export saved",
+            f"Saved to:\n{destination}\n\n"
+            "Transfer this file to your phone.\n"
+            "Back up your phone records before importing it "
+            "through Data & backup.",
+            parent=window
+        )
+
+    ttk.Button(
+        overview_tab,
+        text="Export for Mobile",
+        command=export_for_mobile
     ).pack(anchor="w", pady=(8, 0))
 
     # ===== STARTUP SELECTION =====
