@@ -256,7 +256,7 @@ function recordList(records,kind){
   '<div class="record"><div><h4>'+esc(r.description||('Fuel fill-up'+(r.full_tank?' · full tank':'')))+
   '</h4><small>'+esc(r.date||'Date unknown')+' · '+num(r.mileage)+' mi'+(kind==='fuel'?' · '+esc(r.gallons)+' gal':'')+
   '</small></div><strong>'+(r.cost_cents==null?'No cost':usd(r.cost_cents))+'</strong></div>'+photoHistory(r,kind,index)+
- (kind==='service'&&r.service_document?.id?'<div class="button-row"><button class="btn secondary" type="button" data-service-pdf="'+index+'">View scanned invoice · '+num(r.service_document.pages)+' pages</button></div>':'')).join('');
+ (kind==='service'&&r.service_document?.id?'<div class="button-row"><button class="btn secondary" type="button" data-service-pdf="'+index+'">View scanned invoice · '+num(r.service_document.pages)+' pages</button><button class="btn secondary" type="button" data-service-pdf-share="'+index+'">Share / backup PDF</button></div>':'')).join('');
 }
 function formVehicleName(a){return `<p class="small muted" style="margin:0 0 10px">Recording for <strong>${esc(a.year)} ${esc(a.name)}</strong> • ${num(a.mileage)} mi</p>`}
 const TIRES=[['driver_front','Driver front'],['passenger_front','Passenger front'],['driver_rear','Driver rear'],['passenger_rear','Passenger rear']];
@@ -608,6 +608,12 @@ function wireServicePdfHistory(){
   if(!item)return;
   if(window.MileSageAndroid?.openServiceInvoice)window.MileSageAndroid.openServiceInvoice(item.id);
   else alert('Open this PDF inside the MileSage Service Scanner Test Android app.');
+ });
+ $('serviceBody').querySelectorAll('[data-service-pdf-share]').forEach(btn=>btn.onclick=()=>{
+  const index=Number(btn.dataset.servicePdfShare),item=v()?.service_history?.[index]?.service_document;
+  if(!item)return;
+  if(window.MileSageAndroid?.shareServiceInvoice)window.MileSageAndroid.shareServiceInvoice(item.id);
+  else alert('PDF sharing requires the Android Service Scanner Test app.');
  });
 }
 /* SERVICE_MULTIPAGE_PDF_END */
