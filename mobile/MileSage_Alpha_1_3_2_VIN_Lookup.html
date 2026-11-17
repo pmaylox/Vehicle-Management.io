@@ -322,7 +322,8 @@ function recordList(records,kind){
  return records.map((r,index)=>({r,index})).reverse().slice(0,40).map(({r,index})=>
   '<div class="record"><div><h4>'+esc(r.description||('Fuel fill-up'+(r.full_tank?' · full tank':'')))+
   '</h4><small>'+esc(r.date||'Date unknown')+' · '+num(r.mileage)+' mi'+(kind==='fuel'?' · '+esc(r.gallons)+' gal':'')+
-  '</small></div><strong>'+(r.cost_cents==null?'No cost':usd(r.cost_cents))+'</strong></div>'+photoHistory(r,kind,index)).join('');
+  '</small></div><strong>'+(r.cost_cents==null?'No cost':usd(r.cost_cents))+'</strong></div>'+photoHistory(r,kind,index)+
+ (kind==='service'&&r.service_document?.id?'<div class="button-row"><button class="btn secondary" type="button" data-service-pdf="'+index+'">View scanned invoice · '+num(r.service_document.pages)+' pages</button><button class="btn secondary" type="button" data-service-pdf-share="'+index+'">Share / backup PDF</button></div>':'')).join('');
 }
 function formVehicleName(a){return `<p class="small muted" style="margin:0 0 10px">Recording for <strong>${esc(a.year)} ${esc(a.name)}</strong> • ${num(a.mileage)} mi</p>`}
 const TIRES=[['driver_front','Driver front'],['passenger_front','Passenger front'],['driver_rear','Driver rear'],['passenger_rear','Passenger rear']];
@@ -484,47 +485,81 @@ function parseServiceReceiptText(raw,today){
 }
 /* RECEIPT_PARSER_END */
 /* FUEL_RECEIPT_PARSER_BEGIN */
+// Preserve a consistent three-decimal US gallon reading in UI and history.
+// Reject excess precision rather than silently changing purchased volume.
+function parseGallonsInput(raw){
+ const text=String(raw??'').trim();
+ if(!/^\d+(?:\.\d{1,3})?$/.test(text))
+  throw Error('Enter US gallons using up to 3 decimal places (for example, 10.882).');
+ const amount=Number(text);
+ if(!Number.isFinite(amount)||amount<0.001||amount>9999)
+  throw Error('Enter a valid US gallon amount between 0.001 and 9999.000.');
+ return amount.toFixed(3);
+}
 function parseFuelReceiptText(raw,today){
- const text=String(raw||'');
- const lines=text.split(/\r?\n/).map(x=>x.replace(/\s+/g,' ').trim()).filter(Boolean);
- // Share the validated date and odometer parsing with service receipts.
+ const text=String(raw||'').replace(/\u00a0/g,' ');
+ const lines=text.split(/\r?\n/).map(line=>line.replace(/\s+/g,' ').trim()).filter(Boolean);
  const shared=parseServiceReceiptText(text,today);
  const result={date:shared.date,mileage:shared.mileage,gallons:null,total:null};
- // Favor a quantity explicitly labeled gallons/volume; do NOT infer quantity
- // from the pump price, grade, monetary total, or incidental item numbers.
- const patterns=[
-  /\b(?:gallons?|volume|fuel qty|fuel quantity|quantity|qty)\s*(?:\(us\)|\(gal\)|us|gal|liters?)?\s*[:=\-]?\s*(\d{1,4}(?:\.\d{1,4})?)\b/i,
-  /\b(\d{1,4}\.\d{1,4})\s*(?:us\s*)?gallons?\b/i,
-  /\b(\d{1,4}\.\d{1,4})\s*(?:us\s*)?gal\b/i
- ];
- for(const line of lines){
-  if(/\b(?:price\s*(?:per|\/)\s*(?:gal|gallon)|unit price|ppu|price\/gallon)\b/i.test(line))continue;
-  for(const pattern of patterns){
-   const found=line.match(pattern);
-   if(found){
-    const n=Number(found[1]);
-    if(Number.isFinite(n)&&n>=0.001&&n<=9999){
-     result.gallons=String(n);
-     break;
-    }
+ // Receipts vary: "GALLONS 10.882", "GALL0NS: 10,882", or label and
+ // quantity on adjacent lines. Do not confuse price per gallon with volume.
+ const gallonsLabel=/\b(?:gall(?:o|0)ns?|volume|fuel\s*(?:qty|quantity)|quantity|qty)\b/i;
+ const priceLabel=/\b(?:ppu|unit\s*price|price\s*(?:per|\/)\s*(?:gallons?|gal|g)|(?:gallons?|gal)\s*price)\b/i;
+ const totalLabel=/\b(?:fuel[\s-]*(?:sale|5ale)|sale\s*total|grand\s*total|transaction\s*total|total(?:\s+(?:sale|due|paid|amount|purchase))?|amount(?:\s+(?:paid|due))?|purchase\s*amount)\b/i;
+ const trailingVolume=/\b(\d{1,4}(?:[.,]\d{1,3})?)\s*(?:us\s*)?(?:gallons?|gal)\b/i;
+
+ const numberAfter=fragment=>{
+  const m=String(fragment).match(/(?:^|[^\d])(\d{1,4}(?:[.,]\d{1,3})?)(?!\d)/);
+  if(!m)return null;
+  // Decimal comma is a common OCR error in a gallons-labeled field.
+  const n=Number(m[1].replace(',','.'));
+  return Number.isFinite(n)&&n>=0.001&&n<=9999?n.toFixed(3):null;
+ };
+ for(let i=0;i<lines.length;i++){
+  const line=lines[i],label=gallonsLabel.exec(line);
+  if(!label){
+   const trailing=line.match(trailingVolume);
+   if(trailing&&!priceLabel.test(line)){
+    const n=Number(trailing[1].replace(',','.'));
+    if(Number.isFinite(n)&&n>=0.001&&n<=9999){result.gallons=n.toFixed(3);break;}
    }
+   continue;
   }
-  if(result.gallons!==null)break;
+  const trailing=line.match(trailingVolume);
+  if(trailing&&!priceLabel.test(line)){
+   const n=Number(trailing[1].replace(',','.'));
+   if(Number.isFinite(n)&&n>=0.001&&n<=9999){result.gallons=n.toFixed(3);break;}
+  }
+  const price=priceLabel.exec(line);
+  if(price&&price.index<=label.index)continue;
+  const after=line.slice(label.index+label[0].length);
+  let amount=numberAfter(after);
+  if(amount===null&&i+1<lines.length&&!priceLabel.test(lines[i+1])&&
+     !totalLabel.test(lines[i+1])&&!gallonsLabel.test(lines[i+1]))
+   amount=numberAfter(lines[i+1]);
+  if(amount!==null){result.gallons=amount;break;}
  }
- const moneyRe=/\$?\s*(\d{1,3}(?:,\d{3})*\.\d{2}|\d+\.\d{2})\b/g;
- const totalRe=/\b(?:grand total|fuel total|sale total|transaction total|total(?: sale| due| paid| amount| purchase)?|amount(?: paid| due)?|purchase amount|fuel sale)\b/i;
- // Prefer a line with a labeled total, and reject lines that identify pump
- // unit price, discount or tax. Never use a random dollar figure as a total.
- const labeled=lines.filter(line=>totalRe.test(line)&&
-   !/\b(?:price\s*(?:per|\/)\s*(?:gal|gallon)|unit price|subtotal|sales tax|tax rate|discount|rewards savings)\b/i.test(line));
- for(let i=labeled.length-1;i>=0;i--){
-  const amounts=[...labeled[i].matchAll(moneyRe)];
-  if(amounts.length){
-   const n=Number(amounts.at(-1)[1].replace(/,/g,''));
-   if(Number.isFinite(n)&&n>=0&&n<=100000){
-    result.total=n.toFixed(2);
-    break;
-   }
+ // Trust explicitly labeled fuel sale / total amounts first; a standalone
+ // pump price, tax or subtotal is never a reliable total paid.
+ const paymentLabel=/\b(?:credit|debit|visa|mastercard|amex|discover)\b/i;
+ const excluded=/\b(?:unit\s*price|ppu|price\s*(?:per|\/)\s*(?:gallon|gal|g)|subtotal|sales?\s*tax|tax\s*rate|discount|savings)\b/i;
+ const priceMoney=/\$?\s*(\d{1,6}(?:,\d{3})*\.\d{2})(?!\d)/g;
+ const amountAfter=fragment=>{
+  const numbers=[...String(fragment).matchAll(priceMoney)];
+  if(!numbers.length)return null;
+  const n=Number(numbers[0][1].replace(/,/g,''));
+  return Number.isFinite(n)&&n>=0&&n<=100000?n.toFixed(2):null;
+ };
+ for(const regex of [totalLabel,paymentLabel]){
+  for(let i=0;i<lines.length;i++){
+   const line=lines[i],label=regex.exec(line);
+   if(!label||excluded.test(line.slice(0,label.index)))continue;
+   const after=line.slice(label.index+label[0].length);
+   let amount=amountAfter(after);
+   if(amount===null&&i+1<lines.length&&!excluded.test(lines[i+1])&&
+      !gallonsLabel.test(lines[i+1])&&!totalLabel.test(lines[i+1]))
+    amount=amountAfter(lines[i+1]);
+   if(amount!==null){result.total=amount;return result;}
   }
  }
  return result;
@@ -636,8 +671,56 @@ function wireServiceReceiptPhoto(a){
  gallery.onchange=()=>read(gallery);
 }
 
-function renderService(){clearReceiptPreview('service');const a=v(), el=$('serviceBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}el.innerHTML=tirePressureCard(a)+fluidFilterCard(a)+`<div class="card feature-card"><h3 style="margin-top:0">Log maintenance</h3>${formVehicleName(a)}<form id="serviceForm"><div class="note info"><strong>Service receipt photo</strong><div class="small">Take a photo or choose an existing image. MileSage will attempt to fill the date, mileage, service description and cost; review all fields before saving. OCR downloads recognition tools when connected, and the photo is attached to the entry and Full mobile backup. Choose a phone photo folder in Data & backup for a MileSage/Photos copy.</div></div><div class="button-row"><button id="serviceCameraButton" class="btn secondary" type="button">Take receipt photo</button><button id="serviceGalleryButton" class="btn secondary" type="button">Choose photo</button></div><input id="serviceCameraInput" type="file" accept="image/*" capture="environment" hidden><input id="serviceGalleryInput" type="file" accept="image/*" hidden><div id="receiptProgress" class="small muted" role="status" aria-live="polite">No receipt scanned yet.</div><div id="servicePhotoPreview" class="note info" hidden><strong>Photo ready to attach</strong><img id="servicePhotoImage" alt="Selected service receipt" style="display:block;max-width:100%;max-height:230px;object-fit:contain;margin:8px auto;border-radius:8px"><div id="servicePhotoInfo" class="small"></div></div><details id="receiptTextReview" style="display:none"><summary>View recognized text</summary><pre id="receiptOcrText" style="white-space:pre-wrap;word-wrap:break-word;max-height:180px;overflow:auto"></pre></details><label class="field" for="serviceDesc">Work performed</label><input id="serviceDesc" type="text" required maxlength="180" placeholder="Oil change, tire rotation…"><div class="grid2"><div><label class="field" for="serviceDate">Date</label><input type="date" id="serviceDate" required value="${localDate()}"></div><div><label class="field" for="serviceOdo">Odometer</label><input type="number" id="serviceOdo" inputmode="numeric" min="0" required step="1" value="${a.mileage}"></div></div><label class="field" for="serviceCost">Cost in dollars (optional)</label><input id="serviceCost" inputmode="decimal" type="text" placeholder="89.95"><div class="check"><input type="checkbox" id="oilReset"><label for="oilReset">Reset oil-change countdown</label></div><div class="check"><input type="checkbox" id="tireReset"><label for="tireReset">Reset tire-rotation countdown</label></div><div class="check"><input type="checkbox" id="cabinReplaced"><label for="cabinReplaced">Cabin air filter replaced (log replacement)</label></div><div class="check"><input type="checkbox" id="engineReplaced"><label for="engineReplaced">Engine air filter replaced (log replacement)</label></div><button type="submit" class="btn full">Save service record</button></form></div><div class="card"><h3 style="margin-top:0">Service history (${num(a.service_history.length)})</h3>${recordList(a.service_history,'service')}</div>`;
-wireTirePressureForm(a);wireFluidAndFilters(a);wireServiceReceiptPhoto(a);wirePhotoHistory('service');
+/* SERVICE_MULTIPAGE_PDF_BEGIN */
+let servicePdfDraft=null, servicePdfScanOwner=null;
+window.milesageServiceScannerComplete=function(result){
+ const info=result||{},status=$('servicePdfScanStatus'),preview=$('servicePdfPreview');
+ if(!status)return;
+ if(info.error){status.textContent=info.error;return;}
+ if(!info.id||!Number.isInteger(info.pages)||info.pages<1){status.textContent='Scanner did not return a valid PDF.';return;}
+ if(v()!==servicePdfScanOwner){
+  status.textContent='Selected vehicle changed during scanning. Document not attached; scan again for the correct vehicle.';return;
+ }
+ servicePdfDraft={vehicle:servicePdfScanOwner,id:info.id,pages:info.pages,name:String(info.name||'Service invoice.pdf')};
+ status.textContent='Scanned '+info.pages+' page(s) into one PDF. Save the service entry to attach it.';
+ if(preview){preview.hidden=false;preview.textContent='Ready: '+servicePdfDraft.name+' · '+info.pages+' pages';}
+ message('Multi-page invoice ready. Save the service record.');
+};
+function wireServicePdfScanner(a){
+ const button=$('scanServicePdf'),status=$('servicePdfScanStatus'),preview=$('servicePdfPreview');
+ if(!button)return;
+ if(servicePdfDraft&&servicePdfDraft.vehicle!==a)servicePdfDraft=null;
+ if(servicePdfDraft){
+  preview.hidden=false;preview.textContent='Ready: '+servicePdfDraft.name+' · '+servicePdfDraft.pages+' pages';
+  status.textContent='Finish and save the service entry to attach this PDF.';
+ }
+ button.onclick=()=>{
+  if(!window.MileSageAndroid||typeof window.MileSageAndroid.scanServiceInvoice!=='function'){
+   status.textContent='Multi-page scanner requires the MileSage Service Scanner Test Android app.';return;
+  }
+  servicePdfScanOwner=a;
+  status.textContent='Opening document scanner. Capture all pages, review their order and save in the scanner.';
+  window.MileSageAndroid.scanServiceInvoice();
+ };
+}
+function wireServicePdfHistory(){
+ $('serviceBody').querySelectorAll('[data-service-pdf]').forEach(btn=>btn.onclick=()=>{
+  const index=Number(btn.dataset.servicePdf),item=v()?.service_history?.[index]?.service_document;
+  if(!item)return;
+  if(window.MileSageAndroid?.openServiceInvoice)window.MileSageAndroid.openServiceInvoice(item.id);
+  else alert('Open this PDF inside the MileSage Service Scanner Test Android app.');
+ });
+ $('serviceBody').querySelectorAll('[data-service-pdf-share]').forEach(btn=>btn.onclick=()=>{
+  const index=Number(btn.dataset.servicePdfShare),item=v()?.service_history?.[index]?.service_document;
+  if(!item)return;
+  if(window.MileSageAndroid?.shareServiceInvoice)window.MileSageAndroid.shareServiceInvoice(item.id);
+  else alert('PDF sharing requires the Android Service Scanner Test app.');
+ });
+}
+/* SERVICE_MULTIPAGE_PDF_END */
+
+function renderService(){clearReceiptPreview('service');const a=v(), el=$('serviceBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}el.innerHTML=tirePressureCard(a)+fluidFilterCard(a)+`<div class="card feature-card"><h3 style="margin-top:0">Log maintenance</h3>${formVehicleName(a)}<form id="serviceForm"><div class="note info"><strong>Service receipt photo</strong><div class="small">Take a photo or choose an existing image. MileSage will attempt to fill the date, mileage, service description and cost; review all fields before saving. OCR downloads recognition tools when connected, and the photo is attached to the entry and Full mobile backup. Choose a phone photo folder in Data & backup for a MileSage/Photos copy.</div></div><div class="card" style="margin:12px 0;padding:12px;background:#f7fafc"><strong>Multi-page dealership or repair invoice</strong><p class="small muted">Scan up to 30 pages in one session. Review page order in the scanner. One PDF is attached when you save this service entry. Scanned PDFs stay in this app and are not included in JSON backups; share/export them separately before changing phones.</p><button id="scanServicePdf" class="btn secondary" type="button">Scan multi-page service invoice</button><p id="servicePdfScanStatus" class="small muted" role="status">No multi-page PDF scanned yet.</p><p id="servicePdfPreview" class="note info" hidden></p></div><div class="button-row"><button id="serviceCameraButton" class="btn secondary" type="button">Take receipt photo</button><button id="serviceGalleryButton" class="btn secondary" type="button">Choose photo</button></div><input id="serviceCameraInput" type="file" accept="image/*" capture="environment" hidden><input id="serviceGalleryInput" type="file" accept="image/*" hidden><div id="receiptProgress" class="small muted" role="status" aria-live="polite">No receipt scanned yet.</div><div id="servicePhotoPreview" class="note info" hidden><strong>Photo ready to attach</strong><img id="servicePhotoImage" alt="Selected service receipt" style="display:block;max-width:100%;max-height:230px;object-fit:contain;margin:8px auto;border-radius:8px"><div id="servicePhotoInfo" class="small"></div></div><details id="receiptTextReview" style="display:none"><summary>View recognized text</summary><pre id="receiptOcrText" style="white-space:pre-wrap;word-wrap:break-word;max-height:180px;overflow:auto"></pre></details><label class="field" for="serviceDesc">Work performed</label><input id="serviceDesc" type="text" required maxlength="180" placeholder="Oil change, tire rotation…"><div class="grid2"><div><label class="field" for="serviceDate">Date</label><input type="date" id="serviceDate" required value="${localDate()}"></div><div><label class="field" for="serviceOdo">Odometer</label><input type="number" id="serviceOdo" inputmode="numeric" min="0" required step="1" value="${a.mileage}"></div></div><label class="field" for="serviceCost">Cost in dollars (optional)</label><input id="serviceCost" inputmode="decimal" type="text" placeholder="89.95"><div class="check"><input type="checkbox" id="oilReset"><label for="oilReset">Reset oil-change countdown</label></div><div class="check"><input type="checkbox" id="tireReset"><label for="tireReset">Reset tire-rotation countdown</label></div><div class="check"><input type="checkbox" id="cabinReplaced"><label for="cabinReplaced">Cabin air filter replaced (log replacement)</label></div><div class="check"><input type="checkbox" id="engineReplaced"><label for="engineReplaced">Engine air filter replaced (log replacement)</label></div><button type="submit" class="btn full">Save service record</button></form></div><div class="card"><h3 style="margin-top:0">Service history (${num(a.service_history.length)})</h3>${recordList(a.service_history,'service')}</div>`;
+wireTirePressureForm(a);wireFluidAndFilters(a);wireServiceReceiptPhoto(a);wirePhotoHistory('service');wireServicePdfScanner(a);wireServicePdfHistory();
 $('serviceForm').onsubmit=async e=>{
  e.preventDefault();
  try{
@@ -647,6 +730,8 @@ $('serviceForm').onsubmit=async e=>{
   const desc=$('serviceDesc').value.trim();if(!desc)throw Error('Enter the work performed.');
   const record={date,mileage:od,description:desc,cost_cents:costCents($('serviceCost').value,true),
    oil_reset:$('oilReset').checked,tire_reset:$('tireReset').checked};
+  const pdf=servicePdfDraft?.vehicle===a?servicePdfDraft:null;
+  if(pdf)record.service_document={id:pdf.id,pages:pdf.pages,name:pdf.name};
   const cabin=$('cabinReplaced').checked,engine=$('engineReplaced').checked;
   await storeReceipt(a,'service',record,()=>{
    a.service_history.push(record);
@@ -657,6 +742,7 @@ $('serviceForm').onsubmit=async e=>{
    if(record.oil_reset)a.last_service_mileage=od;
    if(record.tire_reset)a.last_tire_rotation_mileage=od;
   });
+  if(pdf){servicePdfDraft=null;renderService();}
  }catch(err){alert(err.message);}
 };
 }
@@ -694,8 +780,8 @@ function wireFuelReceiptPhoto(a){
    const found=parseFuelReceiptText(text,localDate());
    const fields=[];
    if(found.date){$('fuelDate').value=found.date;fields.push('date');}
-   if(found.gallons!==null){$('fuelGallons').value=found.gallons;fields.push('gallons');}
-   if(found.total!==null){$('fuelCost').value=found.total;fields.push('total paid');}
+   if(found.gallons!==null){$('fuelGallons').value=found.gallons;fields.push('gallons ('+found.gallons+' gal)');}
+   if(found.total!==null){$('fuelCost').value=found.total;fields.push('total paid ($'+found.total+')');}
    if(found.mileage!==null){
     $('fuelOdo').value=String(found.mileage);fields.push('odometer');
    }
@@ -721,7 +807,7 @@ function wireFuelReceiptPhoto(a){
  gallery.onchange=()=>read(gallery);
 }
 
-function renderFuel(){clearReceiptPreview('fuel');const a=v(), el=$('fuelBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}el.innerHTML=`<div class="card feature-card"><h3 style="margin-top:0">Record a fill-up</h3>${formVehicleName(a)}<form id="fuelForm"><div class="note info"><strong>Fuel receipt photo</strong><div class="small">Photograph your pump receipt or choose a saved photo. Suggested purchase date, gallons, total paid and odometer will fill in for review. Many receipts do not show odometer mileage. You must still confirm whether the tank was completely filled. The photo is attached to the entry and Full mobile backup. To copy it to MileSage/Photos, grant folder access under Data & backup.</div></div><div class="button-row"><button id="fuelCameraButton" class="btn secondary" type="button">Take fuel receipt photo</button><button id="fuelGalleryButton" class="btn secondary" type="button">Choose photo</button></div><input id="fuelCameraInput" type="file" accept="image/*" capture="environment" hidden><input id="fuelGalleryInput" type="file" accept="image/*" hidden><div id="fuelReceiptProgress" class="small muted" role="status" aria-live="polite">No receipt scanned yet.</div><div id="fuelPhotoPreview" class="note info" hidden><strong>Photo ready to attach</strong><img id="fuelPhotoImage" alt="Selected fuel receipt" style="display:block;max-width:100%;max-height:230px;object-fit:contain;margin:8px auto;border-radius:8px"><div id="fuelPhotoInfo" class="small"></div></div><details id="fuelReceiptTextReview" style="display:none"><summary>View recognized receipt text</summary><pre id="fuelReceiptOcrText" style="white-space:pre-wrap;word-wrap:break-word;max-height:180px;overflow:auto"></pre></details><div class="grid2"><div><label class="field" for="fuelDate">Date</label><input type="date" id="fuelDate" required value="${localDate()}"></div><div><label class="field" for="fuelOdo">Odometer</label><input type="number" min="0" step="1" inputmode="numeric" id="fuelOdo" required value="${a.mileage}"></div></div><div class="grid2"><div><label class="field" for="fuelGallons">US gallons</label><input id="fuelGallons" required inputmode="decimal" type="number" min="0.001" max="9999" step="any" placeholder="12.5"></div><div><label class="field" for="fuelCost">Total paid ($)</label><input id="fuelCost" required type="text" inputmode="decimal" placeholder="42.85"></div></div><div class="grid2"><div><label class="field" for="fuelType">Fuel type / blend</label><select id="fuelType"><option value="">Not recorded</option><option>Gasoline — blend unknown</option><option>E0 — Non-ethanol</option><option>E10 — gasoline</option><option>E15 — gasoline</option><option>E85 — flex fuel</option><option>Diesel</option><option>Diesel — B5</option><option>Diesel — B20</option><option>Biodiesel — B100</option></select></div><div><label class="field" for="fuelOctane">Octane (optional)</label><input id="fuelOctane" inputmode="numeric" type="number" min="1" max="150" step="1" placeholder="87"></div></div><div class="check"><input type="checkbox" id="fullTank" checked><label for="fullTank">Filled the tank completely</label></div><p class="small muted">MPG uses distances between full tanks and includes partial fill-ups in between.</p><button type="submit" class="btn full">Save fuel & mileage</button></form></div><div class="card"><h3 style="margin-top:0">Fuel history (${num(a.fuel_history.length)})</h3>${recordList(a.fuel_history,'fuel')}</div>`;
+function renderFuel(){clearReceiptPreview('fuel');const a=v(), el=$('fuelBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}el.innerHTML=`<div class="card feature-card"><h3 style="margin-top:0">Record a fill-up</h3>${formVehicleName(a)}<form id="fuelForm"><div class="note info"><strong>Fuel receipt photo</strong><div class="small">Photograph your pump receipt or choose a saved photo. Suggested purchase date, gallons, total paid and odometer will fill in for review. Many receipts do not show odometer mileage. You must still confirm whether the tank was completely filled. The photo is attached to the entry and Full mobile backup. To copy it to MileSage/Photos, grant folder access under Data & backup.</div></div><div class="button-row"><button id="fuelCameraButton" class="btn secondary" type="button">Take fuel receipt photo</button><button id="fuelGalleryButton" class="btn secondary" type="button">Choose photo</button></div><input id="fuelCameraInput" type="file" accept="image/*" capture="environment" hidden><input id="fuelGalleryInput" type="file" accept="image/*" hidden><div id="fuelReceiptProgress" class="small muted" role="status" aria-live="polite">No receipt scanned yet.</div><div id="fuelPhotoPreview" class="note info" hidden><strong>Photo ready to attach</strong><img id="fuelPhotoImage" alt="Selected fuel receipt" style="display:block;max-width:100%;max-height:230px;object-fit:contain;margin:8px auto;border-radius:8px"><div id="fuelPhotoInfo" class="small"></div></div><details id="fuelReceiptTextReview" style="display:none"><summary>View recognized receipt text</summary><pre id="fuelReceiptOcrText" style="white-space:pre-wrap;word-wrap:break-word;max-height:180px;overflow:auto"></pre></details><div class="grid2"><div><label class="field" for="fuelDate">Date</label><input type="date" id="fuelDate" required value="${localDate()}"></div><div><label class="field" for="fuelOdo">Odometer</label><input type="number" min="0" step="1" inputmode="numeric" id="fuelOdo" required value="${a.mileage}"></div></div><div class="grid2"><div><label class="field" for="fuelGallons">US gallons</label><input id="fuelGallons" required inputmode="decimal" type="number" min="0.001" max="9999" step="0.001" placeholder="12.500"></div><div><label class="field" for="fuelCost">Total paid ($)</label><input id="fuelCost" required type="text" inputmode="decimal" placeholder="42.85"></div></div><div class="grid2"><div><label class="field" for="fuelType">Fuel type / blend</label><select id="fuelType"><option value="">Not recorded</option><option>Gasoline — blend unknown</option><option>E0 — Non-ethanol</option><option>E10 — gasoline</option><option>E15 — gasoline</option><option>E85 — flex fuel</option><option>Diesel</option><option>Diesel — B5</option><option>Diesel — B20</option><option>Biodiesel — B100</option></select></div><div><label class="field" for="fuelOctane">Octane (optional)</label><input id="fuelOctane" inputmode="numeric" type="number" min="1" max="150" step="1" placeholder="87"></div></div><div class="check"><input type="checkbox" id="fullTank" checked><label for="fullTank">Filled the tank completely</label></div><p class="small muted">MPG uses distances between full tanks and includes partial fill-ups in between.</p><button type="submit" class="btn full">Save fuel & mileage</button></form></div><div class="card"><h3 style="margin-top:0">Fuel history (${num(a.fuel_history.length)})</h3>${recordList(a.fuel_history,'fuel')}</div>`;
 wireFuelReceiptPhoto(a);wirePhotoHistory('fuel');
 $('fuelType').onchange=()=>{const diesel=$('fuelType').value.toLowerCase().includes('diesel');$('fuelOctane').disabled=diesel;if(diesel)$('fuelOctane').value='';};
 $('fuelForm').onsubmit=async e=>{
@@ -729,13 +815,12 @@ $('fuelForm').onsubmit=async e=>{
  try{
   const od=whole($('fuelOdo').value,'Odometer',0),dt=$('fuelDate').value;
   if(!validDate(dt))throw Error('Enter a valid fill-up date.');
-  const gal=Number($('fuelGallons').value);
-  if(!Number.isFinite(gal)||gal<=0||gal>9999)throw Error('Enter a valid positive number of gallons.');
+  const gal=parseGallonsInput($('fuelGallons').value);
   const cost=costCents($('fuelCost').value),fuelType=$('fuelType').value;
   const diesel=fuelType.toLowerCase().includes('diesel'),octaneInput=$('fuelOctane').value.trim();
   const octane=diesel||!octaneInput?null:whole(octaneInput,'Octane',1);
   if(octane!==null&&octane>150)throw Error('Octane must be between 1 and 150, or blank.');
-  const record={date:dt,mileage:od,gallons:String(gal),cost_cents:cost,full_tank:$('fullTank').checked,
+  const record={date:dt,mileage:od,gallons:gal,cost_cents:cost,full_tank:$('fullTank').checked,
    octane,fuel_type:fuelType||null};
   await storeReceipt(a,'fuel',record,()=>{
    a.fuel_history.push(record);
