@@ -24,6 +24,13 @@ android {
     }
 }
 
+// ML Kit pulls legacy jdk7/jdk8 split libraries alongside Kotlin stdlib 1.8.22.
+// Their implementations are already included in modern kotlin-stdlib.
+configurations.configureEach {
+    exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'
+    exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
+}
+
 dependencies {
     implementation 'androidx.webkit:webkit:1.12.1'
     implementation 'androidx.core:core:1.15.0'
