@@ -1,3 +1,5 @@
+from vehicle_profile_ui import VehicleProfileFields
+from vin_lookup import profile_summary
 from overview_panel import OverviewPanel
 from receipt_ui import ReceiptPanel, scrollable_form
 from fuel_fields import octane_field, parse_octane, fuel_type_field, parse_fuel_type, is_diesel
@@ -23,7 +25,7 @@ from dashboard_charts import DashboardChart, cost_per_mile_points
 # Main function
 def main():
     window = tk.Tk()
-    window.title("Vehicle Manager")
+    window.title("MileSage - by Red Dirt Coding")
     window.geometry("1100x650")
     window.minsize(800, 500)
     # ===== APP COLORS =====
@@ -38,6 +40,24 @@ def main():
 
     style = ttk.Style(window)
     style.theme_use("clam")
+    style.configure(
+        "TButton",
+        font=("Segoe UI", 10),
+        padding=(10, 7),
+        background="#F1DDD2",
+        forground="#292724",
+        borderwidth=0
+    )
+    style.map(
+        "TButton",
+        background=[
+            ("pressed", "#B65C3A"),
+            ("active", "#DDD5CD")
+        ],
+        foreground=[
+            ("pressed", "#FFFFFF")
+        ]
+    )
 
     style.configure(
         "TFrame",
@@ -95,15 +115,33 @@ def main():
         window.destroy()
         return
     
-    # ===== MAIN LAYOUT =====
-    container = ttk.Frame(window, padding=20)
-    container.pack(fill="both", expand=True)
+        # ===== MAIN LAYOUT =====
+    navigation = tk.Frame(
+        window,
+        background="#292724",
+        width=190
+    )
+    navigation.pack(side="left", fill="y")
+    navigation.pack_propagate(False)
 
-    ttk.Label(
-        container,
-        text="Vehicle Manager",
-        font=("Segoe UI", 24, "bold")
-    ).pack(anchor="w", pady=(0, 15))
+    tk.Label(
+        navigation,
+        text="MileSage",
+        font=("Segoe UI", 22, "bold"),
+        background="#292724",
+        foreground="#FFFFFF"
+    ).pack(anchor="w", padx=18, pady=(24, 0))
+
+    tk.Label(
+        navigation,
+        text="by Red Dirt Coding",
+        font=("Segoe UI", 10),
+        background="#292724",
+        foreground="#F1DDD2"
+    ).pack(anchor="w", padx=18, pady=(2, 24))
+
+    container = ttk.Frame(window, padding=12)
+    container.pack(side="left", fill="both", expand=True)
 
     # Reserve space for the vehicle controls even when charts request more width.
     sidebar_width = preferences.get("sidebar_width", 300)
@@ -121,6 +159,8 @@ def main():
 
     panels.add(list_panel, minsize=280, width=sidebar_width, stretch="never")
     panels.add(details_panel, minsize=400, stretch="always")
+
+    sidebar_footer = ttk.Frame(list_panel)
 
     # ===== VEHICLE LIST =====
     ttk.Label(
@@ -167,13 +207,28 @@ def main():
     vehicle_list = tk.Listbox(
         list_panel,
         font=("Segoe UI", 12),
-        exportselection=False
+        height=4,
+        exportselection=False,
+        background="#FFFFFF",
+        foreground="#292724",
+        selectbackground="#B65C3A",
+        selectforeground="#FFFFFF",
+        relief="flat",
+        highlightthickness=1,
+        highlightbackground="#DDD5CD",
+        highlightcolor="#B65C3A",
+        activestyle="none"
     )
-    vehicle_list.pack(fill="both", expand=True)
+    vehicle_list.pack(fill="x")
+    sidebar_footer.pack(fill="x", pady=(6, 0))
     vehicle_count = tk.StringVar()
     ttk.Label(
-        list_panel, textvariable=vehicle_count
-    ).pack(anchor="w", pady=(6,0))
+        sidebar_footer, textvariable=vehicle_count
+    ).pack(anchor="w", pady=(0, 8))
+    vehicle_actions = ttk.Frame(sidebar_footer)
+    vehicle_actions.pack(fill="x")
+    vehicle_actions.columnconfigure(0, weight=1)
+    vehicle_actions.columnconfigure(1, weight=1)
 
     def refresh_vehicle_list(preferred=None):
         selection = vehicle_list.curselection()
@@ -216,6 +271,49 @@ def main():
     notebook.add(fuel_tab, text="Fuel History")
     graphs_tab = ttk.Frame(notebook, padding=15)
     notebook.add(graphs_tab, text="Graphs")
+        # ===== NAVIGATION BUTTONS =====
+    navigation_buttons = {}
+
+    def update_navigation(event=None):
+        selected_tab = notebook.select()
+
+        for tab, button in navigation_buttons.items():
+            active = str(tab) == selected_tab
+            button.configure(
+                background="#B65C3A" if active else "#292724"
+            )
+
+    for title, tab in (
+        ("Dashboard", overview_tab),
+        ("Maintenance", service_tab),
+        ("Fuel Economy", fuel_tab),
+        ("Graphs", graphs_tab),
+    ):
+        button = tk.Button(
+            navigation,
+            text=title,
+            command=lambda target=tab: notebook.select(target),
+            font=("Segoe UI", 11, "bold"),
+            anchor="w",
+            background="#292724",
+            foreground="#FFFFFF",
+            activebackground="#B65C3A",
+            activeforeground="#FFFFFF",
+            relief="flat",
+            borderwidth=0,
+            padx=14,
+            pady=12,
+            cursor="hand2"
+        )
+        button.pack(fill="x", padx=10, pady=4)
+        navigation_buttons[tab] = button
+
+    notebook.bind(
+        "<<NotebookTabChanged>>",
+        update_navigation,
+        add="+"
+    )
+    update_navigation()
     graphs_scroll = ttk.Scrollbar(graphs_tab, orient="vertical")
     graphs_scroll.pack(side="right", fill="y")
 
@@ -393,6 +491,7 @@ def main():
         if not selection:
             vehicle_heading.set("No vehicle selected")
             mileage_heading.set("")
+            overview.specifications.set("No vehicle selected")
             overview.oil.set("Oil change: —")
             overview.tires.set("Tire rotation: —")
             overview.battery.set("No vehicle selected")
@@ -424,6 +523,7 @@ def main():
         mileage_heading.set(
             f"Odometer · {format_mileage(vehicle.mileage)}"
         )
+        overview.specifications.set(profile_summary(vehicle))
         # ===== SPENDING DATA =====
         monthly_cents = {}
         missing_costs = 0
@@ -670,8 +770,9 @@ def main():
             "Update mileage",
             f"{vehicle.year} {vehicle.name}\n"
             f"Current odometer: {vehicle.mileage:,} miles\n\n"
-            "How many miles did you drive?",
-            minvalue=0,
+            "Enter miles to add or subtract.\n"
+            "Examples: +250 or -250",
+            minvalue=-vehicle.mileage,
             parent=window
         )
 
@@ -683,7 +784,7 @@ def main():
 
         confirmed = messagebox.askyesno(
             "Confirm mileage",
-            f"Add {miles:,} miles to {vehicle.name}?\n\n"
+            f"Adjust {vehicle.name} by {miles:+,} miles?\n\n"
             f"Current odometer: {old_mileage:,}\n"
             f"New odometer: {new_mileage:,}",
             parent=window
@@ -692,7 +793,7 @@ def main():
         if not confirmed:
             return
 
-        vehicle.drive(miles)
+        vehicle.mileage = new_mileage
 
         try:
             save_vehicles(vehicles)
@@ -705,7 +806,7 @@ def main():
             )
             return
 
-        show_vehicle()
+        refresh_vehicle_list(preferred=vehicle)
         messagebox.showinfo(
             "Mileage updated",
             f"{vehicle.name} now has {vehicle.mileage:,} miles.",
@@ -822,8 +923,7 @@ def main():
         dialog.resizable(False, False)
         dialog.transient(window)
 
-        form = ttk.Frame(dialog, padding=20)
-        form.pack(fill="both", expand=True)
+        form = scrollable_form(dialog)
 
         name_var = tk.StringVar()
         year_var = tk.StringVar()
@@ -852,6 +952,8 @@ def main():
             if row == 0:
                 name_entry = entry
 
+        profile_fields = VehicleProfileFields(form, 3, name_var, year_var)
+
         def save_new_vehicle():
             name = name_var.get().strip()
 
@@ -879,6 +981,17 @@ def main():
                 )
                 return
 
+            try:
+                profile = profile_fields.get_value()
+            except ValueError as error:
+                messagebox.showerror("Invalid vehicle details", str(error), parent=dialog)
+                return
+            if profile.get("vin") and any(
+                other.profile.get("vin", "").upper() == profile["vin"] for other in vehicles
+            ):
+                messagebox.showerror("VIN already saved", "Another vehicle already uses that VIN. Edit that vehicle instead.", parent=dialog)
+                return
+
             confirmed = messagebox.askyesno(
                 "Confirm new vehicle",
                 f"Add {year} {name}?\n\n"
@@ -890,6 +1003,7 @@ def main():
                 return
 
             new_vehicle = Vehicle(name, year, mileage)
+            new_vehicle.profile = profile
             vehicles.append(new_vehicle)
 
             try:
@@ -917,7 +1031,7 @@ def main():
 
         buttons = ttk.Frame(form)
         buttons.grid(
-            row=3, column=0, columnspan=2,
+            row=4, column=0, columnspan=2,
             sticky="e", pady=(15, 0)
         )
 
@@ -939,10 +1053,10 @@ def main():
         name_entry.focus_set()
 
     ttk.Button(
-        list_panel,
+        vehicle_actions,
         text="Add Vehicle",
         command=add_vehicle
-    ).pack(anchor="w", pady=(10, 0))
+    ).grid(row=0, column=0, sticky="ew", padx=(0, 4))
 
         # ===== EDIT VEHICLE =====
     def edit_vehicle():
@@ -964,8 +1078,7 @@ def main():
         dialog.resizable(False, False)
         dialog.transient(window)
 
-        form = ttk.Frame(dialog, padding=20)
-        form.pack(fill="both", expand=True)
+        form = scrollable_form(dialog)
 
         name_var = tk.StringVar(value=vehicle.name)
         year_var = tk.StringVar(value=str(vehicle.year))
@@ -987,6 +1100,8 @@ def main():
             ).grid(
                 row=row, column=1, padx=(12, 0), pady=6
             )
+
+        profile_fields = VehicleProfileFields(form, 3, name_var, year_var, vehicle.profile)
 
         def save_changes():
             name = name_var.get().strip()
@@ -1011,26 +1126,6 @@ def main():
                 )
                 return
 
-            minimum_mileage = max(
-                vehicle.starting_mileage,
-                vehicle.last_service_mileage,
-                vehicle.last_tire_rotation_mileage or 0,
-                max(
-                    (
-                        record["mileage"]
-                        for record in vehicle.service_history
-                    ),
-                    default=0
-                ),
-                max(
-                    (
-                        record["mileage"]
-                        for record in vehicle.fuel_history
-                    ),
-                    default=0
-                )
-            )
-
             if year <= 0:
                 messagebox.showerror(
                     "Invalid year",
@@ -1039,13 +1134,23 @@ def main():
                 )
                 return
 
-            if mileage < minimum_mileage:
+            if mileage < 0:
                 messagebox.showerror(
                     "Invalid mileage",
-                    f"Mileage cannot be below "
-                    f"{minimum_mileage:,}, based on tracked history.",
+                    "Odometer cannot be below zero.",
                     parent=dialog
                 )
+                return
+
+            try:
+                profile = profile_fields.get_value()
+            except ValueError as error:
+                messagebox.showerror("Invalid vehicle details", str(error), parent=dialog)
+                return
+            if profile.get("vin") and any(
+                other is not vehicle and other.profile.get("vin", "").upper() == profile["vin"] for other in vehicles
+            ):
+                messagebox.showerror("VIN already saved", "Another vehicle already uses that VIN. Edit that vehicle instead.", parent=dialog)
                 return
 
             old_values = (
@@ -1054,7 +1159,9 @@ def main():
                 vehicle.mileage
             )
 
-            if (name, year, mileage) == old_values:
+            old_profile = vehicle.profile.copy()
+
+            if (name, year, mileage) == old_values and profile == old_profile:
                 messagebox.showinfo(
                     "No changes",
                     "The vehicle details are unchanged.",
@@ -1072,6 +1179,7 @@ def main():
             if not confirmed:
                 return
 
+            vehicle.profile = profile
             vehicle.name = name
             vehicle.year = year
             vehicle.mileage = mileage
@@ -1080,6 +1188,7 @@ def main():
                 save_vehicles(vehicles)
 
             except (OSError, TypeError, ValueError) as error:
+                vehicle.profile = old_profile
                 (
                     vehicle.name,
                     vehicle.year,
@@ -1105,7 +1214,7 @@ def main():
 
         buttons = ttk.Frame(form)
         buttons.grid(
-            row=3, column=0, columnspan=2,
+            row=4, column=0, columnspan=2,
             sticky="e", pady=(15, 0)
         )
 
@@ -1126,10 +1235,10 @@ def main():
         dialog.grab_set()
 
     ttk.Button(
-        list_panel,
+        vehicle_actions,
         text="Edit Vehicle",
         command=edit_vehicle
-    ).pack(anchor="w", pady=(8, 0))
+    ).grid(row=0, column=1, sticky="ew", padx=(4, 0))
 
         # ===== REMOVE VEHICLE =====
     def remove_vehicle():
@@ -1184,10 +1293,10 @@ def main():
         )
 
     ttk.Button(
-        list_panel,
+        vehicle_actions,
         text="Remove Vehicle",
         command=remove_vehicle
-    ).pack(anchor="w", pady=(8, 0))
+    ).grid(row=1, column=0, columnspan=2, sticky="ew", pady=(8, 0))
 
         # ===== RECORD SERVICE =====
    

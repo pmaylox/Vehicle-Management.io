@@ -8,6 +8,7 @@ class OverviewPanel(ttk.Frame):
 
         self.heading = tk.StringVar(value="Select a vehicle")
         self.mileage = tk.StringVar()
+        self.specifications = tk.StringVar()
         self.oil = tk.StringVar(value="Oil change: —")
         self.tires = tk.StringVar(value="Tire rotation: —")
         self.details = tk.StringVar()
@@ -66,6 +67,11 @@ class OverviewPanel(ttk.Frame):
         self.add_label(
             vehicle_card, self.mileage, "CardAccent.TLabel"
         )
+
+        profile_card = self.make_card(content)
+        ttk.Label(profile_card, text="VEHICLE DETAILS", style="CardAccent.TLabel").pack(
+            anchor="w", pady=(0, 8))
+        self.add_label(profile_card, self.specifications)
 
         maintenance_card = self.make_card(content)
         ttk.Label(

@@ -1,3 +1,4 @@
+from vin_lookup import clean_profile
 from battery import battery_details, battery_summary, service_suggestions, battery_years_to_months
 from cmath import cos
 from datetime import date, datetime
@@ -20,6 +21,8 @@ class Vehicle:
         }
         self.starting_tire_pressures = self.tire_pressures.copy()
         self.tire_pressure_history = []
+        self.profile = {}
+        self.photo_path =  ""
         self.name = name
         self.year = year
         self.mileage = mileage
@@ -808,6 +811,8 @@ class Vehicle:
     def to_dict(self):
         return {
             "name": self.name,
+            "profile": self.profile.copy(),
+            "photo_path": self.photo_path,
             "year": self.year,
             "mileage": self.mileage,
             "starting_mileage": self.starting_mileage,
@@ -834,6 +839,8 @@ class Vehicle:
 
         )
 
+        vehicle.profile = clean_profile(data.get("profile", {}))
+        vehicle.photo_path =  data.get("photo_path", "")
         vehicle.mileage = data["mileage"]
         vehicle.last_service_mileage = data["last_service_mileage"]
         vehicle.service_history = data.get("service_history", [])
