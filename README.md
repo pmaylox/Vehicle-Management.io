@@ -2,9 +2,20 @@
 
 ## Current project version
 
-**MileSage Alpha 1.3.0** — service and fuel receipt photo workflows added to the mobile HTML preview after the safe restore fix following the Alpha 1.2.0 maintenance features (November 14, 2026). Automated code tests passed; desktop and Android manual testing remain pending. No APK has been built or deployed.
+**MileSage Alpha 1.3.2** — mobile HTML preview adds VIN lookup through NHTSA vPIC with an explicit review-before-save screen. Prior vehicle overview, fuel analytics, receipt-photo features and safe restores remain. Desktop and Android manual testing remain pending. No APK has been built or deployed.
 
 The earlier Alpha 1.1.1 patch records the Tacoma's user-configured tire-rotation and oil-service interval changes. GitHub configuration and documentation have been updated; an Android APK has **not** been built, published, or verified, and mobile/desktop testing of the patch remains pending. The standalone mobile HTML remains a preview, and devices may retain older locally saved data until deliberately synchronized.
+
+
+## Add a vehicle using its VIN (Alpha 1.3.2)
+
+The mobile garage now includes **+ By VIN** beside **+ Manual**. Enter the 17-character VIN, select **Look up VIN** while online, and review the NHTSA-decoded model year, make and model. Edit the suggested name or year if needed, enter the actual odometer reading and confirm **Save new vehicle**. VIN input excludes the letters I, O and Q, checks NHTSA decoder errors, and rejects a duplicate VIN. **No vehicle is written until final confirmation**. The VIN is stored in the record, displayed on its vehicle card and exported in both JSON backup formats.
+
+This uses the public [NHTSA vPIC VIN Decoder](https://vpic.nhtsa.dot.gov/api/) (an external service) and therefore sends the entered VIN to NHTSA. It is not an ownership check or a vehicle-history report. On a mobile browser that blocks remote network requests from a local HTML file, or when offline, the VIN lookup reports an error and does not change the garage. The **+ Manual** button still works without the decoder.
+
+The desktop Python model now preserves the optional \`vin\` field on save/load, so the mobile export does not silently lose it. Older JSON files without a VIN still load normally. Existing vehicles, including named test vehicles, are not automatically merged, removed or renamed. This update does not insert the user's phone data into GitHub's sample \`vehicles.json\`.
+
+**Upgrading phones safely:** In the currently installed version, export **Full mobile backup**. Download and open the new \`mobile/MileSage_Alpha_1_3_2_VIN_Lookup.html\` file; local browser files can have different storage origins and thus appear blank. Use **Data & backup → Import JSON file** to review/import the user's own saved backup if needed. Do **not** clear the old browser storage or import repository demo data over live records. Inspect all vehicle cards, tester labels, odometers and histories before logging new work. There is no automatic phone app replacement or APK deployment.
 
 ## MileSage — configured maintenance intervals
 
@@ -73,3 +84,14 @@ In **Fuel → Record a fill-up**, users can take a pump receipt photo or choose 
 The shared OCR engine is downloaded when needed, and image/text are not uploaded to GitHub or stored in vehicle JSON. The Fuel History JSON and Excel export continue to store the confirmed structured transaction details rather than the receipt image. Parsing tests: `node mobile/test_fuel_receipt_parser.cjs`. Live Android camera/OCR tests are still needed.
 
 **Important:** GitHub data restoration only imports data; it does not update the installed HTML or Android app. To see both photo buttons on the phone, the user must open the updated application HTML in a compatible browser or install a newly packaged app (no APK is provided by this update).
+
+
+## Alpha 1.3.1 — mobile parity for November 14 evening work
+
+The mobile HTML preview now includes **battery, tire PSI, service and fuel overview cards**, plus **miles between recorded fill-ups, per-gallon price and full-tank interval fuel cost per mile** charts. Fuel entries can save optional **fuel type/blend and octane rating** using the same JSON fields as the desktop application. Prior photo OCR and fluid/filter actions remain. Data visualization is based on actual local records and does not invent live readings.
+
+**Device status:** This source update is **not an installed Android update or APK**. The phone continues to use whichever HTML/app package was previously opened; importing `vehicles.json` changes data only, never the app's code. Before opening a new copy of the HTML, export a **Full mobile backup** from the old app; a different browser/file origin may have separate local storage. Import into the new copy only after reviewing the current mileage, tire PSI and history. Do not clear the original browser storage or uninstall anything until the new copy is verified.
+
+**Live-data caution:** `vehicles.json` is currently a mixed development dataset (including an Explorer demonstration vehicle) and is **not** a reliable source of the phone's latest personal readings. Use the phone's own exported backup instead of blindly replacing data with GitHub's current JSON. The older README description of the repository JSON as a fully blank template is historical and not a guarantee of current contents.
+
+**Validation:** `node mobile/test_evening_insights.cjs` tests chart calculations and verifies that original phone storage keys and restore guards remain present. GitHub Actions also checks mobile JavaScript syntax and existing OCR/restore regressions. Manual Android camera, chart and local backup checks still required.

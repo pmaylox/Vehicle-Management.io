@@ -48,6 +48,11 @@ assert.equal(fourth.date,'2026-11-13');
 
 assert.ok(html.includes('capture="environment"'));
 assert.ok(html.includes('wireFuelReceiptPhoto(a)'));
-assert.ok(html.includes("if(od>a.mileage)throw Error"), 'fuel save must retain odometer safety validation');
+assert.ok(html.includes("const od=whole($('fuelOdo').value,'Odometer',0)"), 'historical receipt odometer may be logged without downgrading current mileage');
+assert.ok(html.includes('if(od>a.mileage){a.mobile_mileage_log.push'), 'only higher fuel readings advance vehicle mileage');
+assert.ok(html.includes("storeReceipt(a,'fuel'"), 'fuel record and receipt are persisted together');
 assert.ok(html.includes("$('fullTank').checked=false"), 'OCR may not claim a full tank');
+assert.ok(html.includes('id="fuelPhotoPreview"'), 'fuel photo must show a temporary preview');
+assert.ok(html.includes("showReceiptPreview('fuel',file)"), 'fuel must preview the received photo before OCR starts');
+assert.ok(html.includes('Photo preview is shown, but fuel receipt scanning failed:'), 'fuel must report OCR failures without hiding the photo');
 console.log('Fuel receipt OCR parsing tests passed');

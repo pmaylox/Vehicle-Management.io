@@ -45,4 +45,7 @@ assert.equal(blank.description,null);
 assert.ok(html.includes('capture="environment"'), 'mobile photo capture is required');
 assert.ok(html.includes('wireServiceReceiptPhoto(a)'), 'receipt camera handlers must be wired');
 assert.ok(html.includes("if(od>a.mileage)throw Error"), 'receipt may not silently increase odometer');
+assert.ok(html.includes('id="servicePhotoPreview"'), 'service photo must show a temporary preview');
+assert.ok(html.includes("showReceiptPreview('service',file)"), 'service must preview the received photo before OCR starts');
+assert.ok(html.includes('Photo preview is shown, but receipt scanning failed:'), 'service must report OCR failures without hiding the photo');
 console.log('Receipt parsing tests passed.');
