@@ -20,6 +20,9 @@ label.field{display:block;font-size:13px;font-weight:700;margin:13px 0 7px}input
 .chart-bars{display:flex;align-items:end;gap:16px;height:186px;padding:18px 4px 0}.chart-col{flex:1;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:end;height:100%;gap:7px;font-size:12px;font-weight:700}.chart-bar{background:#315979;border-radius:7px 7px 2px 2px;width:min(100%,74px);min-height:3px}.chart-col:nth-child(2) .chart-bar{background:#bb6b4a}.chart-col:nth-child(3) .chart-bar{background:#838e9d}.chart-col .muted{font-weight:500;font-size:11px}.linechart{width:100%;height:auto;max-height:210px;display:block}.lock{background:#fcf8f6;border-radius:12px;border:1px solid #ead9d3;padding:12px;font-size:13px;color:#684737}
 #toast{position:fixed;left:15px;right:15px;bottom:calc(94px + env(safe-area-inset-bottom));z-index:30;max-width:500px;margin:auto;background:#18344a;color:white;border-radius:10px;padding:12px 15px;text-align:center;font-size:14px;box-shadow:0 6px 20px #0004;display:none}
 @media(min-width:620px){main{padding:23px}.vehicle-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.vehicle-card{margin:0}.triple{grid-template-columns:repeat(3,1fr)}}
+.vehicle-photo[hidden],.vehicle-photo-placeholder[hidden]{display:none}
+.vehicle-photo{display:block;width:100%;height:150px;object-fit:contain;margin-bottom:12px}
+.vehicle-photo-placeholder{display:grid;place-items:center;height:150px;margin-bottom:12px;border-radius:12px;background:#F5F1EB;color:#6B655E;font-size:14px}
 </style>
 </head>
 <body>
@@ -48,6 +51,10 @@ label.field{display:block;font-size:13px;font-weight:700;margin:13px 0 7px}input
 <div class="vehicle-grid" id="vehicleCards"></div>
 <div id="manageVehicle" class="card" hidden>
 <p class="small muted" style="margin:0 0 9px">Selected vehicle: <strong id="manageVehicleName"></strong></p>
+<div class="button-row"><button id="chooseVehiclePhoto" type="button" class="btn secondary">Choose vehicle photo</button><button id="takeVehiclePhoto" type="button" class="btn secondary">Take vehicle photo</button><button id="removeVehiclePhoto" type="button" class="btn outline">Remove photo</button></div>
+<input id="vehiclePhotoFile" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+<input id="vehiclePhotoCamera" type="file" accept="image/*" capture="environment" hidden>
+<p id="vehiclePhotoStatus" class="small muted" role="status">Photos stay on this device and are included in Full mobile backup.</p>
 <div class="button-row"><button id="editVehicle" type="button" class="btn secondary">Edit vehicle</button><button id="removeVehicle" type="button" class="btn outline">Remove vehicle</button></div>
 <form id="editVehicleForm" hidden>
 <h3 class="section-title">Edit selected vehicle</h3>
@@ -139,7 +146,67 @@ function load(){try{const raw=localStorage.getItem(KEY);if(raw){const o=JSON.par
 function updateBanner(){let text='';if(!hasStorage)text='<div class="note" role="alert"><strong>Warning:</strong> This browser is not keeping changes. Export a JSON backup after every change.</div>';else if(!vehicles.length)text='<div class="note info"><strong>Get started:</strong> In <strong>Data & backup</strong>, use <strong>Recover from saved GitHub backup</strong> for earlier recorded mileage and tire pressures. Avoid importing incomplete or demonstration GitHub records over your real odometer and pressure readings.</div>';else text='<div class="note info" style="margin-top:0"><strong>GitHub check:</strong> '+esc(syncStatus)+'<div style="margin-top:5px">GitHub checks do not change your phone data. Always export a full backup before restoring.</div></div>';$('notice').innerHTML=text;$('storageNote').textContent=hasStorage?'Browser storage is available. Keep an exported backup in case browser data is cleared.':'Browser storage is blocked/unavailable. Make a backup immediately.'}
 function status(val,inter){if(!Number.isFinite(val))return ['Unknown','warn'];if(val<=0)return ['Due now','due'];if(val<=Math.max(500,inter*.12))return [`${num(val)} mi left`,'warn'];return [`${num(val)} mi left`,'good']}
 function vehicleTag(obj){const remain=Number(obj.service_interval)-Math.max(0,Number(obj.mileage)-Number(obj.last_service_mileage));const [s,cls]=status(remain,Number(obj.service_interval));return `<span class="pill ${cls}">Oil: ${esc(s)}</span>`}
-function renderVehicles(){const root=$('vehicleCards');root.innerHTML=vehicles.length?vehicles.map((a,i)=>`<button class="vehicle-card ${i===current?'selected':''}" type="button" data-vehicle="${i}" aria-pressed="${i===current}"><div class="vehicle-title">${esc(a.name)} <span class="vehicle-year">${esc(a.year)}</span></div><div class="vehicle-mileage">${num(a.mileage)} <small>miles</small></div>${a.vin?'<div class="small muted" style="margin-top:4px">VIN: '+esc(a.vin)+'</div>':''}<div style="margin-top:9px">${vehicleTag(a)}</div></button>`).join(''):empty('No vehicles loaded yet. Import your GitHub data or add a vehicle.');
+/* VEHICLE_PHOTOS_BEGIN */
+function safeVehiclePhoto(value){
+ return typeof value==='string'&&value.length<=1400000&&/^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(value)?value:'';
+}
+function vehiclePhotoHTML(vehicle){
+ const photo=safeVehiclePhoto(vehicle.mobile_photo);
+ return photo?`<img class="vehicle-photo" src="${photo}" alt="${esc(vehicle.name)}" decoding="async"><div class="vehicle-photo-placeholder" hidden>Photo unavailable — choose another photo</div>`:
+  '<div class="vehicle-photo-placeholder">Choose a photo below for this vehicle</div>';
+}
+function prepareVehiclePhoto(file){
+ return new Promise((resolve,reject)=>{
+  if(!file||!file.type.startsWith('image/')){reject(Error('Choose an image file.'));return;}
+  if(file.size>20*1024*1024){reject(Error('Choose a photo smaller than 20 MB.'));return;}
+  const url=URL.createObjectURL(file),image=new Image();
+  image.onload=()=>{
+   URL.revokeObjectURL(url);
+   try{
+    const scale=Math.min(1,900/Math.max(image.naturalWidth,image.naturalHeight));
+    const canvas=document.createElement('canvas');
+    canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));
+    canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
+    canvas.getContext('2d').drawImage(image,0,0,canvas.width,canvas.height);
+    // PNG retains transparency in vehicle cutouts.
+    const photo=canvas.toDataURL('image/png');
+    if(!safeVehiclePhoto(photo))throw Error('This photo is too detailed to store. Choose a smaller image.');
+    resolve(photo);
+   }catch(error){reject(error);}
+  };
+  image.onerror=()=>{URL.revokeObjectURL(url);reject(Error('This image could not be opened. Try a JPG or PNG.'));};
+  image.src=url;
+ });
+}
+function wireVehiclePhotos(){
+ let busy=false;
+ $('chooseVehiclePhoto').onclick=()=>$('vehiclePhotoFile').click();
+ $('takeVehiclePhoto').onclick=()=>$('vehiclePhotoCamera').click();
+ async function selected(event){
+  const file=event.target.files[0],original=v();event.target.value='';
+  if(!file||!original||busy)return;
+  busy=true;$('vehiclePhotoStatus').textContent='Preparing photo…';
+  try{
+   const photo=await prepareVehiclePhoto(file),index=vehicles.indexOf(original);
+   if(index<0||v()!==original)throw Error('Vehicle selection changed. Choose the photo again for the intended vehicle.');
+   const updated=vehicles.map((vehicle,i)=>i===index?{...vehicle,mobile_photo:photo}:vehicle);
+   if(!commitImport(updated,current,'Vehicle photo saved.'))throw Error('Photo was not saved. Export a backup and free browser storage before trying again.');
+  }catch(error){$('vehiclePhotoStatus').textContent=error.message;alert(error.message);}
+  finally{busy=false;}
+ }
+ $('vehiclePhotoFile').onchange=selected;
+ $('vehiclePhotoCamera').onchange=selected;
+ $('removeVehiclePhoto').onclick=()=>{
+  const original=v();
+  if(busy||!original||!original.mobile_photo)return;
+  if(!confirm('Remove the photo for '+original.name+'? Vehicle history will be kept.'))return;
+  const updated=vehicles.map((vehicle,i)=>i===current?{...vehicle,mobile_photo:''}:vehicle);
+  commitImport(updated,current,'Vehicle photo removed.');
+ };
+}
+/* VEHICLE_PHOTOS_END */
+function renderVehicles(){const root=$('vehicleCards');root.innerHTML=vehicles.length?vehicles.map((a,i)=>`<button class="vehicle-card ${i===current?'selected':''}" type="button" data-vehicle="${i}" aria-pressed="${i===current}">${vehiclePhotoHTML(a)}<div class="vehicle-title">${esc(a.name)} <span class="vehicle-year">${esc(a.year)}</span></div><div class="vehicle-mileage">${num(a.mileage)} <small>miles</small></div>${a.vin?'<div class="small muted" style="margin-top:4px">VIN: '+esc(a.vin)+'</div>':''}<div style="margin-top:9px">${vehicleTag(a)}</div></button>`).join(''):empty('No vehicles loaded yet. Import your GitHub data or add a vehicle.');
+root.querySelectorAll('.vehicle-photo').forEach(image=>image.addEventListener('error',()=>{image.hidden=true;image.nextElementSibling.hidden=false;}));
 root.querySelectorAll('[data-vehicle]').forEach(el=>el.addEventListener('click',()=>{current=Number(el.dataset.vehicle);save();renderAll()}));}
 function odometerNext(current,operator,amount){
  if(!Number.isSafeInteger(current)||current<0)throw Error('Current mileage must be a non-negative whole number.');
@@ -1147,6 +1214,8 @@ function renderVehicleControls(){
  if(!vehicle)return;
  $('manageVehicleName').textContent=vehicle.year+' '+vehicle.name+' · '+num(vehicle.mileage)+' miles';
  $('editVehicleForm').hidden=true;
+ $('removeVehiclePhoto').disabled=!safeVehiclePhoto(vehicle.mobile_photo);
+ $('vehiclePhotoStatus').textContent=safeVehiclePhoto(vehicle.mobile_photo)?'Photo saved on this device. Full mobile backup includes it.':'Choose a photo from this phone. Desktop file paths cannot be opened here.';
  $('editVehicleName').value=vehicle.name;
  $('editVehicleYear').value=String(vehicle.year);
  $('editVehicleVIN').value=vehicle.vin||'';
@@ -1196,513 +1265,7 @@ function init(){
  $('dataButton').onclick=()=>switchTab('data');
  $('addVehicleButton').onclick=addVehicle;
  wireVehicleControls();
- $('addVinButton').onclick=showVINEntry;
- $('vinLookupForm').onsubmit=lookUpVIN;
- $('vinConfirmForm').onsubmit=saveVINVehicle;
- $('vinInput').oninput=()=>{decodedVIN=null;$('vinConfirmForm').hidden=true;$('vinLookupStatus').textContent='';};
- $('githubImport').onclick=githubImport;
- $('githubBackupRecovery').onclick=recoverFromGitHubBackup;
- $('undoImport').onclick=undoImport;
- $('fileImportButton').onclick=()=>$('jsonFile').click();
- $('jsonFile').onchange=async e=>{try{
-  const f=e.target.files?.[0];if(!f)return;
-  if(f.size>15000000)throw Error('File is too large.');
-  replace(JSON.parse(await f.text()));
- }catch(error){alert('Could not import JSON: '+error.message)}
- finally{e.target.value=''}};
- $('choosePhotoDir').onclick=choosePhotoDir;
- $('exportPython').onclick=()=>download('vehicles.json',pythonExport());
- $('exportFull').onclick=()=>download(filename('MileSage-mobile-full-backup'),
-   {format:'MileSage-Mobile-v1',saved_at:new Date().toISOString(),vehicles,current});
-}
-init();
-autoRefreshGitHub();
-setInterval(autoRefreshGitHub,120000);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)autoRefreshGitHub()});
-})();
-</script>
-</body></html>+found.total+')');}
-   if(found.mileage!==null){
-    $('fuelOdo').value=String(found.mileage);fields.push('odometer');
-   }
-   // Never infer full_tank from OCR; partial/full must be user-confirmed.
-   $('fullTank').checked=false;
-   progress.textContent=(fields.length
-    ?'Suggested from photo: '+fields.join(', ')+'.'
-    :'Photo received, but no reliable fuel fields recognized. Open View recognized text.')+
-    ' REVIEW every field. Confirm Full Tank manually before saving.'+
-    (found.mileage!==null&&found.mileage<a.mileage
-     ?' Receipt odometer is older and will be logged as a historical fill-up without lowering the vehicle odometer.':'');
-   message('Fuel receipt scanned. Check suggested values before saving.');
-  }catch(error){
-   progress.textContent='Photo preview is shown, but fuel receipt scanning failed: '+error.message+
-    ' You can still enter the fill-up details manually.';
-  }finally{
-   if(worker){try{await worker.terminate();}catch(e){}}
-   buttons.forEach(x=>x.disabled=false);
-   input.value='';
-  }
- };
- camera.onchange=()=>read(camera);
- gallery.onchange=()=>read(gallery);
-}
-
-function renderFuel(){clearReceiptPreview('fuel');const a=v(), el=$('fuelBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}el.innerHTML=`<div class="card feature-card"><h3 style="margin-top:0">Record a fill-up</h3>${formVehicleName(a)}<form id="fuelForm"><div class="note info"><strong>Fuel receipt photo</strong><div class="small">Photograph your pump receipt or choose a saved photo. Suggested purchase date, gallons, total paid and odometer will fill in for review. Many receipts do not show odometer mileage. You must still confirm whether the tank was completely filled. The photo is attached to the entry and Full mobile backup. To copy it to MileSage/Photos, grant folder access under Data & backup.</div></div><div class="button-row"><button id="fuelCameraButton" class="btn secondary" type="button">Take fuel receipt photo</button><button id="fuelGalleryButton" class="btn secondary" type="button">Choose photo</button></div><input id="fuelCameraInput" type="file" accept="image/*" capture="environment" hidden><input id="fuelGalleryInput" type="file" accept="image/*" hidden><div id="fuelReceiptProgress" class="small muted" role="status" aria-live="polite">No receipt scanned yet.</div><div id="fuelPhotoPreview" class="note info" hidden><strong>Photo ready to attach</strong><img id="fuelPhotoImage" alt="Selected fuel receipt" style="display:block;max-width:100%;max-height:230px;object-fit:contain;margin:8px auto;border-radius:8px"><div id="fuelPhotoInfo" class="small"></div></div><details id="fuelReceiptTextReview" style="display:none"><summary>View recognized receipt text</summary><pre id="fuelReceiptOcrText" style="white-space:pre-wrap;word-wrap:break-word;max-height:180px;overflow:auto"></pre></details><div class="grid2"><div><label class="field" for="fuelDate">Date</label><input type="date" id="fuelDate" required value="${localDate()}"></div><div><label class="field" for="fuelOdo">Odometer</label><input type="number" min="0" step="1" inputmode="numeric" id="fuelOdo" required value="${a.mileage}"></div></div><div class="grid2"><div><label class="field" for="fuelGallons">US gallons</label><input id="fuelGallons" required inputmode="decimal" type="number" min="0.001" max="9999" step="0.001" placeholder="12.500"></div><div><label class="field" for="fuelCost">Total paid ($)</label><input id="fuelCost" required type="text" inputmode="decimal" placeholder="42.85"></div></div><div class="grid2"><div><label class="field" for="fuelType">Fuel type / blend</label><select id="fuelType"><option value="">Not recorded</option><option>Gasoline — blend unknown</option><option>E0 — Non-ethanol</option><option>E10 — gasoline</option><option>E15 — gasoline</option><option>E85 — flex fuel</option><option>Diesel</option><option>Diesel — B5</option><option>Diesel — B20</option><option>Biodiesel — B100</option></select></div><div><label class="field" for="fuelOctane">Octane (optional)</label><input id="fuelOctane" inputmode="numeric" type="number" min="1" max="150" step="1" placeholder="87"></div></div><div class="check"><input type="checkbox" id="fullTank" checked><label for="fullTank">Filled the tank completely</label></div><p class="small muted">MPG uses distances between full tanks and includes partial fill-ups in between.</p><button type="submit" class="btn full">Save fuel & mileage</button></form></div><div class="card"><h3 style="margin-top:0">Fuel history (${num(a.fuel_history.length)})</h3>${recordList(a.fuel_history,'fuel')}</div>`;
-wireFuelReceiptPhoto(a);wirePhotoHistory('fuel');
-$('fuelType').onchange=()=>{const diesel=$('fuelType').value.toLowerCase().includes('diesel');$('fuelOctane').disabled=diesel;if(diesel)$('fuelOctane').value='';};
-$('fuelForm').onsubmit=async e=>{
- e.preventDefault();
- try{
-  const od=whole($('fuelOdo').value,'Odometer',0),dt=$('fuelDate').value;
-  if(!validDate(dt))throw Error('Enter a valid fill-up date.');
-  const gal=parseGallonsInput($('fuelGallons').value);
-  const cost=costCents($('fuelCost').value),fuelType=$('fuelType').value;
-  const diesel=fuelType.toLowerCase().includes('diesel'),octaneInput=$('fuelOctane').value.trim();
-  const octane=diesel||!octaneInput?null:whole(octaneInput,'Octane',1);
-  if(octane!==null&&octane>150)throw Error('Octane must be between 1 and 150, or blank.');
-  const record={date:dt,mileage:od,gallons:gal,cost_cents:cost,full_tank:$('fullTank').checked,
-   octane,fuel_type:fuelType||null};
-  await storeReceipt(a,'fuel',record,()=>{
-   a.fuel_history.push(record);
-   a.fuel_history.sort((x,y)=>String(x.date).localeCompare(String(y.date))||Number(x.mileage)-Number(y.mileage));
-   if(od>a.mileage){a.mobile_mileage_log.push({date:dt,from:a.mileage,to:od});a.mileage=od;}
-  });
- }catch(err){alert(err.message);}
-};
-}
-function expenseSummary(a){let service=a.service_history.reduce((s,r)=>s+(Number(r.cost_cents)||0),0);let fuel=a.fuel_history.reduce((s,r)=>s+(Number(r.cost_cents)||0),0);let extra=a.mobile_expenses.reduce((s,r)=>s+(Number(r.cost_cents)||0),0);return {service,fuel,extra,total:service+fuel+extra}}
-function renderExpenses(){const a=v(),el=$('expensesBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}const totals=expenseSummary(a);el.innerHTML=`<div class="card"><div class="eyebrow">Recorded spending · ${esc(a.name)}</div><h2 style="font-size:31px;margin:4px 0 13px">${usd(totals.total)}</h2><div class="grid2 triple"><div class="stat"><div class="eyebrow">Service</div><strong style="font-size:18px">${usd(totals.service)}</strong></div><div class="stat"><div class="eyebrow">Fuel</div><strong style="font-size:18px">${usd(totals.fuel)}</strong></div><div class="stat"><div class="eyebrow">Other</div><strong style="font-size:18px">${usd(totals.extra)}</strong></div></div><p class="small muted" style="margin-bottom:0">Totals cover recorded expenses only; missing service costs are excluded.</p></div><div class="card"><h3 style="margin-top:0">Add other expense</h3>${formVehicleName(a)}<form id="extraForm"><label class="field" for="extraDesc">Description</label><input id="extraDesc" required type="text" maxlength="180" placeholder="Registration, parking, detailing…"><div class="grid2"><div><label class="field" for="extraDate">Date</label><input id="extraDate" required type="date" value="${localDate()}"></div><div><label class="field" for="extraCost">Cost ($)</label><input id="extraCost" required type="text" inputmode="decimal" placeholder="25.00"></div></div><button type="submit" class="btn full" style="margin-top:12px">Save other expense</button></form><p class="small muted">Other-expense entries are mobile-only until merged into the desktop app. Use <strong>Full mobile backup</strong> to preserve them.</p></div><div class="card"><h3 style="margin-top:0">Other expense history</h3>${recordList(a.mobile_expenses,'expense')}</div>`;
-$('extraForm').onsubmit=e=>{e.preventDefault();try{const desc=$('extraDesc').value.trim(),date=$('extraDate').value;if(!desc)throw Error('Description is required.');if(!validDate(date))throw Error('Enter a valid date.');a.mobile_expenses.push({date,description:desc,mileage:a.mileage,cost_cents:costCents($('extraCost').value)});save();renderAll();message('Other expense saved.')}catch(error){alert(error.message)}};}
-function mpgSeries(a){let start=null,gallons=0;let values=[];for(const r of a.fuel_history){if(r.mileage==null){start=null;gallons=0;continue}let current=Number(r.mileage),g=Number(r.gallons);if(!Number.isFinite(current)||!Number.isFinite(g))continue;if(start==null){if(r.full_tank){start=current;gallons=0;}continue;}gallons+=g;if(r.full_tank){let miles=current-start;if(miles>0&&gallons>0)values.push({label:r.date||'',mpg:miles/gallons});start=current;gallons=0;}}return values;}
-function mpgChart(values){if(values.length<2)return `<p class="muted small">At least 2 completed MPG calculations are needed to draw a trend. A starting full tank and a later full tank establish the first result.</p>`;const vals=values.slice(-8),min=Math.min(...vals.map(x=>x.mpg)),max=Math.max(...vals.map(x=>x.mpg));const hi=max===min?max+1:max;const lo=max===min?Math.max(0,min-1):Math.max(0,min-1);let pts=vals.map((x,i)=>`${(15+i*270/Math.max(1,vals.length-1)).toFixed(1)},${(145-120*(x.mpg-lo)/(hi-lo)).toFixed(1)}`).join(' ');return `<svg viewBox="0 0 300 170" class="linechart" role="img" aria-label="Recent fuel economy trend from ${min.toFixed(1)} to ${max.toFixed(1)} miles per gallon"><path d="M15 15V145H285" stroke="#cbd6df" stroke-width="2" fill="none"/><polyline points="${pts}" fill="none" stroke="#9e3b1b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>${vals.map((x,i)=>`<circle cx="${(15+i*270/Math.max(1,vals.length-1)).toFixed(1)}" cy="${(145-120*(x.mpg-lo)/(hi-lo)).toFixed(1)}" r="4" fill="#9e3b1b"/>`).join('')}<text x="18" y="12" font-size="11" fill="#5d6972">${max.toFixed(1)} MPG</text><text x="18" y="163" font-size="11" fill="#5d6972">${min.toFixed(1)} MPG</text></svg>`}
-function renderGraphs(){const a=v(),el=$('graphsBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}const t=expenseSummary(a),arr=[['Service',t.service],['Fuel',t.fuel],['Other',t.extra]],max=Math.max(1,...arr.map(x=>x[1])),mpgs=mpgSeries(a);const oilRem=Number(a.service_interval)-(Number(a.mileage)-Number(a.last_service_mileage));el.innerHTML=`<div class="card"><h3 style="margin-top:0">Recorded spending by category</h3><div class="chart-bars">${arr.map(([name,c])=>`<div class="chart-col"><div>${usd(c)}</div><div class="chart-bar" style="height:${Math.max(2,Math.round(c/max*130))}px"></div><div class="muted">${name}</div></div>`).join('')}</div></div><div class="card"><h3 style="margin-top:0">Fuel economy trend</h3>${mpgChart(mpgs)}${mpgs.length?`<p class="small muted">Most recent calculated MPG: <strong>${mpgs[mpgs.length-1].mpg.toFixed(2)}</strong> (${mpgs.length} valid full-tank cycle${mpgs.length===1?'':'s'} recorded)</p>`:''}</div><div class="card"><h3 style="margin-top:0">Explainable health snapshot</h3><p><strong>Oil service:</strong> ${oilRem<=0?'Due now or overdue by '+num(-oilRem)+' miles':num(oilRem)+' miles remaining until the next scheduled oil service'}.</p><p><strong>Last oil-service mileage:</strong> ${num(a.last_service_mileage)}. <strong>Interval:</strong> ${num(a.service_interval)} miles.</p><div class="note info">These are mileage-based tracking indicators, not mechanical diagnostics. Follow the vehicle manufacturer’s maintenance guidance.</div></div>`;el.innerHTML+=additionalGraphCards(a);}
-
-const receiptFiles={fuel:null,service:null};
-let photoDir=null;
-async function choosePhotoDir(){
- if(!window.showDirectoryPicker){
-  alert('Folder selection is not supported in this browser. Use Download photo in the receipt history and move the downloaded image to MileSage/Photos using the Files app.');return false;
- }
- try{
-  const base=await window.showDirectoryPicker({mode:'readwrite',startIn:'pictures'});
-  photoDir=base.name==='Photos'?base:base.name==='MileSage'
-   ?await base.getDirectoryHandle('Photos',{create:true})
-   :await (await base.getDirectoryHandle('MileSage',{create:true})).getDirectoryHandle('Photos',{create:true});
-  if($('photoDirStatus'))$('photoDirStatus').textContent='MileSage/Photos selected. New fuel and service photos will be copied there when saved; permission may expire after reopening.';
-  message('Photo folder selected.');return true;
- }catch(e){if(e.name!=='AbortError')alert('Unable to select photo folder: '+e.message);return false;}
-}
-async function photoData(file){
- const url=URL.createObjectURL(file);
- try{
-  const img=new Image();img.src=url;await img.decode();let scale=Math.min(1,1400/Math.max(img.naturalWidth,img.naturalHeight));
-  let blob;
-  for(let i=0;i<5;i++){
-   const cv=document.createElement('canvas');cv.width=Math.max(1,Math.round(img.naturalWidth*scale));cv.height=Math.max(1,Math.round(img.naturalHeight*scale));
-   const cx=cv.getContext('2d');if(!cx)throw Error('Photo processing unavailable.');
-   cx.fillStyle='#fff';cx.fillRect(0,0,cv.width,cv.height);cx.drawImage(img,0,0,cv.width,cv.height);
-   blob=await new Promise(ok=>cv.toBlob(ok,'image/jpeg',Math.max(.36,.74-.09*i)));
-   if(blob&&blob.size<170000)break;
-   scale*=.78;
-  }
-  if(!blob||blob.size>230000)throw Error('Photo too large for in-app storage. Retake a smaller image.');
-  return await new Promise((ok,fail)=>{const fr=new FileReader();fr.onload=()=>ok(fr.result);fr.onerror=()=>fail(Error('Cannot read photo.'));fr.readAsDataURL(blob);});
- }finally{URL.revokeObjectURL(url);}
-}
-function photoBlob(p){
- if(!p?.data_url?.startsWith('data:image/jpeg;base64,'))throw Error('Invalid saved photo.');
- const raw=atob(p.data_url.split(',')[1]),bytes=new Uint8Array(raw.length);
- for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);
- return new Blob([bytes],{type:'image/jpeg'});
-}
-async function writePhonePhoto(p){
- if(!photoDir)throw Error('Choose a folder first.');
- const file=await photoDir.getFileHandle(p.name,{create:true}),stream=await file.createWritable();
- try{await stream.write(photoBlob(p));await stream.close();}
- catch(e){try{await stream.abort();}catch(_){}throw e;}
-}
-function downloadPhonePhoto(p){
- const url=URL.createObjectURL(photoBlob(p)),a=document.createElement('a');
- a.href=url;a.download=p.name;document.body.appendChild(a);a.click();a.remove();
- setTimeout(()=>URL.revokeObjectURL(url),15000);
- alert('Download requested. Check Downloads and move the photo into MileSage/Photos if needed.');
-}
-function photoHistory(r,kind,index){
- const p=r.receipt_photo;if(!p?.data_url)return '';
- return '<details class="note info" style="margin:8px 0"><summary>View saved receipt photo</summary>'+
- '<img src="'+esc(p.data_url)+'" alt="Saved receipt" style="display:block;max-width:100%;max-height:350px;margin:8px 0">'+
- '<p class="small muted">'+(p.folder_saved?'Copied to MileSage/Photos':'Not confirmed in phone folder')+'</p>'+
- '<div class="button-row"><button class="btn secondary" type="button" data-photo-save="'+kind+':'+index+'">Save to MileSage/Photos</button>'+
- '<button class="btn secondary" type="button" data-photo-download="'+kind+':'+index+'">Download photo</button></div></details>';
-}
-function wirePhotoHistory(kind){
- const root=$(kind==='fuel'?'fuelBody':'serviceBody');
- root.querySelectorAll('[data-photo-download]').forEach(b=>b.onclick=()=>{
-  const i=Number(b.dataset.photoDownload.split(':')[1]);downloadPhonePhoto(v()[kind+'_history'][i].receipt_photo);
- });
- root.querySelectorAll('[data-photo-save]').forEach(b=>b.onclick=async()=>{
-  const i=Number(b.dataset.photoSave.split(':')[1]),vehicle=v(),p=vehicle?.[kind+'_history']?.[i]?.receipt_photo;
-  if(!p)return;
-  if(!photoDir&&!(await choosePhotoDir()))return;
-  try{await writePhonePhoto(p);p.folder_saved=true;localStorage.setItem(KEY,JSON.stringify({vehicles,current}));renderAll();message('Receipt photo copied into MileSage/Photos.');}
-  catch(e){alert('Folder copy failed: '+e.message+'. The receipt is still attached in MileSage.');}
- });
-}
-async function storeReceipt(vehicle,kind,record,mutate){
- const file=receiptFiles[kind];
- if(file)record.receipt_photo={data_url:await photoData(file),name:'MileSage-'+record.date+'-'+String(vehicle.year+'-'+vehicle.name).replace(/[^a-z0-9-]+/gi,'-').slice(0,45)+'-'+kind+'-'+Date.now()+'-'+Math.floor(Math.random()*1000000)+'.jpg',folder_saved:false};
- if(v()!==vehicle)throw Error('Vehicle selection changed. Review the entry.');
- const original=JSON.stringify({vehicles,current});
- try{mutate();localStorage.setItem(KEY,JSON.stringify({vehicles,current}));hasStorage=true;updateBanner();}
- catch(e){const restore=JSON.parse(original);vehicles=normalize(restore.vehicles);current=restore.current;throw Error('Entry NOT saved: phone storage failed. '+e.message);}
- let note='';
- if(record.receipt_photo){
-  if(photoDir){
-   try{await writePhonePhoto(record.receipt_photo);record.receipt_photo.folder_saved=true;localStorage.setItem(KEY,JSON.stringify({vehicles,current}));note='Photo copied to MileSage/Photos.';}
-   catch(e){note='Photo attached in MileSage, but folder copy failed: '+e.message+'. Use Save to MileSage/Photos in history.';}
-  }else note='Photo attached to the record and Full mobile backup. To copy it into a phone folder, select the folder in Data & backup, then tap Save to MileSage/Photos in history.';
- }
- renderAll();message(kind==='fuel'?'Fuel entry saved.':'Service entry saved.');
- if(note)alert(note);
-}
-
-function renderAll(){renderHome();renderService();renderFuel();renderExpenses();renderGraphs();updateBanner();}
-function switchTab(id){tab=id;document.querySelectorAll('.section').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('.tab').forEach(x=>{x.classList.toggle('active',x.dataset.tab===id);x.setAttribute('aria-current',x.dataset.tab===id?'page':'false')});window.scrollTo({top:0,behavior:'instant'})}
-function filename(prefix){return `${prefix}-${localDate()}.json`}
-function download(name,data){const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);message('Backup prepared. Check Downloads on your phone.');}
-function pythonExport(){return vehicles.map(({mobile_expenses,mobile_mileage_log,...obj})=>({...obj,service_history:(obj.service_history||[]).map(({receipt_photo,...r})=>r),fuel_history:(obj.fuel_history||[]).map(({receipt_photo,...r})=>r)}))}
-/* RESTORE_GUARDS_BEGIN */
-function vehicleID(a){return a.vin?'vin:'+String(a.vin).toUpperCase():'name:'+String(a.year)+'|'+String(a.name).trim().toLowerCase();}
-function isBlankSeed(recs){
- return recs.length>0 && recs.every(a=>
-   Number(a.mileage)===0 &&
-   Object.values(a.tire_pressures||{}).every(x=>x==null) &&
-   (a.service_history||[]).length===0 && (a.fuel_history||[]).length===0 &&
-   (a.tire_pressure_history||[]).length===0
- );
-}
-function destructiveDiffs(existing,incoming){
- const src=new Map(incoming.map(a=>[vehicleID(a),a]));
- const problems=[];
- for(const local of existing){
-  const next=src.get(vehicleID(local));
-  if(!next){problems.push(local.name+': vehicle missing in import');continue;}
-  if(Number(next.mileage)<Number(local.mileage))
-   problems.push(local.name+': mileage '+local.mileage+' → '+next.mileage);
-  for(const key of ['driver_front','driver_rear','passenger_front','passenger_rear']){
-   if(local.tire_pressures?.[key]!=null && next.tire_pressures?.[key]==null)
-    problems.push(local.name+': '+key.replace('_',' ')+' pressure would be cleared');
-  }
-  for(const key of ['service_history','fuel_history','tire_pressure_history',
-    'fluid_check_history','air_filter_changes','mobile_expenses','mobile_mileage_log']){
-   if((next[key]||[]).length<(local[key]||[]).length)
-    problems.push(local.name+': '+key.replaceAll('_',' ')+' would lose entries');
-  }
- }
- return problems;
-}
-function mergeRecovery(existing,backups){
- const prior=new Map(backups.map(a=>[vehicleID(a),a]));
- const updated=existing.map(local=>{
-  const backup=prior.get(vehicleID(local));
-  if(!backup)return {...local};
-  const item=JSON.parse(JSON.stringify(local));
-  if(Number(item.mileage)===0 && Number(backup.mileage)>0){
-   item.mileage=backup.mileage;
-   item.starting_mileage=backup.starting_mileage;
-   item.last_service_mileage=backup.last_service_mileage;
-   item.last_tire_rotation_mileage=backup.last_tire_rotation_mileage;
-  }
-  for(const name of ['driver_front','driver_rear','passenger_front','passenger_rear']){
-   if(item.tire_pressures?.[name]==null && backup.tire_pressures?.[name]!=null)
-    item.tire_pressures[name]=backup.tire_pressures[name];
-   if(item.starting_tire_pressures?.[name]==null && backup.starting_tire_pressures?.[name]!=null)
-    item.starting_tire_pressures[name]=backup.starting_tire_pressures[name];
-  }
-  for(const key of ['service_history','fuel_history','tire_pressure_history',
-      'fluid_check_history','air_filter_changes','mobile_expenses','mobile_mileage_log']){
-   if(!item[key]?.length && backup[key]?.length)
-    item[key]=JSON.parse(JSON.stringify(backup[key]));
-  }
-  for(const kind of ['washer','coolant']){
-   if(item.fluid_checks?.[kind]?.last_full_mileage==null &&
-      backup.fluid_checks?.[kind]?.last_full_mileage!=null)
-     item.fluid_checks[kind]=JSON.parse(JSON.stringify(backup.fluid_checks[kind]));
-  }
-  // Never modify service_interval or tire_rotation_interval during recovery.
-  return item;
- });
- const existingIDs=new Set(existing.map(vehicleID));
- for(const backup of backups){
-  if(!existingIDs.has(vehicleID(backup)))updated.push(JSON.parse(JSON.stringify(backup)));
- }
- return updated;
-}
-/* RESTORE_GUARDS_END */
-function readSnapshots(){
- try{const x=JSON.parse(localStorage.getItem(RECOVERY_KEY)||'[]');return Array.isArray(x)?x:[]}
- catch(e){return [];}
-}
-function preservePreImport(){
- try{
-  const snapshots=readSnapshots();
-  snapshots.unshift({created_at:new Date().toISOString(),
-    vehicles:JSON.parse(JSON.stringify(vehicles)), current});
-  localStorage.setItem(RECOVERY_KEY,JSON.stringify(snapshots.slice(0,3)));
-  return true;
- }catch(e){
-  alert('Change cancelled: the browser could not save a recovery snapshot. Export a full mobile backup first.');
-  return false;
- }
-}
-function commitImport(newVehicles,newCurrent,reason){
- if(!preservePreImport())return false;
- const prevVehicles=vehicles, prevCurrent=current;
- try{
-  localStorage.setItem(KEY,JSON.stringify({vehicles:newVehicles,current:newCurrent}));
- }catch(e){
-  alert('Change cancelled: unable to save new vehicle data. Your previous records remain.');
-  return false;
- }
- vehicles=newVehicles;current=newCurrent;hasStorage=true;
- syncStatus='Phone records preserved locally; GitHub cannot overwrite them automatically.';
- updateBanner();renderAll();switchTab('home');
- message(reason+' Local undo snapshot saved.');
- return true;
-}
-function replace(data,fromGitHub=false){
- let recs,cur=0;
- if(Array.isArray(data))recs=normalize(data);
- else if(data&&Array.isArray(data.vehicles)){
-  recs=normalize(data.vehicles);
-  cur=Math.max(0,Math.min(Number(data.current)||0,recs.length-1));
- }else throw Error('This does not look like a MileSage or Vehicle Manager backup.');
- if(fromGitHub && isBlankSeed(recs)){
-  alert('Import BLOCKED. The main GitHub vehicles.json has only 0-mile placeholder data and blank tire pressures. Use "Recover from saved GitHub backup" instead.');
-  return false;
- }
- const problems=destructiveDiffs(vehicles,recs);
- if(fromGitHub && problems.length){
-  alert('GitHub import BLOCKED because it could erase phone records:\n\n'+
-        problems.slice(0,8).join('\n')+'\n\nUse a known-good backup instead.');
-  return false;
- }
- if(!confirm('REVIEW IMPORT: Replace phone data with '+recs.length+
-             ' vehicle(s)?\n\nThis imports DATA only, not the latest app code. '+
-             'A local undo snapshot will be saved first.'))return false;
- if(problems.length && !confirm('WARNING — this import would REMOVE or DOWNGRADE existing phone data:\n\n'+
-           problems.slice(0,8).join('\n')+'\n\nContinue anyway?'))return false;
- return commitImport(recs,cur,'JSON import completed.');
-}
-async function githubImport(){
- const btn=$('githubImport');btn.disabled=true;btn.textContent='Reviewing…';
- try{
-  const r=await fetch(REMOTE,{cache:'no-store'});
-  if(!r.ok)throw Error('GitHub returned '+r.status);
-  replace(await r.json(),true);
- }catch(e){alert('GitHub data review could not complete: '+e.message)}
- finally{btn.disabled=false;btn.textContent='Review GitHub vehicles.json';}
-}
-async function recoverFromGitHubBackup(){
- const btn=$('githubBackupRecovery');btn.disabled=true;btn.textContent='Checking backup…';
- try{
-  const r=await fetch(BACKUP_REMOTE,{cache:'no-store'});
-  if(!r.ok)throw Error('GitHub backup returned '+r.status);
-  const saved=normalize(await r.json());
-  if(isBlankSeed(saved))throw Error('Backup has no recoverable mileage or tire pressures.');
-  const merged=mergeRecovery(vehicles,saved);
-  const summary=merged.map(a=>a.name+': '+num(a.mileage)+' mi, '+
-      Object.values(a.tire_pressures||{}).filter(x=>x!=null).length+' tire readings').join('\n');
-  if(JSON.stringify(merged)===JSON.stringify(vehicles)){
-   alert('This backup has no missing readings to recover. Your phone data has not been changed.');
-   return;
-  }
-  if(!confirm('RECOVERY PREVIEW — older GitHub backup:\n\n'+summary+
-      '\n\nOnly blank fields and empty histories will be restored for existing vehicles. '+
-      'Oil/tire intervals already set on your phone will remain unchanged. '+
-      'The actual vehicle odometers may be newer.\n\nApply recovery?'))return;
-  commitImport(merged,current,'Older GitHub backup partially recovered.');
- }catch(e){alert('Recovery could not complete: '+e.message)}
- finally{btn.disabled=false;btn.textContent='Recover from saved GitHub backup';}
-}
-function undoImport(){
- const history=readSnapshots();
- if(!history.length){alert('No pre-import snapshot exists in this version. Check phone Downloads for an earlier full mobile backup.');return;}
- const latest=history[0];
- if(!confirm('Restore phone data from the snapshot created '+latest.created_at+
-     '?\nThis replaces the current phone data. Export a full backup of the current version first.'))return;
- if(!preservePreImport())return;
- try{
-  const restored=normalize(latest.vehicles);
-  localStorage.setItem(KEY,JSON.stringify({vehicles:restored,current:latest.current}));
-  vehicles=restored;current=Math.max(0,Math.min(latest.current,vehicles.length-1));
-  // Remove the original snapshot once used, retaining the new undo snapshot.
-  const next=readSnapshots().filter(x=>x.created_at!==latest.created_at);
-  localStorage.setItem(RECOVERY_KEY,JSON.stringify(next.slice(0,3)));
-  syncStatus='Previous local snapshot restored. GitHub has not overwritten it.';
-  renderAll();switchTab('home');message('Previous local snapshot restored.');
- }catch(e){alert('Could not restore snapshot: '+e.message);}
-}
-async function autoRefreshGitHub(){
- if(checkingGitHub||document.hidden)return;
- checkingGitHub=true;
- try{
-  const response=await fetch(REMOTE+'?v='+Date.now(),{cache:'no-store'});
-  if(!response.ok)throw Error('GitHub returned '+response.status);
-  const incoming=normalize(await response.json());
-  syncStatus=isBlankSeed(incoming)
-   ? 'GitHub vehicles.json is a blank placeholder and cannot overwrite your phone.'
-   : 'GitHub records available for review. No automatic data overwrite.';
- }catch(e){syncStatus='GitHub status unavailable; phone data has not changed.';}
- finally{checkingGitHub=false;updateBanner();}
-}
-/* VIN_LOOKUP_BEGIN */
-function normalizeVIN(raw){
- const vin=String(raw??'').toUpperCase().replace(/[\s-]/g,'');
- if(!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin))
-  throw Error('A VIN must contain 17 letters or digits, excluding I, O, and Q.');
- return vin;
-}
-function parseVINDecode(payload){
- const details=payload?.Results?.[0];
- if(!details || typeof details!=='object')throw Error('The VIN decoder returned no vehicle information.');
- const errors=String(details.ErrorCode??'0').split(',').map(x=>x.trim()).filter(Boolean);
- if(errors.some(x=>x!=='0'))throw Error('NHTSA could not verify this VIN. '+String(details.ErrorText||'').slice(0,160));
- const year=Number(details.ModelYear);
- const make=String(details.Make||'').trim(), model=String(details.Model||'').trim();
- if(!Number.isInteger(year)||year<1981||year>new Date().getFullYear()+2||!make||!model)
-  throw Error('NHTSA did not return a complete model year, make and model.');
- return {year,make,model,trim:String(details.Trim||'').trim()};
-}
-function vinAlreadyExists(records,vin){
- return records.some(a=>String(a.vin||'').toUpperCase()===vin);
-}
-/* VIN_LOOKUP_END */
-let decodedVIN=null;
-function showVINEntry(){
- const panel=$('vinEntryCard');
- panel.hidden=!panel.hidden;
- if(!panel.hidden)$('vinInput').focus();
-}
-async function lookUpVIN(event){
- event.preventDefault();
- let vin;
- try{vin=normalizeVIN($('vinInput').value);}
- catch(error){alert(error.message);return;}
- if(vinAlreadyExists(vehicles,vin)){alert('This VIN is already saved in your garage. No duplicate was added.');return;}
- const button=$('vinLookupButton'),status=$('vinLookupStatus');
- button.disabled=true;button.textContent='Looking up VIN…';
- decodedVIN=null;$('vinConfirmForm').hidden=true;
- status.textContent='Contacting NHTSA. No vehicle data has been changed.';
- try{
-  const response=await fetch('https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/'+encodeURIComponent(vin)+'?format=json',{cache:'no-store'});
-  if(!response.ok)throw Error('NHTSA returned HTTP '+response.status);
-  const result=parseVINDecode(await response.json());
-  decodedVIN={vin,...result};
-  $('vinVehicleName').value=result.make+' '+result.model;
-  $('vinVehicleYear').value=result.year;
-  $('vinVehicleMileage').value='0';
-  $('vinPreview').textContent=vin;
-  $('vinConfirmForm').hidden=false;
-  status.textContent='NHTSA suggests '+result.year+' '+result.make+' '+result.model+
-   (result.trim?' ('+result.trim+')':'')+'. Verify the details and enter the actual odometer.';
- }catch(error){
-  status.textContent='VIN lookup failed: '+error.message+' Your garage is unchanged. Use + Manual if the decoder is unavailable.';
- }finally{button.disabled=false;button.textContent='Look up VIN';}
-}
-function saveVINVehicle(event){
- event.preventDefault();
- if(!decodedVIN){alert('Look up a VIN first.');return;}
- if(vinAlreadyExists(vehicles,decodedVIN.vin)){alert('That VIN is already in your garage.');return;}
- let year,miles;
- const name=$('vinVehicleName').value.trim();
- try{
-  if(!name||name.length>100)throw Error('Enter a vehicle name (up to 100 characters).');
-  year=whole($('vinVehicleYear').value,'Model year',1981);
-  if(year>new Date().getFullYear()+2)throw Error('Check the model year.');
-  miles=whole($('vinVehicleMileage').value,'Odometer mileage',0);
- }catch(error){alert(error.message);return;}
- if(!confirm('Add '+year+' '+name+'?\nVIN: '+decodedVIN.vin+'\nOdometer: '+num(miles)+' miles\n\nExisting vehicles and histories will not change.'))return;
- const record=normalize([{name,year,mileage:miles,starting_mileage:miles,
-  last_service_mileage:miles,service_interval:5000,vin:decodedVIN.vin}])[0];
- vehicles.push(record);current=vehicles.length-1;
- save();renderAll();$('vinEntryCard').hidden=true;
- $('vinLookupForm').reset();$('vinConfirmForm').hidden=true;
- $('vinLookupStatus').textContent='';decodedVIN=null;
- message('Vehicle added using its VIN.');
-}
-
-/* VEHICLE_MANAGEMENT_BEGIN */
-function editVehicleDetails(original,nameInput,yearInput,vinInput,records,index){
- const name=String(nameInput??'').trim();
- if(!name||name.length>100)throw Error('Vehicle name must contain 1–100 characters.');
- const year=whole(String(yearInput),'Model year',1900);
- if(year>new Date().getFullYear()+2)throw Error('Check the vehicle model year.');
- const vin=String(vinInput??'').trim()?normalizeVIN(vinInput):null;
- if(vin&&records.some((vehicle,i)=>i!==index&&String(vehicle.vin||'').toUpperCase()===vin))
-  throw Error('That VIN belongs to another vehicle in your garage.');
- return {...original,name,year,vin};
-}
-function removeVehicleAt(records,index){
- if(!Array.isArray(records)||!Number.isSafeInteger(index)||index<0||index>=records.length)
-  throw Error('Select a valid vehicle before removing it.');
- return records.filter((_,i)=>i!==index);
-}
-function renderVehicleControls(){
- const panel=$('manageVehicle'),vehicle=v();
- panel.hidden=!vehicle;
- if(!vehicle)return;
- $('manageVehicleName').textContent=vehicle.year+' '+vehicle.name+' · '+num(vehicle.mileage)+' miles';
- $('editVehicleForm').hidden=true;
- $('editVehicleName').value=vehicle.name;
- $('editVehicleYear').value=String(vehicle.year);
- $('editVehicleVIN').value=vehicle.vin||'';
-}
-function wireVehicleControls(){
- $('editVehicle').onclick=()=>{
-  const form=$('editVehicleForm');
-  form.hidden=!form.hidden;
-  if(!form.hidden)$('editVehicleName').focus();
- };
- $('cancelVehicleEdit').onclick=()=>$('editVehicleForm').hidden=true;
- $('editVehicleForm').onsubmit=event=>{
-  event.preventDefault();
-  const old=v(),selected=current;
-  if(!old)return;
-  try{
-   const next=editVehicleDetails(old,$('editVehicleName').value,$('editVehicleYear').value,
-    $('editVehicleVIN').value,vehicles,selected);
-   if(old.name===next.name&&old.year===next.year&&(old.vin||null)===next.vin){
-    $('editVehicleForm').hidden=true;message('Vehicle details are unchanged.');return;
-   }
-   if(old.vin&&old.vin!==next.vin&&!confirm('Change or clear the VIN on '+old.year+' '+old.name+'? Verify the replacement carefully.'))return;
-   const updated=vehicles.map((a,i)=>i===selected?next:a);
-   commitImport(updated,selected,'Vehicle details updated.');
-  }catch(error){alert(error.message);}
- };
- $('removeVehicle').onclick=()=>{
-  const selected=current,old=v();
-  if(!old)return;
-  const label=old.year+' '+old.name+' ('+num(old.mileage)+' miles)';
-  if(!confirm('Remove ONLY '+label+' from this garage?\n\nIts service, fuel, photo and expense records will be removed with it. Other vehicles will remain unchanged.\n\nA local recovery snapshot will be saved. Export a Full mobile backup before removing important data.'))return;
-  const typed=prompt('To confirm removal of '+label+', type REMOVE in capital letters.');
-  if(typed!=='REMOVE'){if(typed!==null)alert('Nothing removed. Type REMOVE exactly to confirm.');return;}
-  try{
-   const remaining=removeVehicleAt(vehicles,selected);
-   const nextIndex=remaining.length?Math.min(selected,remaining.length-1):0;
-   commitImport(remaining,nextIndex,'Vehicle removed.');
-  }catch(error){alert(error.message);}
- };
-}
-/* VEHICLE_MANAGEMENT_END */
-
-function addVehicle(){const name=prompt('Vehicle name (example: Toyota Tacoma)');if(name===null)return;if(!name.trim()){alert('Enter a vehicle name.');return}const yearText=prompt('Model year',String(new Date().getFullYear()));if(yearText===null)return;const milesText=prompt('Current odometer mileage','0');if(milesText===null)return;let year,miles;try{year=whole(yearText,'Year',1900);miles=whole(milesText,'Mileage',0);if(year>new Date().getFullYear()+2)throw Error('Check the vehicle year.')}catch(error){alert(error.message);return}const first=normalize([{name:name.trim(),year,mileage:miles,starting_mileage:miles,last_service_mileage:miles,service_interval:5000}])[0];vehicles.push(first);current=vehicles.length-1;save();renderAll();message('Vehicle added.');}
-function init(){
- load();renderAll();
- for(const b of document.querySelectorAll('[data-tab]'))b.onclick=()=>switchTab(b.dataset.tab);
- $('dataButton').onclick=()=>switchTab('data');
- $('addVehicleButton').onclick=addVehicle;
- wireVehicleControls();
+ wireVehiclePhotos();
  $('addVinButton').onclick=showVINEntry;
  $('vinLookupForm').onsubmit=lookUpVIN;
  $('vinConfirmForm').onsubmit=saveVINVehicle;
