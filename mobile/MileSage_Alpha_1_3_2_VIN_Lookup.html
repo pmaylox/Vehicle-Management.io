@@ -23,6 +23,13 @@ label.field{display:block;font-size:13px;font-weight:700;margin:13px 0 7px}input
 .vehicle-photo[hidden],.vehicle-photo-placeholder[hidden]{display:none}
 .vehicle-photo{display:block;width:100%;height:150px;object-fit:contain;margin-bottom:12px}
 .vehicle-photo-placeholder{display:grid;place-items:center;height:150px;margin-bottom:12px;border-radius:12px;background:#F5F1EB;color:#6B655E;font-size:14px}
+
+/* Compact sequential tire entry and top-down drivetrain overview */
+.tire-map{background:#f7f9fb;border:1px solid var(--line);border-radius:13px;padding:9px 5px 6px;margin:8px 0 11px}
+#tirePressureForm .button-row{margin-top:12px}
+#tirePressureForm .button-row>.btn{min-width:0}
+#tirePressureForm .btn[hidden]{display:none!important}
+
 </style>
 </head>
 <body>
@@ -336,40 +343,124 @@ function safePsi(raw,label,allowBlank=true){
   return n;
 }
 function psiText(n){return n===null||n===undefined||!Number.isFinite(Number(n))?'—':Number(n).toLocaleString('en-US',{maximumFractionDigits:2})+' PSI'}
+function tireDiagram(a,draft={},activeKey='driver_front'){
+ const p=a.tire_pressures||{};
+ const positions=[
+  ['driver_front','DF','Driver front · front left',90,83],
+  ['passenger_front','PF','Passenger front · front right',270,83],
+  ['driver_rear','DR','Driver rear · rear left',90,215],
+  ['passenger_rear','PR','Passenger rear · rear right',270,215]
+ ];
+ const wheel=(key,abbr,label,x,y)=>{
+  const amount=Object.prototype.hasOwnProperty.call(draft,key)?draft[key]:p[key];
+  const active=key===activeKey,psi=amount==null?'—':Number(amount).toLocaleString('en-US',{maximumFractionDigits:2});
+  return '<g aria-label="'+esc(label+': '+psiText(amount))+'">'+
+   '<rect x="'+(x<180?x+20:x-44)+'" y="'+(y-23)+'" width="24" height="46" rx="7" fill="'+(active?'#9e3b1b':'#253b50')+'"/>'+
+   '<rect x="'+(x<180?x+25:x-39)+'" y="'+(y-18)+'" width="14" height="36" rx="4" fill="#354f66"/>'+
+   '<text x="'+x+'" y="'+(y-25)+'" text-anchor="middle" font-size="11" fill="#546473" font-weight="700">'+abbr+'</text>'+
+   '<text x="'+x+'" y="'+(y+6)+'" text-anchor="middle" font-size="16" fill="#182f43" font-weight="800">'+esc(psi)+'</text>'+
+   '<text x="'+x+'" y="'+(y+20)+'" text-anchor="middle" font-size="9" fill="#5d6972">PSI</text></g>';
+ };
+ return '<div class="tire-map"><div class="eyebrow" style="text-align:center">FRONT OF VEHICLE ↑ · DRIVER ON LEFT</div>'+
+  '<svg role="img" aria-label="Top-down vehicle drivetrain and four tire readings; driver front at upper left, passenger front upper right, driver rear lower left, passenger rear lower right" viewBox="0 0 360 290" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;max-width:355px;height:auto;margin:0 auto">'+
+  '<path d="M130 62 Q130 39 157 35 L203 35 Q230 39 230 62 L230 227 Q230 253 202 256 L158 256 Q130 253 130 227 Z" fill="#e9edf1" stroke="#62798d" stroke-width="3"/>'+
+  '<path d="M145 85 L215 85 L210 123 L150 123 Z" fill="#c1d8e6" stroke="#62798d" stroke-width="2"/>'+
+  '<path d="M149 184 L211 184 L218 219 L142 219 Z" fill="#c1d8e6" stroke="#62798d" stroke-width="2"/>'+
+  '<path d="M126 109 L234 109 M126 209 L234 209" stroke="#657584" stroke-width="6" stroke-linecap="round"/>'+
+  '<path d="M180 121 L180 207" stroke="#9e3b1b" stroke-width="5" stroke-linecap="round"/>'+
+  '<circle cx="180" cy="109" r="13" fill="#9e3b1b" stroke="#fff" stroke-width="3"/>'+
+  '<circle cx="180" cy="209" r="13" fill="#9e3b1b" stroke="#fff" stroke-width="3"/>'+
+  positions.map(v=>wheel(...v)).join('')+'</svg>'+
+  '<p class="small muted" style="margin:2px 0 0;text-align:center">Diagram values are saved readings plus any unsaved entries you have confirmed in this sequence.</p></div>';
+}
 function tirePressureCard(a){
- const p=a.tire_pressures||{},hist=a.tire_pressure_history||[];
+ const hist=a.tire_pressure_history||[];
  const latest=hist.length?hist[hist.length-1]:null;
- const cards=TIRES.map(([k,label])=>`<div class="stat"><div class="eyebrow">${esc(label)}</div><strong>${esc(psiText(p[k]))}</strong></div>`).join('');
- const fields=TIRES.map(([k,label])=>`<div class="pressure-row"><div class="tire-name">${esc(label)}<small>Last: ${esc(psiText(p[k]))}</small></div><input id="pressure-${k}" type="number" min="0" max="200" step="0.01" inputmode="decimal" placeholder="PSI" aria-label="${esc(label)} measured PSI"><input id="added-${k}" type="number" min="0" max="200" step="0.01" inputmode="decimal" placeholder="0" aria-label="${esc(label)} PSI air added"></div>`).join('');
- return `<div id="tirePressureCard" class="card feature-card"><h3 style="margin:0 0 4px">Tire pressures</h3>${formVehicleName(a)}<div class="tire-values">${cards}</div><p class="small muted">${latest?'Last logged: '+esc(latest.recorded_at||'date unknown')+' at '+num(latest.mileage??a.mileage)+' miles':'No pressure readings logged yet.'}</p><form id="tirePressureForm"><h4 style="margin-bottom:3px">Record tire readings / added air</h4><div class="pressure-head"><span>Tire</span><span>Measured PSI</span><span>Air added PSI</span></div>${fields}<p class="small muted">Leave a field empty to keep that value unchanged. A measured reading replaces the previous calculated PSI; air added increases the measured or previously logged PSI. These are manually entered values, not live TPMS readings.</p><button type="submit" class="btn full">Save tire pressures</button></form><p class="small muted" style="margin-bottom:0">Use your vehicle's door-jamb tire placard for recommended <strong>cold</strong> inflation pressure; MileSage does not prescribe a pressure.</p></div>`;
+ return '<div id="tirePressureCard" class="card feature-card">'+
+  '<h3 style="margin:0 0 4px">Tire pressures</h3>'+formVehicleName(a)+
+  '<div id="tireDiagram">'+tireDiagram(a)+'</div>'+
+  '<p class="small muted">'+(latest?'Last logged: '+esc(latest.recorded_at||'date unknown')+' at '+num(latest.mileage??a.mileage)+' miles':'No pressure readings logged yet.')+'</p>'+
+  '<form id="tirePressureForm"><div class="note info" style="margin-top:8px"><strong id="tirePrompt">Tire 1 of 4 · Driver front (front left)</strong>'+
+  '<div class="small" id="tirePreviousReading">Saved: '+esc(psiText(a.tire_pressures?.driver_front))+'</div></div>'+
+  '<div class="grid2"><div><label class="field" for="tireMeasured">Measured PSI</label>'+
+  '<input id="tireMeasured" type="number" min="0" max="200" step="0.01" inputmode="decimal" placeholder="e.g. 35"></div>'+
+  '<div><label class="field" for="tireAdded">Air added PSI</label>'+
+  '<input id="tireAdded" type="number" min="0" max="200" step="0.01" inputmode="decimal" placeholder="Optional"></div></div>'+
+  '<p class="small muted" id="tireStepNote">Enter a measured reading and/or air added. Leaving both blank retains the last saved pressure.</p>'+
+  '<div class="button-row"><button id="tireBack" type="button" class="btn secondary" hidden>Previous tire</button>'+
+  '<button id="tireNext" type="button" class="btn">Next tire</button>'+
+  '<button id="tireFinish" type="submit" class="btn" hidden>Save tire readings</button></div>'+
+  '</form><p class="small muted" style="margin-bottom:0">Measurements are entered manually, not live TPMS. Refer to the door-jamb placard for recommended <strong>cold</strong> tire pressure.</p></div>';
 }
 function wireTirePressureForm(a){
- const form=$('tirePressureForm');
- form.onsubmit=e=>{e.preventDefault();try{
-   const old={...a.tire_pressures};
-   const next={...old};
-   const baselines={...a.starting_tire_pressures};
-   const increases={};
-   let changed=false;
-   for(const [k,label] of TIRES){
-     const measured=safePsi($('pressure-'+k).value,label+' reading');
-     const added=safePsi($('added-'+k).value,label+' air added');
-     increases[k]=added??0;
-     if(measured!==null){next[k]=measured;baselines[k]=measured;}
-     if(added!==null && added>0){
-       if(next[k]===null || next[k]===undefined)throw Error(label+': enter a measured PSI first, then add air.');
-       next[k]=Math.round((Number(next[k])+added)*100)/100;
-       if(next[k]>200)throw Error(label+': combined PSI exceeds 200.');
-     }
-     if(next[k]!==old[k] || baselines[k]!==a.starting_tire_pressures[k])changed=true;
+ const form=$('tirePressureForm'),draft={},TIRES_LOCAL=TIRES;
+ let step=0;
+ const measured=$('tireMeasured'),added=$('tireAdded');
+ function preview(){
+  const computed={};
+  for(const [key,label] of TIRES_LOCAL){
+   if(!Object.prototype.hasOwnProperty.call(draft,key))continue;
+   const values=draft[key],m=safePsi(values.measured,label+' measured PSI'),air=safePsi(values.added,label+' air added PSI');
+   let psi=m??a.tire_pressures?.[key]??null;
+   if(air!==null&&air>0){
+    if(psi===null)throw Error(label+': measure the tire before adding air.');
+    psi=Math.round((Number(psi)+air)*100)/100;
+    if(psi>200)throw Error(label+': combined PSI exceeds 200.');
    }
-   if(!changed){message('No new tire-pressure values entered.');return;}
-   const ev={recorded_at:new Date().toISOString(),mileage:a.mileage,before:old,starting:{...baselines},added_psi:increases,current:{...next}};
-   a.tire_pressures=next;
-   a.starting_tire_pressures=baselines;
-   a.tire_pressure_history.push(ev);
-   save();renderAll();message('Tire-pressure readings saved.');
- }catch(error){alert(error.message)}};
+   computed[key]=psi;
+  }
+  $('tireDiagram').innerHTML=tireDiagram(a,computed,TIRES_LOCAL[step][0]);
+ }
+ function readStep(){
+  const [key,label]=TIRES_LOCAL[step],m=safePsi(measured.value,label+' measured PSI'),air=safePsi(added.value,label+' air added PSI');
+  const start=m??a.tire_pressures?.[key]??null;
+  if(air!==null&&air>0&&start===null)throw Error(label+': enter a measured PSI before adding air.');
+  if(air!==null&&start!==null&&Number(start)+air>200)throw Error(label+': pressure exceeds 200 PSI.');
+  draft[key]={measured:measured.value.trim(),added:added.value.trim()};
+  preview();
+ }
+ function showStep(){
+  const [key,label]=TIRES_LOCAL[step],previous=draft[key]||{};
+  $('tirePrompt').textContent='Tire '+(step+1)+' of 4 · '+label+(key==='driver_front'?' (front left)':key==='passenger_front'?' (front right)':key==='driver_rear'?' (rear left)':' (rear right)');
+  $('tirePreviousReading').textContent='Last saved: '+psiText(a.tire_pressures?.[key]);
+  measured.value=previous.measured||'';
+  added.value=previous.added||'';
+  $('tireBack').hidden=step===0;
+  $('tireNext').hidden=step===TIRES_LOCAL.length-1;
+  $('tireFinish').hidden=step!==TIRES_LOCAL.length-1;
+  preview();
+ }
+ $('tireBack').onclick=()=>{try{readStep();step--;showStep();}catch(e){alert(e.message);}};
+ $('tireNext').onclick=()=>{try{readStep();step++;showStep();measured.focus();}catch(e){alert(e.message);}};
+ form.onsubmit=e=>{e.preventDefault();try{
+  readStep();
+  const old={...a.tire_pressures},next={...old},baselines={...a.starting_tire_pressures},increases={};
+  let changed=false;
+  for(const [key,label] of TIRES_LOCAL){
+   const answer=draft[key]||{},m=safePsi(answer.measured||'',label+' measured PSI'),air=safePsi(answer.added||'',label+' air added PSI');
+   increases[key]=air??0;
+   if(m!==null){next[key]=m;baselines[key]=m;}
+   if(air!==null&&air>0){
+    if(next[key]==null)throw Error(label+': enter a measured PSI before adding air.');
+    next[key]=Math.round((Number(next[key])+air)*100)/100;
+    if(next[key]>200)throw Error(label+': pressure exceeds 200 PSI.');
+   }
+   if(next[key]!==old[key]||baselines[key]!==a.starting_tire_pressures?.[key])changed=true;
+  }
+  if(!changed){message('No tire pressure changes to save.');return;}
+  const event={recorded_at:new Date().toISOString(),mileage:a.mileage,before:old,starting:{...baselines},added_psi:increases,current:{...next}};
+  const snapshot=JSON.stringify({vehicles,current});
+  a.tire_pressures=next;a.starting_tire_pressures=baselines;a.tire_pressure_history.push(event);
+  try{localStorage.setItem(KEY,JSON.stringify({vehicles,current}));hasStorage=true;updateBanner();}
+  catch(err){
+   const recovered=JSON.parse(snapshot), restored=recovered.vehicles[current];
+   a.tire_pressures=old;a.starting_tire_pressures={...baselines,...(event.starting||{})};
+   a.tire_pressure_history.pop();
+   throw Error('Tire readings NOT saved: '+err.message);
+  }
+  renderAll();message('Tire-pressure readings saved for '+a.name+'.');
+ }catch(error){alert(error.message);}};
+ showStep();
 }
 
 const fluidNames={washer:'Windshield washer fluid',coolant:'Engine coolant reservoir'};
