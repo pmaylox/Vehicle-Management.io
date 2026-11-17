@@ -261,12 +261,33 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void shareSavedServiceDocument(String id) {
+        if (id == null || !id.matches("[a-f0-9-]{36}")) {
+            showToast("Invalid service document reference.");return;
+        }
+        File pdf = new File(new File(getFilesDir(), "service_invoices"), id + ".pdf");
+        if (!pdf.isFile()) {showToast("Scanned service PDF not found on this device.");return;}
+        try {
+            Uri uri = FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", pdf);
+            Intent intent = new Intent(Intent.ACTION_SEND);
+            intent.setType("application/pdf");
+            intent.putExtra(Intent.EXTRA_STREAM,uri);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivity(Intent.createChooser(intent,"Save or share service PDF"));
+        } catch (Exception e) {
+            showToast("Unable to share service document.");
+        }
+    }
+
     private class DownloadBridge {
         @JavascriptInterface public void scanServiceInvoice() {
             runOnUiThread(() -> beginServiceDocumentScan());
         }
         @JavascriptInterface public void openServiceInvoice(String id) {
             runOnUiThread(() -> openSavedServiceDocument(id));
+        }
+        @JavascriptInterface public void shareServiceInvoice(String id) {
+            runOnUiThread(() -> shareSavedServiceDocument(id));
         }
 
         @JavascriptInterface public void saveBase64(String filename, String mimeType, String base64) {
