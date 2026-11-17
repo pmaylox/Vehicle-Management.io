@@ -436,7 +436,7 @@ function parseFuelReceiptText(raw,today){
  // Receipts vary: "GALLONS 10.882", "GALL0NS: 10,882", or label and
  // quantity on adjacent lines. Do not confuse price per gallon with volume.
  const gallonsLabel=/\b(?:gall(?:o|0)ns?|volume|fuel\s*(?:qty|quantity)|quantity|qty)\b/i;
- const priceLabel=/\b(?:ppu|unit\s*price|price\s*(?:per|\/)\s*(?:gal(?:lons?)?|g)|price\/g|(?:gallon|gal)\s*price)\b/i;
+ const priceLabel=/\b(?:ppu|unit\s*price|price\s*(?:per|\/)\s*(?:gallons?|gal|g)|(?:gallons?|gal)\s*price)\b/i;
  const totalLabel=/\b(?:fuel[\s-]*(?:sale|5ale)|sale\s*total|grand\s*total|transaction\s*total|total(?:\s+(?:sale|due|paid|amount|purchase))?|amount(?:\s+(?:paid|due))?|purchase\s*amount)\b/i;
  const numberAfter=fragment=>{
   const m=String(fragment).match(/(?:^|[^\d])(\d{1,4}(?:[.,]\d{1,3})?)(?!\d)/);
@@ -448,7 +448,8 @@ function parseFuelReceiptText(raw,today){
  for(let i=0;i<lines.length;i++){
   const line=lines[i],label=gallonsLabel.exec(line);
   if(!label)continue;
-  if(priceLabel.test(line.slice(0,label.index)))continue;
+  const price=priceLabel.exec(line);
+  if(price&&price.index<=label.index)continue;
   const after=line.slice(label.index+label[0].length);
   let amount=numberAfter(after);
   if(amount===null&&i+1<lines.length&&!priceLabel.test(lines[i+1])&&
