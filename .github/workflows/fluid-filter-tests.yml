@@ -32,6 +32,8 @@ jobs:
         run: node mobile/test_evening_insights.cjs
       - name: Test VIN lookup and local garage preservation
         run: node mobile/test_vin_lookup.cjs
+      - name: Test vehicle edit/removal guards
+        run: node mobile/test_vehicle_management.cjs
       - name: Validate phone JavaScript syntax
         run: |
           python - <<'PY'
