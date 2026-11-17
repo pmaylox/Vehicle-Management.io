@@ -1,8 +1,8 @@
-name: Build MileSage Alpha 1.3.4 Android Test APK and current HTML
+name: Build MileSage Alpha 1.3.5 Service Scanner Test APK
 on:
   push:
     branches:
-      - build/android-apk-alpha-1.3.3
+      - feature/service-multipage-pdf-test-20261116
     paths:
       - "android/**"
       - "mobile/**"
@@ -36,24 +36,26 @@ jobs:
         run: |
           mkdir -p android/app/src/main/assets release
           cp mobile/MileSage_Alpha_1_3_2_VIN_Lookup.html android/app/src/main/assets/index.html
-          sed -i 's/Alpha 1.3.2/Alpha 1.3.4 Test/g' android/app/src/main/assets/index.html
-          cp android/app/src/main/assets/index.html release/MileSage_Alpha_1_3_4_Edit_Remove_Test.html
-          printf '%s\n' "MileSage Alpha 1.3.4 - parallel Android TEST build" \
+          sed -i 's/Alpha 1.3.2/Alpha 1.3.5 Service Scanner Test/g' android/app/src/main/assets/index.html
+          cp android/app/src/main/assets/index.html release/MileSage_Alpha_1_3_5_Service_Scanner_Test.html
+          printf '%s\n' "MileSage Alpha 1.3.5 - separate Android Service PDF Scanner TEST build" \
             "Do NOT uninstall or clear the original MileSage APK; this is a separately installed TEST copy." \
             "Back up your existing phone data before importing anything into the test copy." \
             "The APK uses a new app ID and stores data SEPARATELY from the previously installed MileSage APK." \
             "Use Data & backup > Import JSON file with YOUR full phone backup." \
             "Confirm the real Tacoma and Explorer plus their histories after import." \
-            "This build adds Edit vehicle and Remove vehicle below the selected garage card." \
-            "Try removing only an intentionally created demo vehicle, never the live vehicles." \
+            "This build adds a one-session multi-page Service PDF scanner. Fuel is unchanged." \
+            "Scan up to 30 service invoice pages; the scanner makes one PDF." \
+            "Tap Share / backup PDF in Service history; JSON backups do not include PDF bytes." \
+            "Test with a disposable service record first; preserve original MileSage." \
             "This APK is DEBUG-SIGNED for testing and not for production distribution." \
-            "Receipt camera and folder saving require manual phone testing." > release/READ_ME_FIRST.txt
+            "Scanning, PDF opening/sharing and attachments require manual phone testing." > release/READ_ME_FIRST.txt
       - name: Validate JavaScript and mobile regression tests
         run: |
           python - <<'PY'
           from pathlib import Path
           s=Path("android/app/src/main/assets/index.html").read_text(encoding="utf-8")
-          for phrase in ("milesage-mobile-offline-v1","+ By VIN","Take receipt photo","Take fuel receipt photo","choosePhotoDir","odometer-controls","receipt_photo",'id="editVehicle"','id="removeVehicle"'):
+          for phrase in ("milesage-mobile-offline-v1","+ By VIN","Take receipt photo","Take fuel receipt photo","choosePhotoDir","odometer-controls","receipt_photo",'id="editVehicle"','id="removeVehicle"','id="scanServicePdf"'):
               assert phrase in s, phrase
           Path("/tmp/milesage-inline.js").write_text(s.split("<script>",1)[1].split("</script>",1)[0],encoding="utf-8")
           PY
@@ -61,6 +63,7 @@ jobs:
           node mobile/test_restore_safety.cjs
           node mobile/test_vin_lookup.cjs
           node mobile/test_vehicle_management.cjs
+          node mobile/test_service_pdf_scanner.cjs
           node mobile/test_evening_insights.cjs
           node mobile/test_receipt_parser.cjs
           node mobile/test_fuel_receipt_parser.cjs
@@ -71,11 +74,11 @@ jobs:
         run: gradle --no-daemon :app:assembleDebug
       - name: Collect build files
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk release/MileSage_Alpha_1_3_4_Edit_Remove_Test.apk
-          unzip -t release/MileSage_Alpha_1_3_4_Edit_Remove_Test.apk | tail -1
-          sha256sum release/MileSage_Alpha_1_3_4_Edit_Remove_Test.apk > release/APK_SHA256.txt
+          cp android/app/build/outputs/apk/debug/app-debug.apk release/MileSage_Alpha_1_3_5_Service_Scanner_Test.apk
+          unzip -t release/MileSage_Alpha_1_3_5_Service_Scanner_Test.apk | tail -1
+          sha256sum release/MileSage_Alpha_1_3_5_Service_Scanner_Test.apk > release/APK_SHA256.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: MileSage-Alpha-1.3.4-Edit-Remove-Android-Test
+          name: MileSage-Alpha-1.3.5-Service-Scanner-Test
           path: release/
           retention-days: 90
