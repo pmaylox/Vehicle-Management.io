@@ -2,6 +2,8 @@
     {
         "name": "Toyota Tacoma TESTER",
         "profile": {},
+        "photo_path": "C:/Users/pmart/Python Project/images/2026-tacoma-transparent.png",
+        "vin": null,
         "year": 2026,
         "mileage": 4790,
         "starting_mileage": 0,
@@ -314,6 +316,8 @@
     {
         "name": "Ford Explorer",
         "profile": {},
+        "photo_path": "",
+        "vin": null,
         "year": 2025,
         "mileage": 0,
         "starting_mileage": 0,
@@ -352,6 +356,8 @@
     {
         "name": "Ford Explorer \u2014 Demo (sample data)",
         "profile": {},
+        "photo_path": "C:/Users/pmart/Python Project/images/2025 ford.jpeg",
+        "vin": null,
         "year": 2025,
         "mileage": 14640,
         "starting_mileage": 10000,
@@ -657,6 +663,8 @@
             "source": "NHTSA vPIC",
             "decoded_at": "2026-11-15T02:45:05+00:00"
         },
+        "photo_path": "",
+        "vin": null,
         "year": 2026,
         "mileage": 4580,
         "starting_mileage": 4605,

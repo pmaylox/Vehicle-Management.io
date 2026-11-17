@@ -489,6 +489,7 @@ def main():
         selection = vehicle_list.curselection()
 
         if not selection:
+            overview.set_photo("")
             vehicle_heading.set("No vehicle selected")
             mileage_heading.set("")
             overview.specifications.set("No vehicle selected")
@@ -519,6 +520,7 @@ def main():
             return
 
         vehicle = visible_vehicles[selection[0]]
+        overview.set_photo(vehicle.photo_path)
         vehicle_heading.set(f"{vehicle.year} {vehicle.name}")
         mileage_heading.set(
             f"Odometer · {format_mileage(vehicle.mileage)}"
@@ -1266,7 +1268,7 @@ def main():
 
         buttons = ttk.Frame(form)
         buttons.grid(
-            row=4, column=0, columnspan=2,
+            row=5, column=0, columnspan=2,
             sticky="e", pady=(15, 0)
         )
 

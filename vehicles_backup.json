@@ -2,12 +2,66 @@
     {
         "name": "Toyota Tacoma TESTER",
         "profile": {},
+        "photo_path": "C:/Users/pmart/Python Project/images/2026 tacoma.jpg",
+        "vin": null,
         "year": 2026,
-        "mileage": 4605,
+        "mileage": 4790,
         "starting_mileage": 0,
-        "last_service_mileage": 0,
+        "last_service_mileage": 4750,
         "service_interval": 10000,
         "service_history": [
+            {
+                "date": "2026-06-15",
+                "mileage": 850,
+                "description": "Oil change",
+                "cost_cents": 7495,
+                "oil_reset": true,
+                "tire_reset": false,
+                "sample_data": true,
+                "sample_batch": "tacoma-tester-nov2026",
+                "receipt_photo": "receipts/tacoma-tester-nov2026/service-2026-06-15.png"
+            },
+            {
+                "date": "2026-07-18",
+                "mileage": 1700,
+                "description": "Wiper blades replaced",
+                "cost_cents": 3299,
+                "oil_reset": false,
+                "tire_reset": false,
+                "sample_data": true,
+                "sample_batch": "tacoma-tester-nov2026"
+            },
+            {
+                "date": "2026-08-20",
+                "mileage": 2500,
+                "description": "Cabin air filter replaced",
+                "cost_cents": 2499,
+                "oil_reset": false,
+                "tire_reset": false,
+                "sample_data": true,
+                "sample_batch": "tacoma-tester-nov2026"
+            },
+            {
+                "date": "2026-09-18",
+                "mileage": 3250,
+                "description": "Brake inspection",
+                "cost_cents": 0,
+                "oil_reset": false,
+                "tire_reset": false,
+                "sample_data": true,
+                "sample_batch": "tacoma-tester-nov2026",
+                "receipt_photo": "receipts/tacoma-tester-nov2026/service-2026-09-18.png"
+            },
+            {
+                "date": "2026-10-15",
+                "mileage": 3900,
+                "description": "Battery test",
+                "cost_cents": null,
+                "oil_reset": false,
+                "tire_reset": false,
+                "sample_data": true,
+                "sample_batch": "tacoma-tester-nov2026"
+            },
             {
                 "date": "2026-11-14",
                 "mileage": 4605,
@@ -15,11 +69,224 @@
                 "cost_cents": 0,
                 "oil_reset": false,
                 "tire_reset": true
+            },
+            {
+                "date": "2026-11-17",
+                "mileage": 4750,
+                "description": "Oil change and inspection",
+                "cost_cents": 8995,
+                "oil_reset": true,
+                "tire_reset": false,
+                "sample_data": true,
+                "sample_batch": "tacoma-tester-nov2026",
+                "receipt_photo": "receipts/tacoma-tester-nov2026/service-2026-11-17.png"
             }
         ],
         "tire_rotation_interval": 5000,
         "last_tire_rotation_mileage": 4605,
-        "fuel_history": [],
+        "fuel_history": [
+            {
+                "date": "2026-06-01",
+                "mileage": 500,
+                "gallons": "11.800",
+                "cost_cents": 3657,
+                "full_tank": true,
+                "octane": 87,
+                "fuel_type": "E10 \u2014 gasoline",
+                "sample_data": true,
+                "sample_batch": "tacoma-tester-nov2026",
+                "receipt_photo": "receipts/tacoma-tester-nov2026/fuel-2026-06-01.png"
+            },
+            {
+                "date": "2026-06-10",
+                "mileage": 770,
+                "gallons": "12.450",
+                "cost_cents": 3933,
+                "full_tank": true,
+                "octane": 89,
+                "fuel_type": "E0 \u2014 Non-ethanol",
+                "sample_data": true,
+                "sample_batch": "tacoma-tester-nov2026"
+            },
+            {
+                "date": "2026-06-20",
+                "mileage": 1040,
+                "gallons": "13.100",
+                "cost_cents": 4256,
+                "full_tank": true,
+                "octane": 93,
+                "fuel_type": "E15 \u2014 gasoline",
+                "sample_data": true,
+                "sample_batch": "tacoma-tester-nov2026"
+            },
+            {
+                "date": "2026-06-30",
+                "mileage": 1250,
+                "gallons": "12.000",
+                "cost_cents": 3839,
+                "full_tank": true,
+                "octane": 87,
+                "fuel_type": "E10 \u2014 gasoline",
+                "sample_data": true,
+                "sample_batch": "tacoma-tester-nov2026"
+            },
+            {
+                "date": "2026-07-10",
+                "mileage": 1520,
+                "gallons": "6.800",
+                "cost_cents": 2284,
+                "full_tank": false,
+                "octane": 89,
+                "fuel_type": "E0 \u2014 Non-ethanol",
+                "sample_data": true,
+                "sample_batch": "tacoma-tester-nov2026"
+            },
+            {
+                "date": "2026-07-20",
+                "mileage": 1790,
+                "gallons": "12.450",
+                "cost_cents": 4095,
+                "full_tank": true,
+                "octane": 93,
+                "fuel_type": "E15 \u2014 gasoline",
+                "sample_data": true,
+                "sample_batch": "tacoma-tester-nov2026"
+            },
+            {
+                "date": "2026-07-30",
+                "mileage": 2000,
+                "gallons": "13.100",
+                "cost_cents": 4060,
+                "full_tank": true,
+                "octane": 87,
+                "fuel_type": "E10 \u2014 gasoline",
+                "sample_data": true,
+                "sample_batch": "tacoma-tester-nov2026"
+            },
+            {
+                "date": "2026-08-09",
+                "mileage": 2270,
+                "gallons": "12.000",
+                "cost_cents": 3791,
+                "full_tank": true,
+                "octane": 89,
+                "fuel_type": "E0 \u2014 Non-ethanol",
+                "sample_data": true,
+                "sample_batch": "tacoma-tester-nov2026"
+            },
+            {
+                "date": "2026-08-19",
+                "mileage": 2540,
+                "gallons": "11.800",
+                "cost_cents": 3834,
+                "full_tank": true,
+                "octane": 93,
+                "fuel_type": "E15 \u2014 gasoline",
+                "sample_data": true,
+                "sample_batch": "tacoma-tester-nov2026",
+                "receipt_photo": "receipts/tacoma-tester-nov2026/fuel-2026-08-19.png"
+            },
+            {
+                "date": "2026-08-29",
+                "mileage": 2750,
+                "gallons": "12.450",
+                "cost_cents": 3983,
+                "full_tank": true,
+                "octane": 87,
+                "fuel_type": "E10 \u2014 gasoline",
+                "sample_data": true,
+                "sample_batch": "tacoma-tester-nov2026"
+            },
+            {
+                "date": "2026-09-08",
+                "mileage": 3020,
+                "gallons": "6.800",
+                "cost_cents": 2284,
+                "full_tank": false,
+                "octane": 89,
+                "fuel_type": "E0 \u2014 Non-ethanol",
+                "sample_data": true,
+                "sample_batch": "tacoma-tester-nov2026"
+            },
+            {
+                "date": "2026-09-18",
+                "mileage": 3290,
+                "gallons": "12.000",
+                "cost_cents": 3947,
+                "full_tank": true,
+                "octane": 93,
+                "fuel_type": "E15 \u2014 gasoline",
+                "sample_data": true,
+                "sample_batch": "tacoma-tester-nov2026"
+            },
+            {
+                "date": "2026-09-28",
+                "mileage": 3500,
+                "gallons": "11.800",
+                "cost_cents": 3657,
+                "full_tank": true,
+                "octane": 87,
+                "fuel_type": "E10 \u2014 gasoline",
+                "sample_data": true,
+                "sample_batch": "tacoma-tester-nov2026"
+            },
+            {
+                "date": "2026-10-08",
+                "mileage": 3770,
+                "gallons": "12.450",
+                "cost_cents": 3933,
+                "full_tank": true,
+                "octane": 89,
+                "fuel_type": "E0 \u2014 Non-ethanol",
+                "sample_data": true,
+                "sample_batch": "tacoma-tester-nov2026"
+            },
+            {
+                "date": "2026-10-18",
+                "mileage": 4040,
+                "gallons": "13.100",
+                "cost_cents": 4256,
+                "full_tank": true,
+                "octane": 93,
+                "fuel_type": "E15 \u2014 gasoline",
+                "sample_data": true,
+                "sample_batch": "tacoma-tester-nov2026"
+            },
+            {
+                "date": "2026-10-28",
+                "mileage": 4250,
+                "gallons": "6.800",
+                "cost_cents": 2175,
+                "full_tank": false,
+                "octane": 87,
+                "fuel_type": "E10 \u2014 gasoline",
+                "sample_data": true,
+                "sample_batch": "tacoma-tester-nov2026"
+            },
+            {
+                "date": "2026-11-07",
+                "mileage": 4520,
+                "gallons": "11.800",
+                "cost_cents": 3964,
+                "full_tank": true,
+                "octane": 89,
+                "fuel_type": "E0 \u2014 Non-ethanol",
+                "sample_data": true,
+                "sample_batch": "tacoma-tester-nov2026"
+            },
+            {
+                "date": "2026-11-17",
+                "mileage": 4790,
+                "gallons": "12.450",
+                "cost_cents": 4095,
+                "full_tank": true,
+                "octane": 93,
+                "fuel_type": "E15 \u2014 gasoline",
+                "sample_data": true,
+                "sample_batch": "tacoma-tester-nov2026",
+                "receipt_photo": "receipts/tacoma-tester-nov2026/fuel-2026-11-17.png"
+            }
+        ],
         "tire_pressures": {
             "driver_front": null,
             "driver_rear": null,
@@ -49,6 +316,8 @@
     {
         "name": "Ford Explorer",
         "profile": {},
+        "photo_path": "",
+        "vin": null,
         "year": 2025,
         "mileage": 0,
         "starting_mileage": 0,
@@ -87,6 +356,8 @@
     {
         "name": "Ford Explorer \u2014 Demo (sample data)",
         "profile": {},
+        "photo_path": "C:/Users/pmart/Python Project/images/2025 ford.jpeg",
+        "vin": null,
         "year": 2025,
         "mileage": 14640,
         "starting_mileage": 10000,
@@ -392,6 +663,8 @@
             "source": "NHTSA vPIC",
             "decoded_at": "2026-11-15T02:45:05+00:00"
         },
+        "photo_path": "",
+        "vin": null,
         "year": 2026,
         "mileage": 4580,
         "starting_mileage": 4605,
@@ -411,14 +684,14 @@
         "last_tire_rotation_mileage": 4605,
         "fuel_history": [],
         "tire_pressures": {
-            "driver_front": 35.0,
-            "driver_rear": 35.0,
+            "driver_front": 37.0,
+            "driver_rear": 37.0,
             "passenger_front": 35.0,
             "passenger_rear": 35.0
         },
         "starting_tire_pressures": {
-            "driver_front": 35.0,
-            "driver_rear": 35.0,
+            "driver_front": 37.0,
+            "driver_rear": 37.0,
             "passenger_front": 35.0,
             "passenger_rear": 35.0
         },
@@ -447,6 +720,34 @@
                 "current": {
                     "driver_front": 35.0,
                     "driver_rear": 35.0,
+                    "passenger_front": 35.0,
+                    "passenger_rear": 35.0
+                }
+            },
+            {
+                "recorded_at": "2026-11-17T06:11:38-06:00",
+                "mileage": 4580,
+                "before": {
+                    "driver_front": 35.0,
+                    "driver_rear": 35.0,
+                    "passenger_front": 35.0,
+                    "passenger_rear": 35.0
+                },
+                "starting": {
+                    "driver_front": 37.0,
+                    "driver_rear": 37.0,
+                    "passenger_front": 35.0,
+                    "passenger_rear": 35.0
+                },
+                "added_psi": {
+                    "driver_front": 0.0,
+                    "driver_rear": 0.0,
+                    "passenger_front": 0.0,
+                    "passenger_rear": 0.0
+                },
+                "current": {
+                    "driver_front": 37.0,
+                    "driver_rear": 37.0,
                     "passenger_front": 35.0,
                     "passenger_rear": 35.0
                 }

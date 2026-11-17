@@ -1,8 +1,40 @@
+from pathlib import Path
+from PIL import Image, ImageOps, ImageTk
 import tkinter as tk
 from tkinter import ttk
 
 
 class OverviewPanel(ttk.Frame):
+   
+    def set_photo(self, filename):
+        self.vehicle_photo.configure(image="", text="")
+        self.photo_image = None
+
+        if not filename:
+            self.vehicle_photo.configure(
+                text="Add a photo in Edit Vehicle"
+            )
+            return
+
+        try:
+            path = Path(filename)
+            if not path.is_absolute():
+                path = Path(__file__).resolve().parent / path
+
+            with Image.open(path) as source:
+                photo = ImageOps.exif_transpose(source).convert("RGBA")
+                photo.thumbnail((360, 200), Image.Resampling.LANCZOS)
+
+            self.photo_image = ImageTk.PhotoImage(
+                photo, master=self.vehicle_photo
+            )
+            self.vehicle_photo.configure(image=self.photo_image)
+
+        except (OSError, ValueError, Image.DecompressionBombError):
+            self.vehicle_photo.configure(
+                text="Photo unavailable — choose another in Edit Vehicle"
+            )
+    
     def __init__(self, parent, colors):
         super().__init__(parent)
 
@@ -61,6 +93,14 @@ class OverviewPanel(ttk.Frame):
         self.wrapping_labels = []
 
         vehicle_card = self.make_card(content)
+        self.vehicle_photo = ttk.Label(
+            vehicle_card,
+            text="No vehicle photo selected",
+            style="Card.TLabel",
+            anchor="center"
+        )
+        self.vehicle_photo.pack(fill="x", pady=(0, 12))
+        self.photo_image = None
         self.add_label(
             vehicle_card, self.heading, "CardTitle.TLabel"
         )
