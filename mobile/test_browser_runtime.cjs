@@ -102,13 +102,35 @@ if(!files.length)files.push('mobile/MileSage_Mobile_Auto_Refresh.html','mobile/M
     assert.equal(await page.locator('#expenseGalleryButton').isVisible(),true);
     await page.locator('#expenseGalleryInput').setInputFiles({name:'parking.png',mimeType:'image/png',buffer:png});
     assert.equal(await page.locator('#expensePhotoPreview').isVisible(),true);
+    // The async native OCR callback may still be filling the form. Wait until
+    // it settles before submitting, as a real user would review the result.
+    await page.waitForFunction(()=>{
+      const status=document.querySelector('#expenseReceiptProgress')?.textContent||'';
+      const gallery=document.querySelector('#expenseGalleryButton');
+      return gallery&&!gallery.disabled&&
+        (/Suggested:|Automatic text reading unavailable/.test(status));
+    },null,{timeout:15000});
     await page.locator('#extraDesc').fill('Parking receipt — TEST');
     await page.locator('#extraCost').fill('11.20');
     await page.locator('#saveOtherExpense').click();
-    await page.waitForFunction(()=>{
-      const a=JSON.parse(localStorage.getItem('milesage-mobile-offline-v1')).vehicles[0];
-      return a.mobile_expenses?.length===1&&!!a.mobile_expenses[0].receipt_photo?.data_url;
-    });
+    try{
+      await page.waitForFunction(()=>{
+        const a=JSON.parse(localStorage.getItem('milesage-mobile-offline-v1')).vehicles[0];
+        return a.mobile_expenses?.length===1&&!!a.mobile_expenses[0].receipt_photo?.data_url;
+      },null,{timeout:15000});
+    }catch(error){
+      const detail=await page.evaluate(()=>{
+        const a=JSON.parse(localStorage.getItem('milesage-mobile-offline-v1')).vehicles[0];
+        return {expenseCount:a.mobile_expenses?.length,
+          hasPhoto:!!a.mobile_expenses?.[0]?.receipt_photo?.data_url,
+          progress:document.querySelector('#expenseReceiptProgress')?.textContent,
+          description:document.querySelector('#extraDesc')?.value,
+          date:document.querySelector('#extraDate')?.value,
+          cost:document.querySelector('#extraCost')?.value,
+          formValid:document.querySelector('#extraForm')?.checkValidity()};
+      });
+      throw Error('Expense photo save did not persist for '+filename+': '+JSON.stringify(detail)+'; '+error.message);
+    }
     const expenseSaved=JSON.parse(await page.evaluate(()=>localStorage.getItem('milesage-mobile-offline-v1'))).vehicles[0];
     assert.equal(expenseSaved.mobile_expenses[0].description,'Parking receipt — TEST');
     assert.equal(expenseSaved.mobile_expenses[0].cost_cents,1120);
