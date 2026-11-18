@@ -89,7 +89,8 @@ if(!files.length)files.push('mobile/MileSage_Mobile_Auto_Refresh.html','mobile/M
       'OCR must never assume the tank was filled completely');
     assert.ok((await page.locator('#fuelReceiptProgress').innerText()).includes('Suggested from photo:'));
     assert.equal(await page.locator('#fuelPhotoPreview').isVisible(),true);
-    assert.ok((await page.locator('#fuelReceiptOcrText').innerText()).includes('GALLONS 10.882'));
+    assert.ok((await page.locator('#fuelReceiptOcrText').textContent()).includes('GALLONS 10.882'),
+      'OCR text should be present even when the review details are collapsed');
     // No entry is saved merely by scanning; the user must review and save.
     assert.equal(JSON.parse(await page.evaluate(()=>localStorage.getItem('milesage-mobile-offline-v1')))
       .vehicles[0].fuel_history.length,3);
