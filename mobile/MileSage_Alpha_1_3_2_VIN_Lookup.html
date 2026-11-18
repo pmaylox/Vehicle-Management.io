@@ -672,6 +672,65 @@ function ensureReceiptOCR(){
  }
  return receiptScriptPromise;
 }
+
+// Native Android APKs use bundled ML Kit instead of a CDN/worker download.
+// Browser-only HTML keeps Tesseract.js as a fallback. Receipt pixels remain on
+// the device; Android receives a resized JPEG, never a remote image URL.
+let receiptOcrNextId=0;
+const receiptOcrPending=new Map();
+window.milesageReceiptOcrComplete=function(payload){
+ const id=String(payload?.id??''),pending=receiptOcrPending.get(id);
+ if(!pending)return; // Ignore stale or timed-out responses.
+ receiptOcrPending.delete(id);
+ clearTimeout(pending.timer);
+ if(payload.error)pending.reject(Error(String(payload.error)));
+ else pending.resolve(String(payload.text||''));
+};
+async function androidReceiptImage(file){
+ const url=URL.createObjectURL(file);
+ try{
+  const img=new Image();
+  img.src=url;
+  await img.decode();
+  // Keep fine receipt print readable but avoid huge WebView bridge payloads.
+  const scale=Math.min(1,2800/Math.max(img.naturalWidth,img.naturalHeight));
+  const canvas=document.createElement('canvas');
+  canvas.width=Math.max(1,Math.round(img.naturalWidth*scale));
+  canvas.height=Math.max(1,Math.round(img.naturalHeight*scale));
+  const ctx=canvas.getContext('2d');
+  if(!ctx)throw Error('Cannot prepare receipt for Android OCR.');
+  ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(img,0,0,canvas.width,canvas.height);
+  const base64=canvas.toDataURL('image/jpeg',0.9).split(',')[1];
+  if(!base64||base64.length>11000000)throw Error('Receipt image is too large to scan. Retake it closer.');
+  return base64;
+ }finally{URL.revokeObjectURL(url);}
+}
+async function recognizeReceiptPhoto(file){
+ if(window.MileSageAndroid&&typeof window.MileSageAndroid.recognizeReceipt==='function'){
+  const base64=await androidReceiptImage(file);
+  return await new Promise((resolve,reject)=>{
+   const id=String(++receiptOcrNextId);
+   const timer=setTimeout(()=>{
+    receiptOcrPending.delete(id);
+    reject(Error('Android receipt reader timed out. Try a clearer photo.'));
+   },45000);
+   receiptOcrPending.set(id,{resolve,reject,timer});
+   try{window.MileSageAndroid.recognizeReceipt(id,base64);}
+   catch(error){
+    clearTimeout(timer);receiptOcrPending.delete(id);reject(error);
+   }
+  });
+ }
+ const engine=await ensureReceiptOCR();
+ let worker=null;
+ try{
+  worker=await engine.createWorker('eng');
+  const result=await worker.recognize(file);
+  return String(result?.data?.text||'');
+ }finally{if(worker)await worker.terminate();}
+}
+
 // Show a temporary receipt thumbnail before OCR starts, including when OCR fails.
 // Object URLs are short-lived and never written to localStorage, JSON or GitHub.
 const receiptPreviewUrls={service:null,fuel:null,expense:null};
@@ -706,16 +765,12 @@ function wireServiceReceiptPhoto(a){
   showReceiptPreview('service',file);
   buttons.forEach(x=>x.disabled=true);
   const status=$('receiptProgress');
-  status.textContent='Photo received. Preparing receipt reader… (first scan needs internet).';
-  let worker=null;
+  status.textContent='Photo received. Preparing receipt reader… (Android OCR works offline; browser-only scans may need internet).';
   try{
-   const engine=await ensureReceiptOCR();
    if(requestEpoch!==serviceDraftEpoch)return;
    status.textContent='Reading receipt on this device…';
-   worker=await engine.createWorker('eng');
-   const result=await worker.recognize(file);
+   const text=(await recognizeReceiptPhoto(file)).trim();
    if(requestEpoch!==serviceDraftEpoch)return;
-   const text=String(result?.data?.text||'').trim();
    if(v()!==a)throw Error('Selected vehicle changed during scanning. Select the correct vehicle and rescan.');
    if(!text)throw Error('No readable text found. Try retaking the photo in better light.');
    const details=$('receiptTextReview');
@@ -755,7 +810,7 @@ function wireServiceReceiptPhoto(a){
    status.textContent='Photo preview is shown, but receipt scanning failed: '+error.message+
       ' You can still enter the service details manually.';
   }finally{
-   if(worker){try{await worker.terminate();}catch(e){}}
+
    buttons.forEach(x=>x.disabled=false);
    input.value='';
   }
@@ -837,7 +892,7 @@ function cancelServiceEntry(a){
  message('Service entry canceled. No record saved.');
 }
 
-function renderService(){clearReceiptPreview('service');const a=v(), el=$('serviceBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}el.innerHTML=tirePressureCard(a)+`<div class="card feature-card"><h3 style="margin-top:0">Log maintenance</h3>${formVehicleName(a)}<form id="serviceForm"><div class="note info"><strong>Service receipt photo</strong><div class="small">Take a photo or choose an existing image. MileSage will attempt to fill the date, mileage, service description and cost; review all fields before saving. OCR downloads recognition tools when connected, and the photo is attached to the entry and Full mobile backup. Choose a phone photo folder in Data & backup for a MileSage/Photos copy.</div></div><div class="card" style="margin:12px 0;padding:12px;background:#f7fafc"><strong>Multi-page dealership or repair invoice</strong><p class="small muted">Scan up to 30 pages in one session. Review page order in the scanner. One PDF is attached when you save this service entry. Scanned PDFs stay in this app and are not included in JSON backups; share/export them separately before changing phones.</p><button id="scanServicePdf" class="btn secondary" type="button">Scan multi-page service invoice</button><p id="servicePdfScanStatus" class="small muted" role="status">No multi-page PDF scanned yet.</p><p id="servicePdfPreview" class="note info" hidden></p></div><div class="button-row"><button id="serviceCameraButton" class="btn secondary" type="button">Take receipt photo</button><button id="serviceGalleryButton" class="btn secondary" type="button">Choose photo</button></div><input id="serviceCameraInput" type="file" accept="image/*" capture="environment" hidden><input id="serviceGalleryInput" type="file" accept="image/*" hidden><div id="receiptProgress" class="small muted" role="status" aria-live="polite">No receipt scanned yet.</div><div id="servicePhotoPreview" class="note info" hidden><strong>Photo ready to attach</strong><img id="servicePhotoImage" alt="Selected service receipt" style="display:block;max-width:100%;max-height:230px;object-fit:contain;margin:8px auto;border-radius:8px"><div id="servicePhotoInfo" class="small"></div></div><details id="receiptTextReview" style="display:none"><summary>View recognized text</summary><pre id="receiptOcrText" style="white-space:pre-wrap;word-wrap:break-word;max-height:180px;overflow:auto"></pre></details><label class="field" for="serviceDesc">Work performed</label><input id="serviceDesc" type="text" required maxlength="180" placeholder="Oil change, tire rotation…"><div class="grid2"><div><label class="field" for="serviceDate">Date</label><input type="date" id="serviceDate" required value="${localDate()}"></div><div><label class="field" for="serviceOdo">Odometer</label><input type="number" id="serviceOdo" inputmode="numeric" min="0" required step="1" value="${a.mileage}"></div></div><label class="field" for="serviceCost">Cost in dollars (optional)</label><input id="serviceCost" inputmode="decimal" type="text" placeholder="89.95"><div class="check"><input type="checkbox" id="oilReset"><label for="oilReset">Reset oil-change countdown</label></div><div class="check"><input type="checkbox" id="tireReset"><label for="tireReset">Reset tire-rotation countdown</label></div><div class="check"><input type="checkbox" id="cabinReplaced"><label for="cabinReplaced">Cabin air filter replaced (log replacement)</label></div><div class="check"><input type="checkbox" id="engineReplaced"><label for="engineReplaced">Engine air filter replaced (log replacement)</label></div><div class="button-row" style="margin-top:12px"><button type="submit" class="btn">Save service record</button><button id="cancelServiceEntry" type="button" class="btn secondary">Cancel</button></div></form></div><div class="card"><h3 style="margin-top:0">Service history (${num(a.service_history.length)})</h3>${recordList(a.service_history,'service')}</div>`+fluidFilterCard(a);
+function renderService(){clearReceiptPreview('service');const a=v(), el=$('serviceBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}el.innerHTML=tirePressureCard(a)+`<div class="card feature-card"><h3 style="margin-top:0">Log maintenance</h3>${formVehicleName(a)}<form id="serviceForm"><div class="note info"><strong>Service receipt photo</strong><div class="small">Take a photo or choose an existing image. MileSage will attempt to fill the date, mileage, service description and cost; review all fields before saving. Android receipt scanning works offline; browser-only OCR downloads recognition tools when connected, and the photo is attached to the entry and Full mobile backup. Choose a phone photo folder in Data & backup for a MileSage/Photos copy.</div></div><div class="card" style="margin:12px 0;padding:12px;background:#f7fafc"><strong>Multi-page dealership or repair invoice</strong><p class="small muted">Scan up to 30 pages in one session. Review page order in the scanner. One PDF is attached when you save this service entry. Scanned PDFs stay in this app and are not included in JSON backups; share/export them separately before changing phones.</p><button id="scanServicePdf" class="btn secondary" type="button">Scan multi-page service invoice</button><p id="servicePdfScanStatus" class="small muted" role="status">No multi-page PDF scanned yet.</p><p id="servicePdfPreview" class="note info" hidden></p></div><div class="button-row"><button id="serviceCameraButton" class="btn secondary" type="button">Take receipt photo</button><button id="serviceGalleryButton" class="btn secondary" type="button">Choose photo</button></div><input id="serviceCameraInput" type="file" accept="image/*" capture="environment" hidden><input id="serviceGalleryInput" type="file" accept="image/*" hidden><div id="receiptProgress" class="small muted" role="status" aria-live="polite">No receipt scanned yet.</div><div id="servicePhotoPreview" class="note info" hidden><strong>Photo ready to attach</strong><img id="servicePhotoImage" alt="Selected service receipt" style="display:block;max-width:100%;max-height:230px;object-fit:contain;margin:8px auto;border-radius:8px"><div id="servicePhotoInfo" class="small"></div></div><details id="receiptTextReview" style="display:none"><summary>View recognized text</summary><pre id="receiptOcrText" style="white-space:pre-wrap;word-wrap:break-word;max-height:180px;overflow:auto"></pre></details><label class="field" for="serviceDesc">Work performed</label><input id="serviceDesc" type="text" required maxlength="180" placeholder="Oil change, tire rotation…"><div class="grid2"><div><label class="field" for="serviceDate">Date</label><input type="date" id="serviceDate" required value="${localDate()}"></div><div><label class="field" for="serviceOdo">Odometer</label><input type="number" id="serviceOdo" inputmode="numeric" min="0" required step="1" value="${a.mileage}"></div></div><label class="field" for="serviceCost">Cost in dollars (optional)</label><input id="serviceCost" inputmode="decimal" type="text" placeholder="89.95"><div class="check"><input type="checkbox" id="oilReset"><label for="oilReset">Reset oil-change countdown</label></div><div class="check"><input type="checkbox" id="tireReset"><label for="tireReset">Reset tire-rotation countdown</label></div><div class="check"><input type="checkbox" id="cabinReplaced"><label for="cabinReplaced">Cabin air filter replaced (log replacement)</label></div><div class="check"><input type="checkbox" id="engineReplaced"><label for="engineReplaced">Engine air filter replaced (log replacement)</label></div><div class="button-row" style="margin-top:12px"><button type="submit" class="btn">Save service record</button><button id="cancelServiceEntry" type="button" class="btn secondary">Cancel</button></div></form></div><div class="card"><h3 style="margin-top:0">Service history (${num(a.service_history.length)})</h3>${recordList(a.service_history,'service')}</div>`+fluidFilterCard(a);
 wireTirePressureForm(a);wireFluidAndFilters(a);wireServiceReceiptPhoto(a);wirePhotoHistory('service');
  $('cancelServiceEntry').onclick=()=>cancelServiceEntry(a);wireServicePdfScanner(a);wireServicePdfHistory();
 $('serviceForm').onsubmit=async e=>{
@@ -886,14 +941,10 @@ function wireFuelReceiptPhoto(a){
   const progress=$('fuelReceiptProgress');
   showReceiptPreview('fuel',file);
   buttons.forEach(x=>x.disabled=true);
-  progress.textContent='Photo received. Preparing on-device receipt reader… (internet needed for first scan).';
-  let worker=null;
+  progress.textContent='Photo received. Preparing on-device receipt reader… (Android OCR works offline; browser-only scans may need internet).';
   try{
-   const engine=await ensureReceiptOCR();
-   worker=await engine.createWorker('eng');
    progress.textContent='Recognizing fuel receipt on this device…';
-   const detected=await worker.recognize(file);
-   const text=String(detected?.data?.text||'').trim();
+   const text=(await recognizeReceiptPhoto(file)).trim();
    if(v()!==a)throw Error('Selected vehicle changed during scanning. Select the correct vehicle and rescan.');
    if(!text)throw Error('No readable receipt text found. Retake the photo with better lighting.');
    $('fuelReceiptTextReview').style.display='';
@@ -919,7 +970,7 @@ function wireFuelReceiptPhoto(a){
    progress.textContent='Photo preview is shown, but fuel receipt scanning failed: '+error.message+
     ' You can still enter the fill-up details manually.';
   }finally{
-   if(worker){try{await worker.terminate();}catch(e){}}
+
    buttons.forEach(x=>x.disabled=false);
    input.value='';
   }
@@ -967,16 +1018,12 @@ function wireExpenseReceiptPhoto(a){
   const epoch=expensePhotoDraftEpoch;
   showReceiptPreview('expense',file);
   const status=$('expenseReceiptProgress');
-  status.textContent='Photo selected. Reading the receipt for suggested date and cost… (internet needed for first scan).';
+  status.textContent='Photo selected. Reading the receipt for suggested date and cost… (Android OCR works offline; browser-only scans may need internet).';
   buttons.forEach(button=>button.disabled=true);
-  let worker=null;
   try{
-   const engine=await ensureReceiptOCR();
    if(epoch!==expensePhotoDraftEpoch||v()!==a)return;
-   worker=await engine.createWorker('eng');
-   const detected=await worker.recognize(file);
+   const text=(await recognizeReceiptPhoto(file)).trim();
    if(epoch!==expensePhotoDraftEpoch||v()!==a)return;
-   const text=String(detected?.data?.text||'').trim();
    if(!text)throw Error('No readable receipt text detected.');
    $('expenseReceiptTextReview').style.display='';
    $('expenseReceiptOcrText').textContent=text.slice(0,12000);
@@ -995,7 +1042,7 @@ function wireExpenseReceiptPhoto(a){
    status.textContent='Photo ready to attach. Automatic text reading unavailable: '+err.message+
     ' Enter expense details manually, then Save other expense.';
   }finally{
-   if(worker){try{await worker.terminate();}catch(e){}}
+
    buttons.forEach(button=>button.disabled=false);
    input.value='';
   }
