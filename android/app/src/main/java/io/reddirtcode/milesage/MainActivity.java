@@ -5,6 +5,8 @@ import android.app.DownloadManager;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -35,6 +37,10 @@ import org.json.JSONObject;
 import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions;
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanning;
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult;
+import com.google.mlkit.vision.common.InputImage;
+import com.google.mlkit.vision.text.TextRecognition;
+import com.google.mlkit.vision.text.TextRecognizer;
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 import java.io.OutputStream;
 
 public class MainActivity extends Activity {
@@ -279,7 +285,69 @@ public class MainActivity extends Activity {
         }
     }
 
+
+    // The bundled Latin OCR model runs locally in this APK. JS passes only a
+    // compressed receipt image; recognized text is returned to the same WebView.
+    // No receipt or OCR result is uploaded to a server.
+    private void receiptOcrResult(String requestId, String text, String error) {
+        try {
+            JSONObject data = new JSONObject();
+            data.put("id", requestId);
+            if (error != null) data.put("error", error);
+            else data.put("text", text == null ? "" : text);
+            String js = "if(window.milesageReceiptOcrComplete)window.milesageReceiptOcrComplete(" +
+                data.toString() + ");";
+            runOnUiThread(() -> {
+                if (web != null) web.evaluateJavascript(js, null);
+            });
+        } catch (Exception ignored) {
+            showToast("Could not report receipt OCR result.");
+        }
+    }
+
+    private void recognizeReceiptOnDevice(String requestId, String base64) {
+        if (requestId == null || !requestId.matches("[0-9]{1,12}")) return;
+        try {
+            if (base64 == null || base64.length() > 11_000_000) {
+                throw new IllegalArgumentException("Receipt image exceeds scanner size limit.");
+            }
+            byte[] bytes = Base64.decode(base64, Base64.DEFAULT);
+            if (bytes.length == 0 || bytes.length > 8_250_000) {
+                throw new IllegalArgumentException("Invalid receipt image size.");
+            }
+            BitmapFactory.Options bounds = new BitmapFactory.Options();
+            bounds.inJustDecodeBounds = true;
+            BitmapFactory.decodeByteArray(bytes, 0, bytes.length, bounds);
+            if (bounds.outWidth < 1 || bounds.outHeight < 1 ||
+                (long) bounds.outWidth * bounds.outHeight > 9_000_000L) {
+                throw new IllegalArgumentException("Receipt image dimensions are invalid.");
+            }
+            Bitmap image = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+            if (image == null) throw new IllegalArgumentException("Receipt photo could not be opened.");
+            TextRecognizer recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
+            try {
+                recognizer.process(InputImage.fromBitmap(image, 0))
+                    .addOnSuccessListener(result -> receiptOcrResult(requestId, result.getText(), null))
+                    .addOnFailureListener(error -> receiptOcrResult(requestId, null,
+                        "Android text recognition failed: " + error.getMessage()))
+                    .addOnCompleteListener(task -> {
+                        recognizer.close();
+                        image.recycle();
+                    });
+            } catch (Exception exception) {
+                recognizer.close();
+                image.recycle();
+                throw exception;
+            }
+        } catch (Exception error) {
+            receiptOcrResult(requestId, null, error.getMessage());
+        }
+    }
+
     private class DownloadBridge {
+        @JavascriptInterface public void recognizeReceipt(String requestId, String base64) {
+            recognizeReceiptOnDevice(requestId, base64);
+        }
         @JavascriptInterface public void scanServiceInvoice() {
             runOnUiThread(() -> beginServiceDocumentScan());
         }
