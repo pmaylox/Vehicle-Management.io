@@ -35,4 +35,6 @@ dependencies {
     implementation 'androidx.webkit:webkit:1.12.1'
     implementation 'androidx.core:core:1.15.0'
     implementation 'com.google.android.gms:play-services-mlkit-document-scanner:16.0.0'
+    // Bundled on-device Latin OCR: no JavaScript worker or model download.
+    implementation 'com.google.mlkit:text-recognition:16.0.1'
 }
