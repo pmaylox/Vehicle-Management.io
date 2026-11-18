@@ -77,6 +77,35 @@ const unitPriceOnly=sandbox.parseFuelReceiptText('PRICE/GALLON 3.599\nSUBTOTAL 3
 assert.equal(unitPriceOnly.gallons,null,'Never infer volume from price-per-gallon');
 assert.equal(unitPriceOnly.total,null,'Never infer total from subtotal or tax');
 
+
+const unlabeledNumericOCR=sandbox.parseFuelReceiptText([
+ 'USD$39.16',
+ '************3178',
+ 'Entry: contactless 1',
+ '10.882',
+ '$3.599',
+ '$39.16',
+ '$39.16',
+ '***'
+].join('\n'),'2026-11-16');
+assert.equal(unlabeledNumericOCR.gallons,'10.882','Unlabeled OCR quantity must autofill when pump math agrees');
+assert.equal(unlabeledNumericOCR.total,'39.16','Unlabeled OCR total must autofill when pump math agrees');
+assert.equal(unlabeledNumericOCR.mileage,null,'OCR must not invent a vehicle odometer');
+
+const rowShiftOCR=sandbox.parseFuelReceiptText(
+ 'PRODUCT: UNL 10.882\nGALLONS: $3.599\nFUEL SALE $39.16','2026-11-16');
+assert.equal(rowShiftOCR.gallons,'10.882','Unit price misread on gallons row must not replace volume');
+assert.equal(rowShiftOCR.total,'39.16');
+
+const badMathOCR=sandbox.parseFuelReceiptText('10.882\n$3.599\n$40.16','2026-11-16');
+assert.equal(badMathOCR.gallons,null,'Unverifiable pump math requires manual review');
+assert.equal(badMathOCR.total,null,'Unverifiable amount requires manual review');
+
+const ambiguousOCR=sandbox.parseFuelReceiptText(
+ '10.882\n$3.599\n$39.16\n12.345\n$3.159\n$39.00','2026-11-16');
+assert.equal(ambiguousOCR.gallons,null,'Multiple candidate pump sales require manual review');
+assert.equal(ambiguousOCR.total,null,'Multiple candidate totals require manual review');
+
 assert.equal(sandbox.parseGallonsInput('12.5'),'12.500');
 assert.equal(sandbox.parseGallonsInput('10.882'),'10.882');
 assert.equal(sandbox.parseGallonsInput('9'),'9.000');
