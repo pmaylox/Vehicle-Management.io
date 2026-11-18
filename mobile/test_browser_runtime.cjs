@@ -67,6 +67,33 @@ if(!files.length)files.push('mobile/MileSage_Mobile_Auto_Refresh.html','mobile/M
     assert.equal(tires.tire_pressures.driver_rear,34);
     assert.equal(tires.tire_pressures.passenger_rear,35.5);
 
+    // Simulate the native Android ML Kit bridge; no CDN/network is available.
+    // The camera/gallery photo should reach native OCR and populate Fuel.
+    await page.evaluate(()=>{
+      window.MileSageAndroid={recognizeReceipt:(id,base64)=>{
+        if(!/^[a-zA-Z0-9+/=]+$/.test(base64))throw Error('Expected JPEG base64');
+        window.milesageReceiptOcrComplete({
+          id,text:'ALLSUPS\nDATE 10/14/2026\nGALLONS 10.882\nPRICE/G 3.599\nFUEL SALE $39.16'
+        });
+      }};
+    });
+    await page.locator('[data-tab="fuel"]').click();
+    await page.locator('#fuelGalleryInput').setInputFiles({
+      name:'fuel-pump-test.png',mimeType:'image/png',buffer:png
+    });
+    await page.waitForFunction(()=>
+      document.querySelector('#fuelGallons')?.value==='10.882' &&
+      document.querySelector('#fuelCost')?.value==='39.16');
+    assert.equal(await page.locator('#fuelDate').inputValue(),'2026-10-14');
+    assert.equal(await page.locator('#fullTank').isChecked(),false,
+      'OCR must never assume the tank was filled completely');
+    assert.ok((await page.locator('#fuelReceiptProgress').innerText()).includes('Suggested from photo:'));
+    assert.equal(await page.locator('#fuelPhotoPreview').isVisible(),true);
+    assert.ok((await page.locator('#fuelReceiptOcrText').innerText()).includes('GALLONS 10.882'));
+    // No entry is saved merely by scanning; the user must review and save.
+    assert.equal(JSON.parse(await page.evaluate(()=>localStorage.getItem('milesage-mobile-offline-v1')))
+      .vehicles[0].fuel_history.length,3);
+
     // End-to-end expense receipt attachment: use a small camera/gallery image,
     // save the expense, check persisted compressed JPEG and full JSON backup.
     await page.locator('[data-tab="expenses"]').click();
