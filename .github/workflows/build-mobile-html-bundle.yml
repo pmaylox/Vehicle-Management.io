@@ -1,9 +1,11 @@
 name: Package MileSage phone HTML
 on:
   push:
-    branches: [main]
+    branches: [main, feature/car-history-tab-annual-review]
     paths:
-      - "mobile/MileSage_Alpha_1_3_2_VIN_Lookup.html"
+      - "mobile/MileSage_Alpha_1_3_3_Car_History.html"
+      - "mobile/MileSage_Mobile_Auto_Refresh.html"
+      - "mobile/car_history_feature.js"
       - ".github/workflows/build-mobile-html-bundle.yml"
   workflow_dispatch:
 
@@ -16,9 +18,9 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          path = Path("mobile/MileSage_Alpha_1_3_2_VIN_Lookup.html")
+          path = Path("mobile/MileSage_Alpha_1_3_3_Car_History.html")
           html = path.read_text(encoding="utf-8")
-          for required in ["Alpha 1.3.2", "Take receipt photo", "Take fuel receipt photo",
+          for required in ["Alpha 1.3.3", "Take receipt photo", "Take fuel receipt photo",
                            "EVENING_PARITY_BEGIN", "RESTORE_GUARDS_BEGIN",
                            "milesage-mobile-offline-v1"]:
               assert required in html, f"Missing: {required}"
@@ -35,12 +37,13 @@ jobs:
           node mobile/test_fuel_receipt_parser.cjs
           node mobile/test_vehicle_photos.cjs
           node mobile/test_service_cancel_layout.cjs
+          node mobile/test_car_history.cjs
       - name: Assemble phone download
         run: |
           mkdir -p release
-          cp mobile/MileSage_Alpha_1_3_2_VIN_Lookup.html release/
+          cp mobile/MileSage_Alpha_1_3_3_Car_History.html release/
           cat > release/READ_ME_FIRST.txt <<'TXT'
-          MileSage Alpha 1.3.2 — phone HTML preview with all mobile updates
+          MileSage Alpha 1.3.3 — phone HTML preview with independent Car History tab
           
           THIS IS AN HTML APP FILE, NOT AN ANDROID APK.
           
@@ -51,7 +54,7 @@ jobs:
           
           INSTALL / OPEN:
           4. Extract this ZIP in the Files / My Files app.
-          5. Open MileSage_Alpha_1_3_2_VIN_Lookup.html using Chrome or another compatible browser.
+          5. Open MileSage_Alpha_1_3_3_Car_History.html using Chrome or another compatible browser.
           6. In Data & backup, import YOUR saved Full mobile backup, if the new copy shows no data.
           7. Check the Tacoma and Explorer odometers, PSI and histories before logging anything.
           8. Service > Log maintenance has Take receipt photo and Choose photo.
@@ -59,7 +62,10 @@ jobs:
           10. Home > + By VIN decodes a VIN online using the NHTSA vPIC service.
           11. Review the model, year and current odometer before saving.
           12. Home > select a vehicle > Choose vehicle photo or Take vehicle photo.
-          Photos are stored locally and included in Full mobile backup.
+          13. Car History > Open CARFAX Car Care, review your own report, then Mark history reviewed.
+          14. Car History > Add reported event manually; annual reminders and entries are stored locally.
+          CARFAX does NOT automatically synchronize with MileSage.
+          Photos and Car History records are stored locally and included in Full mobile backup.
           
           The photo reader uses a web OCR engine downloaded on demand.
           Some content:// or file:// browser contexts may block OCR workers, VIN network lookup or storage.
@@ -73,7 +79,7 @@ jobs:
           TXT
       - uses: actions/upload-artifact@v4
         with:
-          name: MileSage-Alpha-1.3.2-VIN-Lookup-Android-HTML
+          name: MileSage-Alpha-1.3.3-Car-History-Android-HTML
           path: release/
           retention-days: 90
           compression-level: 6
