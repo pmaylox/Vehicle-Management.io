@@ -5,7 +5,7 @@ const assert=require('node:assert/strict');
 
 const paths=[
  'mobile/MileSage_Mobile_Auto_Refresh.html',
- 'mobile/MileSage_Alpha_1_3_2_VIN_Lookup.html'
+ 'mobile/MileSage_Alpha_1_3_3_Car_History.html'
 ];
 const contents=paths.map(p=>fs.readFileSync(p,'utf8'));
 assert.equal(contents[0],contents[1],'Both distributed mobile builds must match');
@@ -36,6 +36,9 @@ for(const html of contents){
  assert.throws(()=>context.parseVINDecode({Results:[{ErrorCode:'1',ErrorText:'Invalid check digit',ModelYear:'2026',Make:'TOYOTA',Model:'Tacoma'}]}),/could not verify/);
  assert.throws(()=>context.parseVINDecode({Results:[{ErrorCode:'0',ModelYear:'',Make:'TOYOTA',Model:'Tacoma'}]}),/complete/);
  assert.throws(()=>context.parseVINDecode({Results:[]}),/no vehicle/);
+ const historyHelpers=script.split('/* CAR_HISTORY_BEGIN */')[1]?.split('/* CAR_HISTORY_END */')[0];
+ assert.ok(historyHelpers,'Car History helpers must be available to vehicle import tests');
+ vm.runInContext(historyHelpers,context);
  const normalizeFn=script.slice(script.indexOf('function normalize(data)'),script.indexOf('function save()'));
  vm.runInContext(normalizeFn,context);
  const old={name:'Toyota Tacoma — Tester',year:2026,mileage:5000,service_history:[{date:'2026-11-14',mileage:5000,description:'Test'}]};
