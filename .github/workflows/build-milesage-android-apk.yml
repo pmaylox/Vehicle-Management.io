@@ -16,7 +16,7 @@ on:
 jobs:
   build:
     concurrency:
-      group: milesage-alpha140-debug-signing
+      group: milesage-alpha140-${{ github.sha }}
       cancel-in-progress: true
     runs-on: ubuntu-latest
     permissions:
