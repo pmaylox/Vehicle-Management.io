@@ -59,22 +59,22 @@ jobs:
         run: |
           mkdir -p android/app/src/main/assets release
           cp mobile/MileSage_Alpha_1_3_2_VIN_Lookup.html android/app/src/main/assets/index.html
-          sed -i 's/Alpha 1.3.2/Alpha 1.4.3 Expense OCR/g' android/app/src/main/assets/index.html
+          sed -i 's/Alpha 1.3.2/Alpha 1.4.5 Tester #2/g' android/app/src/main/assets/index.html
           cp android/app/src/main/assets/index.html release/MileSage_Alpha_1_4_5_Tester_Resale_Feedback.html
-          printf '%s\n' "MileSage Alpha 1.4.5 - reusable backup browser and local snapshots, with tested Fuel, Service, Expense scanners preserved" \
+          printf '%s\n' "MileSage Alpha 1.4.5 - Closed Alpha Tester #2: resale tracking and in-app feedback" \
             "Do NOT uninstall or clear existing MileSage apps. This separately installed test copy has independent storage." \
-            "Back up your existing phone data before importing anything into the test copy." \
-            "This APK has its own application ID and cannot overwrite previous MileSage test apps. Import a Full mobile backup to copy data into it." \
-            "Use Data & backup > Import JSON file with YOUR full phone backup." \
+            "If upgrading from an earlier tester version, save YOUR own Full mobile JSON backup first." \
+            "This APK installs separately. Start with an empty garage. NEVER import the developer's personal vehicle backup." \
+            "For your own existing test records only: use Data & backup > Import JSON file with YOUR previously saved backup." \
             "Data & backup > Saved backups & snapshots lists local undo copies and offers Browse saved JSON files in Downloads/MileSage. Restoring does not delete downloaded JSON. The three most recent app-local snapshots are retained." \
-            "Confirm the real Tacoma and Explorer plus their histories after import." \
+            "Use your own vehicle or a fictional test vehicle, and confirm your own records persist after restarting." \
             "The Fuel and Service receipt buttons each open a one-page crop-and-straighten document scanner, with native offline OCR and editable suggestions. The independent Service multi-page PDF scanner remains available." \
             "Expenses > Scan multi-page document produces a 30-page PDF and recognizes dates, invoice totals and body repair descriptions for confirmation. View the PDF before saving the expense." \
             "The separate Service scanner still supports up to 30 invoice pages." \
             "For expense PDF files: tap Save PDF to My Files; Samsung My Files > Downloads > MileSage > Expenses. Full mobile JSON backups include PDF references, NOT PDF bytes." \
             "Test with disposable Expense, Service and Fuel records first; preserve original MileSage." \
-            "This APK is DEBUG-SIGNED for testing and not for production distribution." \
-            "OCR, PDF opening/sharing and attachments require Samsung phone testing." > release/READ_ME_FIRST.txt
+            "Tester Feedback is saved locally until you tap Share and choose a recipient. This is a DEBUG-SIGNED alpha APK, not a Google Play release." \
+            "Graphs > Resale value records your own mileage-linked trade-in/private-party quotes; no live KBB API is included." > release/READ_ME_FIRST.txt
       - name: Validate JavaScript and mobile regression tests
         run: |
           python - <<'PY'
