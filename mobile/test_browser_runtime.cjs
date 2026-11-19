@@ -214,6 +214,58 @@ if(!files.length)files.push('mobile/MileSage_Mobile_Auto_Refresh.html','mobile/M
       expenseSaved.mobile_expenses[0].receipt_photo.data_url,'Expense receipt lost on restore');
     await page.locator('[data-tab="expenses"]').click();
     assert.equal(await page.locator('[data-photo-download="expense:0"]').count(),1);
+    // Separate multi-page expense paperwork test: scanned PDF metadata is
+    // attached only when Save other expense is pressed, never on scan alone.
+    await page.evaluate(()=>{
+      window.MileSageAndroid={
+        ...window.MileSageAndroid,
+        scanExpenseDocument:()=>window.milesageExpenseScannerComplete({
+          id:'da1e216e-490b-4f1e-8bbd-50ca81aab111',
+          pages:3,name:'MileSage-Expense-da1e216e-490b-4f1e-8bbd-50ca81aab111.pdf'
+        }),
+        openExpenseDocument:id=>{window.__lastOpenedExpensePDF=id;},
+        shareExpenseDocument:id=>{window.__lastSharedExpensePDF=id;}
+      };
+    });
+    await page.locator('#scanExpensePdf').click();
+    assert.equal(await page.locator('#expensePdfPreview').isVisible(),true);
+    assert.ok((await page.locator('#expensePdfScanStatus').innerText()).includes('3 page'));
+    assert.equal(JSON.parse(await page.evaluate(()=>localStorage.getItem('milesage-mobile-offline-v1')))
+      .vehicles[0].mobile_expenses.length,1,'Scanning alone must not save a new expense');
+    await page.locator('#clearExpensePdf').click();
+    assert.equal(await page.locator('#expensePdfPreview').isVisible(),false);
+    await page.locator('#scanExpensePdf').click();
+    await page.locator('#extraDesc').fill('Collision body repair estimate — TEST');
+    await page.locator('#extraCost').fill('1500.75');
+    await page.locator('#saveOtherExpense').click();
+    await page.waitForFunction(()=>{
+      const expenses=JSON.parse(localStorage.getItem('milesage-mobile-offline-v1'))
+        .vehicles[0].mobile_expenses;
+      return expenses.length===2&&expenses[1]?.expense_document?.pages===3;
+    },null,{timeout:15000});
+    assert.equal(await page.locator('[data-expense-pdf="1"]').count(),1);
+    assert.equal(await page.locator('[data-expense-pdf-share="1"]').count(),1);
+    await page.locator('[data-expense-pdf="1"]').click();
+    await page.locator('[data-expense-pdf-share="1"]').click();
+    const routed=await page.evaluate(()=>({
+      opened:window.__lastOpenedExpensePDF,shared:window.__lastSharedExpensePDF
+    }));
+    assert.equal(routed.opened,'da1e216e-490b-4f1e-8bbd-50ca81aab111');
+    assert.equal(routed.shared,routed.opened);
+    const expensePDF=JSON.parse(await page.evaluate(()=>localStorage.getItem('milesage-mobile-offline-v1')))
+      .vehicles[0].mobile_expenses[1].expense_document;
+    assert.equal(expensePDF.pages,3);
+    assert.ok(!('data_url' in expensePDF),'PDF bytes must not be embedded in JSON data');
+    await page.locator('#dataButton').click();
+    const expenseBackupDownload=page.waitForEvent('download');
+    await page.locator('#exportFull').click();
+    const expensePDFBackup=JSON.parse(fs.readFileSync(await (await expenseBackupDownload).path(),'utf8'));
+    assert.equal(expensePDFBackup.vehicles[0].mobile_expenses[1].expense_document.id,
+      expensePDF.id,'PDF reference must survive backup');
+    assert.equal(expensePDFBackup.vehicles[0].mobile_expenses[0].receipt_photo.data_url,
+      expenseSaved.mobile_expenses[0].receipt_photo.data_url,
+      'Multi-page PDF work must preserve earlier expense photo');
+
     await page.locator('[data-tab="home"]').click();
     await page.locator('#vehiclePhotoFile').setInputFiles({name:'vehicle.png',mimeType:'image/png',buffer:png});
     await page.locator('.vehicle-photo').waitFor();
