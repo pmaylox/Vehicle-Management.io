@@ -1231,6 +1231,45 @@ $('fuelForm').onsubmit=async e=>{
 }
 function expenseSummary(a){let service=a.service_history.reduce((s,r)=>s+(Number(r.cost_cents)||0),0);let fuel=a.fuel_history.reduce((s,r)=>s+(Number(r.cost_cents)||0),0);let extra=a.mobile_expenses.reduce((s,r)=>s+(Number(r.cost_cents)||0),0);return {service,fuel,extra,total:service+fuel+extra}}
 
+/* EXPENSE_PDF_OCR_BEGIN */
+function parseExpenseDocumentText(raw,today){
+ const text=String(raw||'').replace(/\u00a0/g,' ').replace(/\r/g,'').slice(0,48000);
+ const lines=text.split('\n').map(x=>x.replace(/\s+/g,' ').trim()).filter(Boolean);
+ const date=parseServiceReceiptText(text,today).date;
+ const strong=/\b(?:grand total|final total|total amount due|amount due|balance due|total due|invoice total|repair total|total repair cost|net repair cost|total estimate|estimate total|estimate amount|total charges|total paid|amount paid|payment total|total cost)\b/i;
+ const weak=/^(?:total|total amount|total price)\s*[:$ ]/i;
+ const excluded=/\b(?:subtotal|sub total|sales tax|tax rate|parts total|labor total|discount|deductible|deposit|supplement|insurance contribution|estimated hours|page total)\b/i;
+ const money=/\$?\s*((?:\d{1,3}(?:,\d{3})+|\d{1,7})\.\d{2})(?!\d)/g;
+ const found=[];
+ for(let i=0;i<lines.length;i++){
+  if(excluded.test(lines[i]))continue;
+  const score=strong.test(lines[i])?5:weak.test(lines[i])?3:0;
+  if(!score)continue;
+  let matches=[...lines[i].matchAll(money)];
+  if(!matches.length&&i+1<lines.length&&!excluded.test(lines[i+1]))
+   matches=[...lines[i+1].matchAll(money)];
+  if(matches.length!==1)continue;
+  const n=Number(matches[0][1].replace(/,/g,''));
+  if(Number.isFinite(n)&&n>=0&&n<=500000)found.push({score,amount:n.toFixed(2)});
+ }
+ const strongest=Math.max(0,...found.map(x=>x.score));
+ const amounts=[...new Set(found.filter(x=>x.score===strongest).map(x=>x.amount))];
+ const cost=strongest>=5&&amounts.length===1?amounts[0]:null;
+ const conflict=strongest>=5&&amounts.length>1;
+ let description=null;
+ if(/\b(?:collision|auto body|body shop|body repair|bodywork|paint and body|repair estimate|collision center|bumper replacement|fender repair)\b/i.test(text))
+  description=/\b(?:estimate|appraisal|quotation|quote)\b/i.test(text)?'Body repair estimate':'Body repair / collision work';
+ else if(/\b(?:insurance claim|claim number|claimant)\b/i.test(text))
+  description='Vehicle insurance paperwork';
+ else if(/\b(?:parts invoice|auto parts|replacement parts)\b/i.test(text))
+  description='Vehicle parts purchase';
+ else if(/\b(?:vehicle registration|registration renewal)\b/i.test(text))
+  description='Vehicle registration';
+ else description=parseServiceReceiptText(text,today).description;
+ return {date,cost,description,conflict};
+}
+/* EXPENSE_PDF_OCR_END */
+
 /* EXPENSE_MULTIPAGE_PDF_BEGIN */
 // Expense documents are stored separately from compressed receipt photos.
 // JSON backups contain the document reference, not its PDF bytes.
