@@ -1,3 +1,4 @@
+from car_history import clean_car_history, empty_car_history
 from vin_lookup import clean_profile
 from battery import battery_details, battery_summary, service_suggestions, battery_years_to_months
 from cmath import cos
@@ -43,6 +44,8 @@ class Vehicle:
         self.fluid_check_history = []
         # Interior = cabin filter; exterior = engine air-intake filter.
         self.air_filter_changes = []
+        # Separately reported Car History; does not affect service/odometer.
+        self.car_history = empty_car_history()
 
     def record_air_filter_change(self, filter_type, changed_on, mileage=None):
         """Log a dated replacement of a cabin or engine intake air filter."""
@@ -829,7 +832,8 @@ class Vehicle:
             "tire_pressure_history": self.tire_pressure_history,
             "fluid_checks": self.fluid_checks,
             "fluid_check_history": self.fluid_check_history,
-            "air_filter_changes": self.air_filter_changes
+            "air_filter_changes": self.air_filter_changes,
+            "car_history": clean_car_history(self.car_history)
         }
     @classmethod
     def from_dict(cls, data):
@@ -880,6 +884,8 @@ class Vehicle:
         vehicle.fluid_check_history = history if isinstance(history, list) else []
         changes = data.get("air_filter_changes", [])
         vehicle.air_filter_changes = changes if isinstance(changes, list) else []
+
+        vehicle.car_history = clean_car_history(data.get("car_history"))
 
         return vehicle
 
