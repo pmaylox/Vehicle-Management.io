@@ -388,8 +388,11 @@ public class MainActivity extends Activity {
                     payload.put("pages",pages);
                     payload.put("name",name);
                     payload.put("imported",true);
-                    payload.put("ocr_pending",false); // Existing PDFs are not OCR-scanned in this release.
+                    // Imported PDFs should use the same editable OCR suggestions as fresh scans.
+                    // Reattached history documents do not mutate already-saved records.
+                    payload.put("ocr_pending",!forHistory);
                     expensePdfImportResult(payload,null,forHistory);
+                    if (!forHistory) readImportedExpensePdf(target,id);
                 } catch (Exception error) {
                     expensePdfImportResult(null,"Unable to load PDF: "+error.getMessage(),forHistory);
                 }
@@ -462,6 +465,62 @@ public class MainActivity extends Activity {
         } catch (Exception ignored) {
             showToast("Unable to return expense OCR text.");
         }
+    }
+
+    // ACTION_OPEN_DOCUMENT returns a PDF, not scanner JPEG pages. Rasterize each
+    // validated page at a bounded resolution and use bundled offline ML Kit OCR.
+    // The PDF remains attached even if OCR finds nothing; never store OCR text in JSON.
+    // Called from the existing import worker (not the Android UI thread).
+    private void readImportedExpensePdf(File pdf, String id) {
+        StringBuilder all = new StringBuilder();
+        int pagesRead = 0, failures = 0;
+        String error = null;
+        TextRecognizer recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
+        try (ParcelFileDescriptor fd = ParcelFileDescriptor.open(pdf, ParcelFileDescriptor.MODE_READ_ONLY);
+             PdfRenderer renderer = new PdfRenderer(fd)) {
+            for (int i = 0; i < renderer.getPageCount(); i++) {
+                Bitmap bitmap = null;
+                try (PdfRenderer.Page page = renderer.openPage(i)) {
+                    float scale = Math.min(2.5f, Math.min(
+                        2000f / Math.max(1, page.getWidth()),
+                        2000f / Math.max(1, page.getHeight())));
+                    int width = Math.max(1, Math.round(page.getWidth() * scale));
+                    int height = Math.max(1, Math.round(page.getHeight() * scale));
+                    bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                    bitmap.eraseColor(android.graphics.Color.WHITE);
+                    page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
+                } catch (Exception renderError) {
+                    failures++;
+                    if (bitmap != null) bitmap.recycle();
+                    continue;
+                }
+                try {
+                    com.google.mlkit.vision.text.Text recognized =
+                        com.google.android.gms.tasks.Tasks.await(
+                            recognizer.process(InputImage.fromBitmap(bitmap, 0)));
+                    pagesRead++;
+                    String pageText = recognized.getText();
+                    if (pageText != null && !pageText.trim().isEmpty() && all.length() < 48000) {
+                        all.append("\n--- PAGE ").append(i + 1).append(" ---\n");
+                        int room = Math.max(0, 48000 - all.length());
+                        all.append(pageText, 0, Math.min(pageText.length(), room));
+                    }
+                } catch (Exception ocrError) {
+                    failures++;
+                } finally {
+                    bitmap.recycle();
+                }
+            }
+        } catch (Exception readError) {
+            error = "Unable to read imported PDF: " + readError.getMessage();
+        } finally {
+            recognizer.close();
+        }
+        if (error == null && failures > 0)
+            error = "Some PDF pages could not be recognized; verify the fields manually.";
+        if (error == null && all.toString().trim().isEmpty())
+            error = "No readable text found in this PDF; enter the expense fields manually.";
+        expenseOcrResult(id, all.toString(), pagesRead, error);
     }
 
     private void beginExpensePagesOCR(List<GmsDocumentScanningResult.Page> pages, String id) {

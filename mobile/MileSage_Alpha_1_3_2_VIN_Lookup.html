@@ -1290,7 +1290,7 @@ window.milesageExpenseScannerComplete=function(result){
  expensePdfDraft={vehicle:owner,id:info.id,pages:info.pages,epoch,baseline:baseline||{},
     name:String(info.name||'Expense invoice.pdf').slice(0,120)};
  refreshExpensePdfActions();
- status.textContent=(info.imported?'Loaded existing PDF with ':'Captured ')+info.pages+' page(s). '+(info.ocr_pending?'Reading pages for date, total and description…':info.imported?'Imported PDF is not automatically OCR-read; enter or check the cost, date and description. ':'No page images for OCR; enter fields manually. ')+'PDF ready to view/export; save expense to attach it.';
+ status.textContent=(info.imported?'Loaded existing PDF with ':'Captured ')+info.pages+' page(s). '+(info.ocr_pending?'Reading pages for date, total and description…':info.imported?'No readable pages available; enter or check the expense fields. ':'No page images for OCR; enter fields manually. ')+'PDF ready to view/export; save expense to attach it.';
  const review=$('expensePdfTextReview');if(review){review.hidden=true;$('expensePdfOcrText').textContent='';}
  message(info.imported?'Expense PDF loaded. Review and save the expense record.':'Expense PDF scanned. Review and save the expense record.');
 };
@@ -1302,7 +1302,7 @@ function refreshExpensePdfActions(){
  const ready=!!d&&d.vehicle===v();
  preview.hidden=!ready;actions.hidden=!ready;clear.hidden=!ready;
  preview.textContent=ready?
-  'PDF captured: '+d.pages+' page(s). Stored inside this MileSage app. Tap View PDF or Save PDF to My Files. Save other expense to attach it to Expense History.':'';
+  'PDF ready: '+d.pages+' page(s). Stored inside this MileSage app. Tap View PDF or Save PDF to My Files. Save other expense to attach it to Expense History.':'';
 }
 window.milesageExpenseOCRComplete=function(result){
  const info=result||{},draft=expensePdfDraft,status=$('expensePdfScanStatus');
@@ -1312,7 +1312,7 @@ window.milesageExpenseOCRComplete=function(result){
  const review=$('expensePdfTextReview');
  if(review){review.hidden=!raw.trim();$('expensePdfOcrText').textContent=raw;}
  if(!raw.trim()){
-  status.textContent='PDF captured. No readable page text: '+
+  status.textContent='PDF ready. No readable page text: '+
     (info.error||'Enter expense fields manually.')+
     ' You can still view and export the PDF.';
   return;

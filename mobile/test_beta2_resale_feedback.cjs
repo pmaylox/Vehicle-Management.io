@@ -18,5 +18,5 @@ for(const html of pages){
 }
 const g=fs.readFileSync('android/app/build.gradle','utf8');
 assert.match(g,/applicationId 'io\.reddirtcode\.milesage\.alpha146pdfimport'/);
-assert.match(g,/versionCode 146/);
+assert.match(g,/versionCode 147/);
 console.log('PASS: beta feedback, consent-based sharing, vehicle resale snapshots, and distinct test APK.');
