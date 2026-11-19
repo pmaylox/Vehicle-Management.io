@@ -347,6 +347,7 @@ if(!files.length)files.push('mobile/MileSage_Mobile_Auto_Refresh.html','mobile/M
     await page.locator('#resaleTrade').fill('32000.00');
     await page.locator('#resalePrivate').fill('35000.00');
     await page.locator('#resaleNotes').fill('Sample quote, not a live KBB estimate');
+    await page.locator('#resaleForm button[type="submit"]').evaluate(el=>el.scrollIntoView({block:'center',behavior:'instant'}));
     await page.locator('#resaleForm button[type="submit"]').click();
     const saleSaved=JSON.parse(await page.evaluate(()=>localStorage.getItem('milesage-mobile-offline-v1')));
     assert.equal(saleSaved.vehicles[0].resale_history.length,1);
