@@ -61,23 +61,18 @@ if(!files.length)files.push('mobile/MileSage_Mobile_Auto_Refresh.html','mobile/M
      assert.ok(!visible.includes('${')&&!visible.includes('function render'),tab+' leaked application code');
      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),tab+' overflows phone width');
     }
-    const navDebug=await page.evaluate(()=>{
-      const button=document.querySelector('[data-tab="service"]'),
-       nav=document.querySelector('.bottom'),label=document.querySelector('label[for="resaleSource"]'),
-       r=button.getBoundingClientRect(),n=nav.getBoundingClientRect();
+    // Emulated mobile Chrome can mis-scroll fixed footers during Playwright's
+    // locator.click(). Assert the real center hit-target is the bottom tab,
+    // then dispatch the same tab activation without synthetic scrolling.
+    const navIsTouchable=await page.evaluate(()=>{
+      const button=document.querySelector('[data-tab="service"]'),r=button.getBoundingClientRect();
       const hit=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);
-      return {viewport:[innerWidth,innerHeight],scrollY,
-        button:[r.x,r.y,r.width,r.height],nav:[n.x,n.y,n.width,n.height],
-        hit:hit?.outerHTML.slice(0,200),navComputed:getComputedStyle(nav).cssText,
-        navPosition:getComputedStyle(nav).position,navZ:getComputedStyle(nav).zIndex,
-        mainZ:getComputedStyle(document.querySelector('main')).zIndex,
-        labelRect:label?Object.values(label.getBoundingClientRect().toJSON()):null,
-        navParent:nav.parentElement?.tagName};
+      return button.contains(hit);
     });
-    console.log('MILESAGE_NAV_DEBUG',JSON.stringify(navDebug));
+    assert.equal(navIsTouchable,true,'Service bottom-tab touch target must not be occluded');
     // Rebuilt Service scanner: native one-page crop/OCR populates a draft,
     // attaches its photo and does not save or reset maintenance until approved.
-    await page.locator('[data-tab="service"]').click();
+    await page.locator('[data-tab="service"]').evaluate(button=>button.click());
     await page.evaluate(()=>{
       window.MileSageAndroid={
         scanServiceReceipt:()=>{
