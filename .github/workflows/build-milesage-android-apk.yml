@@ -1,7 +1,8 @@
-name: Build MileSage Alpha 1.4.7 Imported Expense PDF OCR APK
+name: Build MileSage Alpha 1.4.8 Expense PDF Autofill Diagnostics APK
 on:
   push:
     branches:
+      - fix/expense-pdf-autofill-diagnostics-alpha148-20261119
       - fix/expense-import-pdf-ocr-alpha147-20261119
       - feature/expense-load-pdf-reattach-alpha146-20261119
       - feature/beta2-feedback-resale-alpha145-20261119
@@ -23,7 +24,7 @@ on:
 jobs:
   build:
     concurrency:
-      group: milesage-alpha147-${{ github.sha }}
+      group: milesage-alpha148-${{ github.sha }}
       cancel-in-progress: true
     runs-on: ubuntu-latest
     permissions:
@@ -61,9 +62,9 @@ jobs:
         run: |
           mkdir -p android/app/src/main/assets release
           cp mobile/MileSage_Alpha_1_3_2_VIN_Lookup.html android/app/src/main/assets/index.html
-          sed -i 's/Alpha 1.3.2/Alpha 1.4.7 Imported PDF OCR/g' android/app/src/main/assets/index.html
-          cp android/app/src/main/assets/index.html release/MileSage_Alpha_1_4_7_Expense_PDF_Autofill.html
-          printf '%s\n' "MileSage Alpha 1.4.7 - imported expense PDF OCR, reusable backup browser and Fuel/Service/Expense scanners" \
+          sed -i 's/Alpha 1.3.2/Alpha 1.4.8 PDF OCR Diagnostics/g' android/app/src/main/assets/index.html
+          cp android/app/src/main/assets/index.html release/MileSage_Alpha_1_4_8_Expense_PDF_Autofill.html
+          printf '%s\n' "MileSage Alpha 1.4.8 - PDF autofill diagnostics and unambiguous TOTAL labels, reusable backup browser and Fuel/Service/Expense scanners" \
             "Do NOT uninstall or clear existing MileSage apps. This separately installed test copy has independent storage." \
             "Back up your existing phone data before importing anything into the test copy." \
             "This APK has its own application ID and cannot overwrite previous MileSage test apps. Import a Full mobile backup to copy data into it." \
@@ -74,6 +75,7 @@ jobs:
             "Expenses > Scan multi-page document produces a 30-page PDF and recognizes dates, invoice totals and body repair descriptions for confirmation. View the PDF before saving the expense." \
             "The separate Service scanner still supports up to 30 invoice pages." \
             "Expenses > Load PDF reads imported 1-30 page PDFs with local OCR and suggests expense date, total and description without replacing user-entered values." \
+            "Unambiguous TOTAL amounts are suggested. PDF OCR status appears near the expense fields. Only Save other expense adds to history." \
             "For expense PDF files: tap Save PDF to My Files; Samsung My Files > Downloads > MileSage > Expenses. Full mobile JSON backups include PDF references, NOT PDF bytes." \
             "Test with disposable Expense, Service and Fuel records first; preserve original MileSage." \
             "This APK is DEBUG-SIGNED for testing and not for production distribution." \
@@ -125,13 +127,13 @@ jobs:
           done
       - name: Collect build files
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk release/MileSage_Alpha_1_4_7_Expense_PDF_Autofill.apk
-          python mobile/validate_mobile_html.py release/MileSage_Alpha_1_4_7_Expense_PDF_Autofill.apk
-          unzip -t release/MileSage_Alpha_1_4_7_Expense_PDF_Autofill.apk | tail -1
-          sha256sum release/MileSage_Alpha_1_4_7_Expense_PDF_Autofill.apk > release/APK_SHA256.txt
+          cp android/app/build/outputs/apk/debug/app-debug.apk release/MileSage_Alpha_1_4_8_Expense_PDF_Autofill.apk
+          python mobile/validate_mobile_html.py release/MileSage_Alpha_1_4_8_Expense_PDF_Autofill.apk
+          unzip -t release/MileSage_Alpha_1_4_8_Expense_PDF_Autofill.apk | tail -1
+          sha256sum release/MileSage_Alpha_1_4_8_Expense_PDF_Autofill.apk > release/APK_SHA256.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: MileSage-Alpha-1.4.7-Expense-PDF-Autofill
+          name: MileSage-Alpha-1.4.8-Expense-PDF-Autofill
           path: release/
           retention-days: 90
       - name: Test complete app in a phone-sized browser
