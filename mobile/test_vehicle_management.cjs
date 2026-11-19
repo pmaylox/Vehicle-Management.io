@@ -22,7 +22,7 @@ for(const html of files){
  assert.match(html,/commitImport\(remaining,nextIndex,'Vehicle removed\.'\)/);
  assert.match(html,/type REMOVE in capital letters/,
   'Removing a vehicle must require explicit typed confirmation');
- assert.match(html,/Restore previous local snapshot/,
+ assert.match(html,/Saved backups &amp; snapshots/,
   'Recovery must remain available after a vehicle change');
 
  const script=html.split('<script>')[1]?.split('</script>')[0];
