@@ -90,6 +90,7 @@ label.field{display:block;font-size:13px;font-weight:700;margin:13px 0 7px}input
 <section id="graphs" class="section" aria-label="Graphs">
 <div class="section-head"><h2>Graphs & insights</h2></div>
 <div id="graphsBody"></div>
+<div id="betaFeedbackBody"></div>
 </section>
 <section id="data" class="section" aria-label="Data and backup">
 <div class="section-head"><h2>Data & backup</h2></div>
@@ -1467,7 +1468,87 @@ $('extraForm').onsubmit=async e=>{
 };}
 function mpgSeries(a){let start=null,gallons=0;let values=[];for(const r of a.fuel_history){if(r.mileage==null){start=null;gallons=0;continue}let current=Number(r.mileage),g=Number(r.gallons);if(!Number.isFinite(current)||!Number.isFinite(g))continue;if(start==null){if(r.full_tank){start=current;gallons=0;}continue;}gallons+=g;if(r.full_tank){let miles=current-start;if(miles>0&&gallons>0)values.push({label:r.date||'',mpg:miles/gallons});start=current;gallons=0;}}return values;}
 function mpgChart(values){if(values.length<2)return `<p class="muted small">At least 2 completed MPG calculations are needed to draw a trend. A starting full tank and a later full tank establish the first result.</p>`;const vals=values.slice(-8),min=Math.min(...vals.map(x=>x.mpg)),max=Math.max(...vals.map(x=>x.mpg));const hi=max===min?max+1:max;const lo=max===min?Math.max(0,min-1):Math.max(0,min-1);let pts=vals.map((x,i)=>`${(15+i*270/Math.max(1,vals.length-1)).toFixed(1)},${(145-120*(x.mpg-lo)/(hi-lo)).toFixed(1)}`).join(' ');return `<svg viewBox="0 0 300 170" class="linechart" role="img" aria-label="Recent fuel economy trend from ${min.toFixed(1)} to ${max.toFixed(1)} miles per gallon"><path d="M15 15V145H285" stroke="#cbd6df" stroke-width="2" fill="none"/><polyline points="${pts}" fill="none" stroke="#9e3b1b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>${vals.map((x,i)=>`<circle cx="${(15+i*270/Math.max(1,vals.length-1)).toFixed(1)}" cy="${(145-120*(x.mpg-lo)/(hi-lo)).toFixed(1)}" r="4" fill="#9e3b1b"/>`).join('')}<text x="18" y="12" font-size="11" fill="#5d6972">${max.toFixed(1)} MPG</text><text x="18" y="163" font-size="11" fill="#5d6972">${min.toFixed(1)} MPG</text></svg>`}
-function renderGraphs(){const a=v(),el=$('graphsBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}const t=expenseSummary(a),arr=[['Service',t.service],['Fuel',t.fuel],['Other',t.extra]],max=Math.max(1,...arr.map(x=>x[1])),mpgs=mpgSeries(a);const oilRem=Number(a.service_interval)-(Number(a.mileage)-Number(a.last_service_mileage));el.innerHTML=`<div class="card"><h3 style="margin-top:0">Recorded spending by category</h3><div class="chart-bars">${arr.map(([name,c])=>`<div class="chart-col"><div>${usd(c)}</div><div class="chart-bar" style="height:${Math.max(2,Math.round(c/max*130))}px"></div><div class="muted">${name}</div></div>`).join('')}</div></div><div class="card"><h3 style="margin-top:0">Fuel economy trend</h3>${mpgChart(mpgs)}${mpgs.length?`<p class="small muted">Most recent calculated MPG: <strong>${mpgs[mpgs.length-1].mpg.toFixed(2)}</strong> (${mpgs.length} valid full-tank cycle${mpgs.length===1?'':'s'} recorded)</p>`:''}</div><div class="card"><h3 style="margin-top:0">Explainable health snapshot</h3><p><strong>Oil service:</strong> ${oilRem<=0?'Due now or overdue by '+num(-oilRem)+' miles':num(oilRem)+' miles remaining until the next scheduled oil service'}.</p><p><strong>Last oil-service mileage:</strong> ${num(a.last_service_mileage)}. <strong>Interval:</strong> ${num(a.service_interval)} miles.</p><div class="note info">These are mileage-based tracking indicators, not mechanical diagnostics. Follow the vehicle manufacturer’s maintenance guidance.</div></div>`;el.innerHTML+=additionalGraphCards(a);}
+
+/* BETA2_RESALE_FEEDBACK_BEGIN */
+const FEEDBACK_KEY='milesage-beta-feedback-v1';
+function feedbackRecords(){try{const a=JSON.parse(localStorage.getItem(FEEDBACK_KEY)||'[]');return Array.isArray(a)?a:[]}catch(_){return []}}
+function saveFeedbackRecords(a){localStorage.setItem(FEEDBACK_KEY,JSON.stringify(a.slice(-50)))}
+function resaleRecords(a){return Array.isArray(a.resale_valuations)?a.resale_valuations:[]}
+function resaleValueChart(a){
+ const data=resaleRecords(a).filter(x=>Number.isSafeInteger(x.value_cents)&&Number.isSafeInteger(x.mileage)).slice().sort((x,y)=>x.date.localeCompare(y.date)||x.mileage-y.mileage);
+ if(!data.length)return '<p class="small muted">No resale valuations yet. Add an estimate from KBB or another source to start your history. Mileage changes alone do not establish market value.</p>';
+ const max=Math.max(...data.map(x=>x.value_cents),1),min=Math.min(...data.map(x=>x.value_cents),0);
+ const points=data.map((x,i)=>[10+(i*280/Math.max(1,data.length-1)),130-((x.value_cents-min)/(max-min||1))*110]);
+ const poly=points.map(p=>p.join(',')).join(' ');
+ return '<svg role="img" aria-label="Recorded resale value estimates by date" viewBox="0 0 310 160" style="width:100%;height:auto;background:#f7fafc;border-radius:10px"><polyline fill="none" stroke="#9e3b1b" stroke-width="3" points="'+poly+'"/>'+points.map(p=>'<circle cx="'+p[0]+'" cy="'+p[1]+'" r="4" fill="#9e3b1b"/>').join('')+'</svg>'+
+ '<div class="small muted">Recorded snapshots (oldest to newest): '+data.map(x=>esc(x.date)+' · '+num(x.mileage)+' mi · '+usd(x.value_cents)).join(' | ')+'</div>';
+}
+function resaleCard(a){
+ const rows=resaleRecords(a).slice().sort((x,y)=>String(y.date).localeCompare(String(x.date)));
+ const last=rows[0];
+ return '<div class="card" id="resaleTracker"><h3 style="margin-top:0">Resale value & odometer</h3><p><strong>Current mileage:</strong> '+num(a.mileage)+' mi</p>'+
+ (last?'<p><strong>Latest recorded estimate:</strong> '+usd(last.value_cents)+' ('+esc(last.source)+', '+esc(last.date)+', '+num(last.mileage)+' mi)</p>':'<p class="small muted">No valuation recorded yet.</p>')+
+ resaleValueChart(a)+
+ '<p class="small muted">These are manually entered estimates, not live KBB values or guaranteed sale prices. Use a current valuation for your exact trim, condition, ZIP and mileage. Your odometer updates automatically, but past estimates never change.</p>'+
+ '<p><a href="https://www.kbb.com/whats-my-car-worth/" target="_blank" rel="noopener noreferrer">Look up a valuation at Kelley Blue Book</a></p>'+
+ '<form id="resaleForm"><div class="grid2"><div><label class="field" for="resaleDate">Valuation date</label><input id="resaleDate" type="date" required value="'+localDate()+'"></div><div><label class="field" for="resaleMileage">Odometer at valuation</label><input id="resaleMileage" type="number" min="0" step="1" required value="'+Number(a.mileage)+'"></div></div>'+
+ '<div class="grid2"><div><label class="field" for="resaleAmount">Estimated value ($)</label><input id="resaleAmount" inputmode="decimal" required placeholder="25000.00"></div><div><label class="field" for="resaleSource">Valuation source</label><select id="resaleSource"><option value="KBB">Kelley Blue Book</option><option value="Dealer quote">Dealer quote</option><option value="Other">Other documented source</option></select></div></div>'+
+ '<label class="field" for="resaleKind">Value type</label><select id="resaleKind"><option>Trade-in</option><option>Private-party</option><option>Instant cash offer</option><option>Other estimate</option></select>'+
+ '<button type="submit" class="btn secondary">Record valuation snapshot</button></form>'+
+ '<div class="small muted" style="margin-top:12px">Each valuation is tied to this vehicle and included in Full mobile backup.</div></div>';
+}
+function wireResaleCard(a){
+ const form=$('resaleForm');if(!form)return;
+ form.onsubmit=e=>{e.preventDefault();try{
+ const dt=$('resaleDate').value;if(!validDate(dt))throw Error('Select a valid valuation date.');
+ const miles=whole($('resaleMileage').value,'Valuation odometer',0);
+ const cents=costCents($('resaleAmount').value);
+ if(cents<=0)throw Error('Enter a positive estimate.');
+ if(!confirm('Record '+usd(cents)+' at '+num(miles)+' miles as a '+$('resaleKind').value+' estimate? This is a manually entered value, not a live KBB quote.'))return;
+ a.resale_valuations=resaleRecords(a);
+ a.resale_valuations.push({date:dt,mileage:miles,value_cents:cents,source:$('resaleSource').value,kind:$('resaleKind').value});
+ save();renderGraphs();message('Resale valuation recorded.');
+ }catch(err){alert(err.message)}};
+}
+function feedbackPanel(){
+ return '<div class="card" id="betaFeedbackCard"><h3 style="margin-top:0">Beta tester feedback</h3>'+
+ '<p class="small muted">Report bugs, suggestions or confusing screens. Reports stay on this phone until you explicitly share or export them. No vehicle records, VIN, receipt photos or PDFs are attached automatically.</p>'+
+ '<form id="betaFeedbackForm"><label class="field" for="betaFeedbackCategory">Type of feedback</label><select id="betaFeedbackCategory"><option>Bug</option><option>Suggestion</option><option>Usability</option><option>Other</option></select>'+
+ '<label class="field" for="betaFeedbackArea">App area</label><select id="betaFeedbackArea"><option>Home</option><option>Service</option><option>Fuel</option><option>Expenses</option><option>Graphs</option><option>Backup & restore</option><option>Other</option></select>'+
+ '<label class="field" for="betaFeedbackDetail">What happened? What did you expect?</label><textarea id="betaFeedbackDetail" rows="4" maxlength="3000" required placeholder="Describe the steps, what you expected, and what happened instead."></textarea>'+
+ '<label class="field" for="betaFeedbackSeverity">Impact</label><select id="betaFeedbackSeverity"><option>Minor</option><option>Moderate</option><option>Blocking</option></select>'+
+ '<button type="submit" class="btn">Save feedback report</button></form>'+
+ '<p id="betaFeedbackStatus" role="status" class="small muted">No report sent automatically.</p>'+
+ '<div class="button-row"><button id="betaFeedbackShare" class="btn secondary" type="button">Share saved feedback</button><button id="betaFeedbackExport" class="btn secondary" type="button">Export feedback JSON</button></div>'+
+ '<div id="betaFeedbackHistory" class="small muted"></div></div>';
+}
+function wireFeedbackPanel(){
+ const form=$('betaFeedbackForm');if(!form)return;
+ const history=$('betaFeedbackHistory'),status=$('betaFeedbackStatus');
+ const refresh=()=>{const items=feedbackRecords();history.textContent=items.length+' report(s) saved locally. Sharing is optional.';};
+ refresh();
+ form.onsubmit=e=>{e.preventDefault();try{
+ const detail=$('betaFeedbackDetail').value.trim();
+ if(detail.length<8)throw Error('Please describe the problem in at least eight characters.');
+ const items=feedbackRecords();
+ items.push({id:'feedback-'+Date.now(),created_at:new Date().toISOString(),app_version:'1.4.5-beta2',category:$('betaFeedbackCategory').value,area:$('betaFeedbackArea').value,impact:$('betaFeedbackSeverity').value,detail});
+ saveFeedbackRecords(items);form.reset();status.textContent='Saved on this phone. Use Share saved feedback to send it to the developer.';refresh();
+ }catch(err){alert(err.message)}};
+ $('betaFeedbackExport').onclick=()=>download(filename('MileSage-beta-feedback'),{format:'MileSage-Feedback-v1',reports:feedbackRecords()});
+ $('betaFeedbackShare').onclick=async()=>{
+ const items=feedbackRecords();
+ if(!items.length){status.textContent='Save a feedback report first.';return;}
+ const text='MileSage Beta Feedback\n\n'+items.map(x=>x.created_at+' | '+x.category+' | '+x.area+' | '+x.impact+'\n'+x.detail).join('\n\n---\n\n');
+ try{
+ if(navigator.share){await navigator.share({title:'MileSage beta feedback',text});status.textContent='Share sheet opened. Select your messaging or email app to send.';}
+ else if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(text);status.textContent='Copied feedback. Paste it into a message to the developer.';}
+ else{status.textContent='Use Export feedback JSON and share the downloaded file.';}
+ }catch(err){if(err.name!=='AbortError')status.textContent='Sharing unavailable. Export feedback JSON instead.';}
+ };
+}
+/* BETA2_RESALE_FEEDBACK_END */
+
+function renderGraphs(){const a=v(),el=$('graphsBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');$('betaFeedbackBody').innerHTML=feedbackPanel();wireFeedbackPanel();return}const t=expenseSummary(a),arr=[['Service',t.service],['Fuel',t.fuel],['Other',t.extra]],max=Math.max(1,...arr.map(x=>x[1])),mpgs=mpgSeries(a);const oilRem=Number(a.service_interval)-(Number(a.mileage)-Number(a.last_service_mileage));el.innerHTML=`<div class="card"><h3 style="margin-top:0">Recorded spending by category</h3><div class="chart-bars">${arr.map(([name,c])=>`<div class="chart-col"><div>${usd(c)}</div><div class="chart-bar" style="height:${Math.max(2,Math.round(c/max*130))}px"></div><div class="muted">${name}</div></div>`).join('')}</div></div><div class="card"><h3 style="margin-top:0">Fuel economy trend</h3>${mpgChart(mpgs)}${mpgs.length?`<p class="small muted">Most recent calculated MPG: <strong>${mpgs[mpgs.length-1].mpg.toFixed(2)}</strong> (${mpgs.length} valid full-tank cycle${mpgs.length===1?'':'s'} recorded)</p>`:''}</div><div class="card"><h3 style="margin-top:0">Explainable health snapshot</h3><p><strong>Oil service:</strong> ${oilRem<=0?'Due now or overdue by '+num(-oilRem)+' miles':num(oilRem)+' miles remaining until the next scheduled oil service'}.</p><p><strong>Last oil-service mileage:</strong> ${num(a.last_service_mileage)}. <strong>Interval:</strong> ${num(a.service_interval)} miles.</p><div class="note info">These are mileage-based tracking indicators, not mechanical diagnostics. Follow the vehicle manufacturer’s maintenance guidance.</div></div>`;el.innerHTML+=additionalGraphCards(a)+resaleCard(a);wireResaleCard(a);$('betaFeedbackBody').innerHTML=feedbackPanel();wireFeedbackPanel();}
 
 const receiptFiles={fuel:null,service:null,expense:null};
 let photoDir=null;
