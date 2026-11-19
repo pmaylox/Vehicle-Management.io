@@ -33,6 +33,9 @@ const context = {
 };
 vm.createContext(context);
 vm.runInContext(source,context);
+// The storage helper is tested in isolation; stub rendering after loading its declarations.
+context.renderCarHistory=()=>{};
+context.renderHome=()=>{};
 const get = expression => vm.runInContext(expression,context);
 assert.equal(get('nextHistoryReview("2024-02-29")'),'2025-02-28');
 assert.equal(get('nextHistoryReview("2025-11-19")'),'2026-11-19');
