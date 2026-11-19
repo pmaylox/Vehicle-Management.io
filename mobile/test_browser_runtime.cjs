@@ -390,6 +390,7 @@ if(!files.length)files.push('mobile/MileSage_Mobile_Auto_Refresh.html','mobile/M
     assert.equal(await page.locator('[data-feedback-share]').count(),1,
       'Feedback history must persist after restart');
 
+    await page.locator('[data-tab="home"]').click();
     await page.locator('.vehicle-photo').waitFor();
     assert.deepEqual(errors,[],'Uncaught browser errors');
     console.log('PASS: browser startup, full expense-photo backup/restore, all tabs, vehicle photo and invalid-import preservation:',filename);
