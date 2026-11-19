@@ -733,7 +733,7 @@ function parseFuelScanV2(raw,today){
   return re.test(lines[item.line]||'')||
     (item.line>0 && !entries.some(x=>x.line===item.line-1)&&re.test(lines[item.line-1]));
  }
- const q=entries.filter(x=>x.decimals===3&&x.amount>=0.5&&x.amount<=250&&!x.excluded)
+ const q=entries.filter(x=>x.decimals===3&&x.amount>=0.5&&x.amount<=250&&!x.excluded&&!x.dollar)
   .map(x=>({...x,score:(nearLabel(x,qtyLabel)?5:0)+(x.dollar?-3:1)-(nearLabel(x,priceLabel)?4:0)}))
   .filter(x=>x.score>=0);
  const p=entries.filter(x=>x.decimals===3&&x.amount>=0.5&&x.amount<=15&&!x.excluded)
