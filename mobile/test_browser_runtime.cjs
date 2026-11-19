@@ -117,8 +117,9 @@ if(!files.length)files.push('mobile/MileSage_Mobile_Auto_Refresh.html','mobile/M
     await page.waitForFunction(()=>
       document.querySelector('#fuelGallons')?.value==='10.882' &&
       document.querySelector('#fuelCost')?.value==='39.16' &&
-      document.querySelector('#fuelPhotoPreview')?.hidden===false);
-    assert.ok((await page.locator('#fuelReceiptProgress').innerText()).includes('Verified calculation'));
+      document.querySelector('#fuelPhotoPreview')?.hidden===false &&
+      (document.querySelector('#fuelReceiptProgress')?.textContent||'').includes('Verified calculation'),
+      null,{timeout:15000});
     assert.equal(JSON.parse(await page.evaluate(()=>localStorage.getItem('milesage-mobile-offline-v1')))
       .vehicles[0].fuel_history.length,3,'native scan must not save until user confirms');
 
