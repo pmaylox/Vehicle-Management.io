@@ -711,7 +711,7 @@ function parseFuelScanV2(raw,today){
   .replace(/\bGALL0NS?\b/gi,'GALLONS').replace(/\bFUEL\s*5ALE\b/gi,'FUEL SALE')
   .replace(/\bPR[1I]CE\b/gi,'PRICE').replace(/\s+/g,' ').trim()).filter(Boolean);
  const shared=parseServiceReceiptText(source,today);
- const found={date:shared.date,mileage:shared.mileage,gallons:null,total:null,unitPrice:null,verified:false};
+ const found={date:shared.date,mileage:shared.mileage,gallons:null,total:null,unitPrice:null,verified:false,conflict:false};
  const qtyLabel=/\b(?:GALLONS?|GALS?|VOLUME|QUANTITY|QTY)\b/i;
  const priceLabel=/\b(?:UNIT\s*PRICE|PRICE\s*(?:PER|\/)?\s*(?:GALLONS?|GALS?)?|PPG|P\s*\/\s*G)\b/i;
  const totalLabel=/\b(?:FUEL\s*SALE|TOTAL(?:\s*(?:PAID|DUE|SALE|AMOUNT))?|AMOUNT\s*PAID|SALE\s*TOTAL)\b/i;
@@ -769,6 +769,14 @@ function parseFuelScanV2(raw,today){
   .filter((x,i,a)=>a.findIndex(y=>y.amount===x.amount)===i);
  const labelsQ=select(q,x=>nearLabel(x,qtyLabel)&&!x.dollar&&!nearLabel(x,priceLabel));
  const labelsT=select(t,x=>nearLabel(x,totalLabel));
+ if(labelsQ.length===1&&labelsT.length===1){
+  const priceLabels=p.filter(x=>nearLabel(x,priceLabel)&&x.score>=5);
+  if(priceLabels.length && !priceLabels.some(x=>
+      Math.abs(labelsQ[0].amount*x.amount-labelsT[0].amount)<=0.025)){
+   found.conflict=true;
+   return found; // Don't fill numbers when OCR fails the pump math check.
+  }
+ }
  if(labelsQ.length===1)found.gallons=labelsQ[0].amount.toFixed(3);
  if(labelsT.length===1)found.total=labelsT[0].amount.toFixed(2);
  return found;
@@ -1057,7 +1065,7 @@ function applyFuelScanV2(text,a,origin){
  if(found.total!==null){$('fuelCost').value=found.total;fields.push('$'+found.total+' paid');}
  if(found.mileage!==null){$('fuelOdo').value=String(found.mileage);fields.push('odometer');}
  $('fullTank').checked=false;
- const checked=found.verified
+ const checked=found.conflict?' Receipt values disagree with the pump calculation; enter manually.' :found.verified
   ? ' Verified calculation: '+found.gallons+' gal × $'+found.unitPrice+'/gal ≈ $'+found.total+'.'
   : ' Values not mathematically verified; compare against receipt.';
  progress.textContent=(fields.length?'Recognized: '+fields.join(', ')+'.'
