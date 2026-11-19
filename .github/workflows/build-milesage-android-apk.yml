@@ -44,6 +44,11 @@ jobs:
           test -n "$SDKMANAGER"
           yes | "$SDKMANAGER" --licenses >/dev/null || true
           "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0"
+      - name: Cache Gradle dependency downloads for expense-scanner builds
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle/caches/modules-2
+          key: milesage-alpha142-gradle-dependencies-${{ runner.os }}-v1
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.11.1"
@@ -98,9 +103,20 @@ jobs:
           npm install --no-save playwright@1.65.1
           npx playwright install --with-deps chromium
           node mobile/test_browser_runtime.cjs mobile/MileSage_Mobile_Auto_Refresh.html mobile/MileSage_Alpha_1_3_2_VIN_Lookup.html android/app/src/main/assets/index.html
-      - name: Build installable debug APK
+      - name: Build installable debug APK with limited dependency traffic
         working-directory: android
-        run: gradle --no-daemon :app:assembleDebug
+        run: |
+          for attempt in 1 2 3; do
+            if gradle --no-daemon --max-workers=2 :app:assembleDebug; then
+              exit 0
+            fi
+            if [ "$attempt" = 3 ]; then
+              echo "APK compilation failed after three attempts."
+              exit 1
+            fi
+            echo "Dependency download may be rate-limited; retrying."
+            sleep "$((attempt * 20))"
+          done
       - name: Collect build files
         run: |
           cp android/app/build/outputs/apk/debug/app-debug.apk release/MileSage_Alpha_1_4_2_Expense_PDF.apk
