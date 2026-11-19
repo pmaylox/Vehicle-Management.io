@@ -116,10 +116,10 @@ jobs:
           done
       - name: Collect build files
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk release/MileSage_Alpha_1_4_2_Expense_PDF.apk
-          python mobile/validate_mobile_html.py release/MileSage_Alpha_1_4_2_Expense_PDF.apk
-          unzip -t release/MileSage_Alpha_1_4_2_Expense_PDF.apk | tail -1
-          sha256sum release/MileSage_Alpha_1_4_2_Expense_PDF.apk > release/APK_SHA256.txt
+          cp android/app/build/outputs/apk/debug/app-debug.apk release/MileSage_Alpha_1_4_3_Expense_PDF_OCR.apk
+          python mobile/validate_mobile_html.py release/MileSage_Alpha_1_4_3_Expense_PDF_OCR.apk
+          unzip -t release/MileSage_Alpha_1_4_3_Expense_PDF_OCR.apk | tail -1
+          sha256sum release/MileSage_Alpha_1_4_3_Expense_PDF_OCR.apk > release/APK_SHA256.txt
       - uses: actions/upload-artifact@v4
         with:
           name: MileSage-Alpha-1.4.3-Expense-PDF-OCR
