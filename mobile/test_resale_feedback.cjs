@@ -4,6 +4,10 @@ const paths=['mobile/MileSage_Mobile_Auto_Refresh.html','mobile/MileSage_Alpha_1
 const [html,mirror]=paths.map(f=>fs.readFileSync(f,'utf8'));
 assert.equal(html,mirror,'Both distributed mobile builds must match');
 assert.equal(html.split('</body></html>').length,2,'HTML must not be duplicated');
+assert.ok(html.includes('const SECOND_TESTER_BUILD=true;'),'Test build must disable developer data imports');
+assert.ok(html.includes('id="githubBackupRecovery" class="btn" type="button" hidden disabled'),'Developer recovery must be hidden and disabled');
+assert.ok(html.includes('id="githubImport" class="btn secondary" type="button" hidden disabled'),'Developer GitHub import must be hidden and disabled');
+assert.ok(html.includes("if(SECOND_TESTER_BUILD){syncStatus='Tester build:"),'Remote refresh must exit before fetching developer records');
 const script=html.split('<script>')[1]?.split('</script>')[0];
 new vm.Script(script);
 for(const required of [
