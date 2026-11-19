@@ -16,7 +16,7 @@ assert.equal(section(versioned), source, 'versioned preview must match shared so
 assert.ok(html.includes('data-tab="carHistory"'), 'independent bottom tab exists');
 assert.ok(html.includes('id="carHistoryBody"'), 'independent Car History view exists');
 assert.ok(html.includes('car_history:normalizeCarHistory(x.car_history)'), 'history survives load');
-assert.ok(html.includes('renderCarHistory();updateBanner()'), 'history renders in app');
+assert.ok(html.includes('renderCarHistory();renderHome();updateBanner()'), 'history renders in app');
 assert.ok(html.includes('Car History events would be lost'), 'restore warns on lost history');
 assert.ok(html.includes('item.car_history=oldHistory;'), 'backup recovery preserves history');
 assert.ok(html.includes('id="quickHistory"'), 'home review reminder shortcut exists');
