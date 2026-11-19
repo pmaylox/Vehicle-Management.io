@@ -1,6 +1,6 @@
 'use strict';
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
-const paths=['mobile/MileSage_Mobile_Auto_Refresh.html','mobile/MileSage_Alpha_1_3_2_VIN_Lookup.html'];
+const paths=['mobile/MileSage_Mobile_Auto_Refresh.html','mobile/MileSage_Alpha_1_3_3_Car_History.html'];
 assert.equal(fs.readFileSync(paths[0],'utf8'),fs.readFileSync(paths[1],'utf8'));
 (async()=>{
  for(const path of paths){
