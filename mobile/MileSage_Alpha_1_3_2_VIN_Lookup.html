@@ -1315,7 +1315,7 @@ window.milesageExpenseOCRComplete=function(result){
   return;
  }
  const found=parseExpenseDocumentText(raw,localDate()),changed=[];
- const baseline=d.baseline||{};
+ const baseline=draft.baseline||{};
  if(found.date&&baseline.date===localDate()&&$('extraDate').value===baseline.date){
   $('extraDate').value=found.date;changed.push('date');
  }
