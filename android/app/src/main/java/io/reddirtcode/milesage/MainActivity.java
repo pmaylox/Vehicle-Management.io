@@ -29,6 +29,7 @@ import androidx.webkit.WebViewAssetLoader;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
 import java.util.UUID;
@@ -46,6 +47,8 @@ import java.io.OutputStream;
 public class MainActivity extends Activity {
     private static final int FILE_CHOOSER_CODE = 218;
     private static final int SERVICE_DOCUMENT_SCAN_CODE = 219;
+    private static final int FUEL_DOCUMENT_SCAN_CODE = 220;
+    private boolean fuelScanOpen = false;
     private boolean serviceScanOpen = false;
     private WebView web;
     private ValueCallback<Uri[]> pendingFileChooser;
@@ -144,6 +147,47 @@ public class MainActivity extends Activity {
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        if (requestCode == FUEL_DOCUMENT_SCAN_CODE) {
+            fuelScanOpen = false;
+            if (resultCode != RESULT_OK) {
+                fuelScanResult(null, null, "Fuel scan cancelled. No entry changed.");
+                return;
+            }
+            try {
+                GmsDocumentScanningResult scan = GmsDocumentScanningResult.fromActivityResultIntent(data);
+                if (scan == null || scan.getPages() == null || scan.getPages().isEmpty())
+                    throw new IOException("Scanner did not return a receipt image.");
+                Uri receipt = scan.getPages().get(0).getImageUri();
+                // Recognize the full-resolution, cropped and deskewed scanner page
+                // BEFORE scaling a separate photo copy for the attached preview.
+                InputImage image = InputImage.fromFilePath(this, receipt);
+                TextRecognizer recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
+                recognizer.process(image)
+                    .addOnSuccessListener(found -> {
+                        try {
+                            fuelScanResult(found.getText(), fuelScanPreview(receipt), null);
+                        } catch (Exception error) {
+                            fuelScanResult(found.getText(), null,
+                                "Photo preview failed: " + error.getMessage());
+                        } finally {
+                            recognizer.close();
+                        }
+                    })
+                    .addOnFailureListener(error -> {
+                        recognizer.close();
+                        try {
+                            fuelScanResult("", fuelScanPreview(receipt),
+                                "Text recognition failed. Enter fuel details manually.");
+                        } catch (Exception imageError) {
+                            fuelScanResult(null, null,
+                                "Unable to read receipt photo: " + imageError.getMessage());
+                        }
+                    });
+            } catch (Exception error) {
+                fuelScanResult(null, null, "Fuel scanner could not finish: " + error.getMessage());
+            }
+            return;
+        }
         if (requestCode == SERVICE_DOCUMENT_SCAN_CODE) {
             serviceScanOpen = false;
             if (resultCode != RESULT_OK) {
@@ -213,6 +257,100 @@ public class MainActivity extends Activity {
             }
         } catch (Exception ignored) {
             showToast("Unable to report document scanner result.");
+        }
+    }
+
+
+    // Fuel uses a dedicated one-page, crop-and-enhance document scanning flow.
+    // This does not change the existing Service-only multipage PDF scanner.
+    private void fuelScanResult(String text, String imageDataUrl, String error) {
+        try {
+            JSONObject payload = new JSONObject();
+            if (text != null) payload.put("text", text);
+            if (imageDataUrl != null) payload.put("image", imageDataUrl);
+            if (error != null) payload.put("error", error);
+            String script = "if(window.milesageFuelScanComplete)window.milesageFuelScanComplete("
+                + payload.toString() + ");";
+            runOnUiThread(() -> {
+                if (web != null) web.evaluateJavascript(script, null);
+            });
+        } catch (Exception ignored) {
+            showToast("Unable to report fuel scan result.");
+        }
+    }
+
+    private String fuelScanPreview(Uri source) throws IOException {
+        BitmapFactory.Options info = new BitmapFactory.Options();
+        info.inJustDecodeBounds = true;
+        try (InputStream in = getContentResolver().openInputStream(source)) {
+            if (in == null) throw new IOException("Scanned image unavailable.");
+            BitmapFactory.decodeStream(in, null, info);
+        }
+        if (info.outWidth < 1 || info.outHeight < 1)
+            throw new IOException("Invalid scanned image.");
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inSampleSize = 1;
+        while (Math.max(info.outWidth / options.inSampleSize,
+                info.outHeight / options.inSampleSize) > 2200) options.inSampleSize *= 2;
+        Bitmap sourceBitmap;
+        try (InputStream in = getContentResolver().openInputStream(source)) {
+            if (in == null) throw new IOException("Scanned image unavailable.");
+            sourceBitmap = BitmapFactory.decodeStream(in, null, options);
+        }
+        if (sourceBitmap == null) throw new IOException("Could not decode scanned image.");
+        Bitmap image = sourceBitmap;
+        try {
+            int maximum = Math.max(image.getWidth(), image.getHeight());
+            if (maximum > 2000) {
+                float ratio = 2000f / maximum;
+                image = Bitmap.createScaledBitmap(sourceBitmap,
+                    Math.max(1, Math.round(image.getWidth() * ratio)),
+                    Math.max(1, Math.round(image.getHeight() * ratio)), true);
+            }
+            try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                if (!image.compress(Bitmap.CompressFormat.JPEG, 82, out))
+                    throw new IOException("Could not encode receipt image.");
+                byte[] bytes = out.toByteArray();
+                if (bytes.length > 3_500_000)
+                    throw new IOException("Receipt photo exceeds safe storage size.");
+                return "data:image/jpeg;base64," + Base64.encodeToString(bytes, Base64.NO_WRAP);
+            }
+        } finally {
+            if (image != sourceBitmap) image.recycle();
+            sourceBitmap.recycle();
+        }
+    }
+
+    private void beginFuelDocumentScan() {
+        if (fuelScanOpen) return;
+        fuelScanOpen = true;
+        try {
+            GmsDocumentScannerOptions options = new GmsDocumentScannerOptions.Builder()
+                .setGalleryImportAllowed(true)
+                .setPageLimit(1)
+                .setResultFormats(GmsDocumentScannerOptions.RESULT_FORMAT_JPEG)
+                .setScannerMode(GmsDocumentScannerOptions.SCANNER_MODE_FULL)
+                .build();
+            GmsDocumentScanning.getClient(options).getStartScanIntent(this)
+                .addOnSuccessListener(intent -> {
+                    try {
+                        startIntentSenderForResult(intent, FUEL_DOCUMENT_SCAN_CODE,
+                            null, 0, 0, 0);
+                    } catch (IntentSender.SendIntentException e) {
+                        fuelScanOpen = false;
+                        fuelScanResult(null, null, "Unable to start fuel scanner.");
+                    }
+                })
+                .addOnFailureListener(error -> {
+                    fuelScanOpen = false;
+                    fuelScanResult(null, null,
+                        "Fuel scanner unavailable: " + error.getMessage()
+                        + ". Choose photo to enter manually.");
+                });
+        } catch (Exception error) {
+            fuelScanOpen = false;
+            fuelScanResult(null, null,
+                "Fuel scanner unavailable: " + error.getMessage());
         }
     }
 
@@ -347,6 +485,9 @@ public class MainActivity extends Activity {
     private class DownloadBridge {
         @JavascriptInterface public void recognizeReceipt(String requestId, String base64) {
             recognizeReceiptOnDevice(requestId, base64);
+        }
+        @JavascriptInterface public void scanFuelReceipt() {
+            runOnUiThread(() -> beginFuelDocumentScan());
         }
         @JavascriptInterface public void scanServiceInvoice() {
             runOnUiThread(() -> beginServiceDocumentScan());
