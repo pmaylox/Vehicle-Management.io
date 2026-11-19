@@ -3,7 +3,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:allowBackup="false"
-        android:label="MileSage Alpha 1.3.9"
+        android:label="MileSage Scan 1.4"
         android:icon="@drawable/ic_milesage"
         android:theme="@android:style/Theme.Material.Light.NoActionBar"
         android:usesCleartextTraffic="false"
