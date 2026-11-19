@@ -98,11 +98,6 @@ jobs:
           python -m unittest -v test_mobile_html_validation
           node mobile/test_odometer_controls.cjs
           node mobile/test_receipt_folder.cjs
-      - name: Test complete app in a phone-sized browser
-        run: |
-          npm install --no-save playwright@1.65.1
-          npx playwright install --with-deps chromium
-          node mobile/test_browser_runtime.cjs mobile/MileSage_Mobile_Auto_Refresh.html mobile/MileSage_Alpha_1_3_2_VIN_Lookup.html android/app/src/main/assets/index.html
       - name: Build installable debug APK with limited dependency traffic
         working-directory: android
         run: |
@@ -128,3 +123,8 @@ jobs:
           name: MileSage-Alpha-1.4.2-Multipage-Expenses
           path: release/
           retention-days: 90
+      - name: Test complete app in a phone-sized browser
+        run: |
+          npm install --no-save playwright@1.65.1
+          npx playwright install --with-deps chromium
+          node mobile/test_browser_runtime.cjs mobile/MileSage_Mobile_Auto_Refresh.html mobile/MileSage_Alpha_1_3_2_VIN_Lookup.html android/app/src/main/assets/index.html
