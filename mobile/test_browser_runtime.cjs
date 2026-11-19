@@ -34,6 +34,39 @@ if(!files.length)files.push('mobile/MileSage_Mobile_Auto_Refresh.html','mobile/M
      assert.ok(!visible.includes('${')&&!visible.includes('function render'),tab+' leaked application code');
      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),tab+' overflows phone width');
     }
+    // Rebuilt Service scanner: native one-page crop/OCR populates a draft,
+    // attaches its photo and does not save or reset maintenance until approved.
+    await page.locator('[data-tab="service"]').click();
+    await page.evaluate(()=>{
+      window.MileSageAndroid={
+        scanServiceReceipt:()=>{
+          const canvas=document.createElement('canvas');canvas.width=16;canvas.height=16;
+          const context=canvas.getContext('2d');context.fillStyle='#fff';context.fillRect(0,0,16,16);
+          window.milesageServiceReceiptComplete({
+            text:'INVOICE DATE 11/14/2026\nODO 4560\nSynthetic oil change\nTire rotation\nTOTAL PAID $127.90',
+            image:canvas.toDataURL('image/jpeg',0.85)
+          });
+        }
+      };
+    });
+    await page.locator('#serviceCameraButton').click();
+    await page.waitForFunction(()=>
+      document.querySelector('#serviceDesc')?.value.includes('Oil change') &&
+      document.querySelector('#serviceDate')?.value==='2026-11-14' &&
+      document.querySelector('#serviceOdo')?.value==='4560' &&
+      document.querySelector('#serviceCost')?.value==='127.90' &&
+      document.querySelector('#servicePhotoPreview')?.hidden===false &&
+      (document.querySelector('#receiptProgress')?.textContent||'').includes('Suggested from scanned service receipt'),
+      null,{timeout:15000});
+    assert.equal(await page.locator('#oilReset').isChecked(),true);
+    assert.equal(await page.locator('#tireReset').isChecked(),true);
+    assert.equal(JSON.parse(await page.evaluate(()=>localStorage.getItem('milesage-mobile-offline-v1')))
+      .vehicles[0].service_history.length,1,'OCR must not save service entry');
+    await page.locator('#cancelServiceEntry').click();
+    assert.equal(await page.locator('#serviceDesc').inputValue(),'');
+    assert.equal(await page.locator('#servicePhotoPreview').isVisible(),false);
+    assert.equal(JSON.parse(await page.evaluate(()=>localStorage.getItem('milesage-mobile-offline-v1')))
+      .vehicles[0].service_history.length,1,'Cancel must retain existing service history');
     // Four-step tire wizard; driver front MUST occupy diagram's upper-left wheel.
     await page.locator('[data-tab="service"]').click();
     assert.ok((await page.locator('#tirePrompt').innerText()).includes('Driver front (front left)'));
