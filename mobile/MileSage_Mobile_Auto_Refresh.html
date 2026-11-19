@@ -920,7 +920,7 @@ function saveCarHistory(a,history,notice){
  const changed=vehicles.map((item,i)=>i===index?{...item,car_history:normalizeCarHistory(history)}:item);
  try{localStorage.setItem(KEY,JSON.stringify({vehicles:changed,current}));}
  catch(e){hasStorage=false;alert('Could not save Car History. Your current vehicle records were not changed. Export a backup.');updateBanner();return false;}
- vehicles=changed;hasStorage=true;renderCarHistory();updateBanner();message(notice);
+ vehicles=changed;hasStorage=true;renderCarHistory();renderHome();updateBanner();message(notice);
  return true;
 }
 function renderCarHistory(){
