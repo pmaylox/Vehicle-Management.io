@@ -3,7 +3,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:allowBackup="false"
-        android:label="MileSage Beta 1.4.5"
+        android:label="MileSage PDF 1.4.6"
         android:icon="@drawable/ic_milesage"
         android:theme="@android:style/Theme.Material.Light.NoActionBar"
         android:usesCleartextTraffic="false"
