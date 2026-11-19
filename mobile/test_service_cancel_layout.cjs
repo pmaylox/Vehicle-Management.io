@@ -48,7 +48,8 @@ for(let i=0;i<paths.length;i++){
  vm.createContext(sandbox);
  vm.runInContext(code+'\nthis.cancelServiceEntry=cancelServiceEntry;',sandbox);
  sandbox.cancelServiceEntry(vehicle);
- assert.equal(elements.serviceForm.resetCalls,1);\n assert.equal(vm.runInContext('serviceReceiptScanOwner',sandbox),null,'Cancel must discard pending native service scan');
+ assert.equal(elements.serviceForm.resetCalls,1);
+ assert.equal(vm.runInContext('serviceReceiptScanOwner',sandbox),null,'Cancel must discard pending native service scan');
  assert.equal(elements.serviceDate.value,'2026-11-17');
  assert.equal(elements.serviceOdo.value,'4321');
  assert.equal(elements.servicePhotoPreview.hidden,true);
