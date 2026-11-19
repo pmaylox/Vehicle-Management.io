@@ -73,7 +73,7 @@ jobs:
             "The Fuel and Service receipt buttons each open a one-page crop-and-straighten document scanner, with native offline OCR and editable suggestions. The independent Service multi-page PDF scanner remains available." \
             "Expenses > Scan multi-page document produces a 30-page PDF and recognizes dates, invoice totals and body repair descriptions for confirmation. View the PDF before saving the expense." \
             "The separate Service scanner still supports up to 30 invoice pages." \
-            "Expenses > Load PDF reads imported 1-30 page PDFs with local OCR and suggests expense date, total and description without replacing user-entered values." \\
+            "Expenses > Load PDF reads imported 1-30 page PDFs with local OCR and suggests expense date, total and description without replacing user-entered values." \
             "For expense PDF files: tap Save PDF to My Files; Samsung My Files > Downloads > MileSage > Expenses. Full mobile JSON backups include PDF references, NOT PDF bytes." \
             "Test with disposable Expense, Service and Fuel records first; preserve original MileSage." \
             "This APK is DEBUG-SIGNED for testing and not for production distribution." \
