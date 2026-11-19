@@ -7,16 +7,16 @@
 <title>MileSage • Mobile Vehicle Manager · GitHub Auto Refresh</title>
 <style>
 :root{color-scheme:light;--navy:#142a40;--navy2:#233d56;--clay:#9e3b1b;--cream:#f5f6f7;--ink:#202a33;--muted:#5d6972;--line:#dbe1e5;--good:#237c58;--bad:#b13b35;--warn:#a56415;--white:#fff;--radius:16px}
-*{box-sizing:border-box}html{background:var(--cream);scroll-behavior:smooth}body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--ink);padding-bottom:calc(89px + env(safe-area-inset-bottom));line-height:1.42}
+*{box-sizing:border-box}html{background:var(--cream);scroll-behavior:auto}body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--ink);padding-bottom:calc(89px + env(safe-area-inset-bottom));line-height:1.42}
 button,input,select,textarea{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #f4ad62;outline-offset:2px}
 .top{background:linear-gradient(125deg,#12293e,#24425e);color:white;padding:19px max(18px,env(safe-area-inset-left));padding-bottom:17px;box-shadow:0 3px 12px #1a34451a}
 .topline{max-width:800px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:12px}.brand{display:flex;gap:11px;align-items:center}.logo{width:47px;height:47px;border:1px solid #ffffff55;border-radius:13px;background:#ffffff13;display:grid;place-items:center;flex:none}.brand h1{margin:0;line-height:1;font-size:24px;letter-spacing:-.7px}.brand small{display:block;font-size:11px;margin-top:5px;color:#e6dbcf;letter-spacing:.8px;text-transform:uppercase}.top-action{background:#ffffff1e;color:white;border:1px solid #ffffff55;border-radius:11px;padding:9px 11px;font-size:13px;font-weight:700}
-main{max-width:800px;margin:0 auto;padding:20px 15px 12px}.section{display:none}.section.active{display:block}.section-head{display:flex;align-items:center;justify-content:space-between;gap:9px;margin-bottom:13px}.section-head h2{font-size:22px;margin:0;letter-spacing:-.4px}.section-title{margin:19px 0 9px;font-size:16px}.muted{color:var(--muted)}.small{font-size:13px}.eyebrow{font-size:11px;font-weight:750;letter-spacing:.9px;text-transform:uppercase;color:var(--muted)}
+main{max-width:800px;margin:0 auto;padding:20px 15px 120px;position:relative;z-index:0}.section{display:none}.section.active{display:block}.section-head{display:flex;align-items:center;justify-content:space-between;gap:9px;margin-bottom:13px}.section-head h2{font-size:22px;margin:0;letter-spacing:-.4px}.section-title{margin:19px 0 9px;font-size:16px}.muted{color:var(--muted)}.small{font-size:13px}.eyebrow{font-size:11px;font-weight:750;letter-spacing:.9px;text-transform:uppercase;color:var(--muted)}
 .card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 3px 11px #1430470d;margin-bottom:13px;padding:17px}.feature-card{border-left:4px solid var(--clay)}.vehicle-card{width:100%;text-align:left;display:block;background:white;border:2px solid var(--line);border-radius:16px;padding:17px;margin-bottom:12px;color:var(--ink)}.vehicle-card.selected{border-color:var(--clay);box-shadow:0 4px 15px #9e3b1b18}.vehicle-title{font-size:18px;font-weight:750;margin:0}.vehicle-year{color:var(--muted);font-weight:500}.vehicle-mileage{font-size:27px;font-weight:790;letter-spacing:-.7px;margin-top:9px;font-variant-numeric:tabular-nums}.vehicle-mileage small{font-size:13px;font-weight:500;color:var(--muted);letter-spacing:0}.pill{display:inline-block;border-radius:40px;padding:5px 9px;font-size:11px;font-weight:700;background:#e6f4ec;color:var(--good)}.pill.warn{background:#fff1d9;color:#9d671b}.pill.due{background:#fae8e7;color:var(--bad)}
 .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.stat{padding:15px;background:#f6f8f9;border-radius:12px}.stat strong{font-size:20px;display:block;font-variant-numeric:tabular-nums;margin:5px 0 2px}.stat .small{font-size:12px}.progress{height:9px;border-radius:9px;background:#e7e8e9;overflow:hidden;margin:11px 0 5px}.progress>span{display:block;background:var(--good);height:100%;border-radius:9px}.progress>span.warn{background:var(--warn)}.progress>span.due{background:var(--bad)}
 .btn{background:var(--clay);border:0;color:white;border-radius:11px;min-height:46px;padding:11px 16px;font-weight:730;display:inline-flex;align-items:center;justify-content:center;gap:8px}.btn.secondary{background:#edf1f5;color:var(--navy);border:1px solid #cdd9e1}.btn.outline{background:#fff;color:var(--clay);border:1px solid #c38470}.btn:disabled{opacity:.55;cursor:default}.btn.full{width:100%}.button-row{display:flex;flex-wrap:wrap;gap:9px}.button-row[hidden],#expensePdfTextReview[hidden]{display:none!important}.button-row>.btn{flex:1;min-width:130px}.odometer-controls>.btn{flex:1;min-width:0;padding:10px 4px;font-size:13px}.odometer-op[aria-pressed="true"]{background:var(--navy);color:white;border-color:var(--navy)}
 label.field{display:block;font-size:13px;font-weight:700;margin:13px 0 7px}input[type=text],input[type=number],input[type=date],select,textarea{display:block;background:#fff;width:100%;padding:12px 13px;border-radius:10px;border:1px solid #bfcbd4;color:var(--ink);min-height:46px;font-size:16px}textarea{min-height:88px;resize:vertical}.pressure-row{display:grid;grid-template-columns:minmax(0,1fr) 85px 85px;gap:9px;align-items:end;padding:10px 0;border-top:1px solid var(--line)}.pressure-row:first-child{border-top:0}.pressure-row .tire-name{font-size:13px;font-weight:650;line-height:1.35}.pressure-row small{display:block;color:var(--muted);font-size:11px;font-weight:400}.pressure-row input{padding:10px 6px;text-align:center}.pressure-head{display:grid;grid-template-columns:minmax(0,1fr) 85px 85px;gap:9px;color:var(--muted);font-size:11px;font-weight:700;margin-top:14px}.tire-values{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:10px 0 14px}.tire-values .stat strong{font-size:23px}.tire-values .stat{padding:12px}input[type=checkbox]{width:20px;height:20px;accent-color:var(--clay)}.check{display:flex;align-items:center;gap:10px;margin:13px 0}.check label{font-size:14px;font-weight:550}.note{padding:12px 13px;background:#fff5e7;border:1px solid #ecd3aa;border-radius:11px;color:#725024;font-size:13px;margin:12px 0}.note.info{background:#edf4f9;border-color:#c6d8e4;color:#2b526b}.notice{margin-bottom:14px}.record{padding:13px 0;border-top:1px solid var(--line);display:flex;align-items:start;justify-content:space-between;gap:8px}.record:first-of-type{border:0}.record h4{margin:0 0 3px;font-size:14px}.record small{color:var(--muted)}.record strong{font-size:14px;white-space:nowrap}.empty{padding:25px 15px;text-align:center;color:var(--muted);border:1px dashed #bbc9d2;border-radius:13px;background:#fff}
-.bottom{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid #dae0e4;display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom);z-index:20;box-shadow:0 -2px 15px #142a4010}.tabs{display:flex;max-width:800px;width:100%;justify-content:space-around}.tab{border:0;background:transparent;color:#697786;flex:1;min-width:0;padding:9px 1px 11px;display:flex;align-items:center;flex-direction:column;gap:3px;font-size:10px;font-weight:750}.tab svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.tab.active{color:var(--clay)}.tab.active:before{content:"";position:absolute;top:0;width:42px;height:3px;background:var(--clay);border-radius:0 0 3px 3px}
+.bottom{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid #dae0e4;display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom);z-index:9999;isolation:isolate;box-shadow:0 -2px 15px #142a4010}.tabs{display:flex;max-width:800px;width:100%;justify-content:space-around}.tab{border:0;background:transparent;color:#697786;flex:1;min-width:0;padding:9px 1px 11px;display:flex;align-items:center;flex-direction:column;gap:3px;font-size:10px;font-weight:750}.tab svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.tab.active{color:var(--clay)}.tab.active:before{content:"";position:absolute;top:0;width:42px;height:3px;background:var(--clay);border-radius:0 0 3px 3px}
 .chart-bars{display:flex;align-items:end;gap:16px;height:186px;padding:18px 4px 0}.chart-col{flex:1;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:end;height:100%;gap:7px;font-size:12px;font-weight:700}.chart-bar{background:#315979;border-radius:7px 7px 2px 2px;width:min(100%,74px);min-height:3px}.chart-col:nth-child(2) .chart-bar{background:#bb6b4a}.chart-col:nth-child(3) .chart-bar{background:#838e9d}.chart-col .muted{font-weight:500;font-size:11px}.linechart{width:100%;height:auto;max-height:210px;display:block}.lock{background:#fcf8f6;border-radius:12px;border:1px solid #ead9d3;padding:12px;font-size:13px;color:#684737}
 #toast{position:fixed;left:15px;right:15px;bottom:calc(94px + env(safe-area-inset-bottom));z-index:30;max-width:500px;margin:auto;background:#18344a;color:white;border-radius:10px;padding:12px 15px;text-align:center;font-size:14px;box-shadow:0 6px 20px #0004;display:none}
 @media(min-width:620px){main{padding:23px}.vehicle-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.vehicle-card{margin:0}.triple{grid-template-columns:repeat(3,1fr)}}
@@ -33,9 +33,10 @@ label.field{display:block;font-size:13px;font-weight:700;margin:13px 0 7px}input
 </style>
 </head>
 <body>
-<header class="top"><div class="topline"><div class="brand"><div class="logo" aria-hidden="true"><svg width="37" height="37" viewBox="0 0 40 40" fill="none"><path d="M8 31 L12 9 L20 20 L28 9 L32 31" stroke="#f4cfb2" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 4 V10 M20 14 V18 M20 25 V29 M20 33 V37" stroke="#fff" stroke-width="2" stroke-dasharray="3 4"/></svg></div><div><h1>MileSage</h1><small>Vehicle intelligence · Alpha 1.3.2 VIN lookup</small></div></div><button class="top-action" id="dataButton" type="button">Data & backup</button></div></header>
+<header class="top"><div class="topline"><div class="brand"><div class="logo" aria-hidden="true"><svg width="37" height="37" viewBox="0 0 40 40" fill="none"><path d="M8 31 L12 9 L20 20 L28 9 L32 31" stroke="#f4cfb2" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 4 V10 M20 14 V18 M20 25 V29 M20 33 V37" stroke="#fff" stroke-width="2" stroke-dasharray="3 4"/></svg></div><div><h1>MileSage</h1><small>Vehicle intelligence · Alpha 1.4.5 Tester #2</small></div></div><button class="top-action" id="dataButton" type="button">Data & backup</button></div></header>
 <main>
 <div id="notice" class="notice" role="status"></div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 12px 8px"><span class="small muted">MileSage · Alpha Tester #2</span><button id="feedbackShortcut" class="btn secondary" type="button" style="min-width:0;padding:9px 12px">Feedback / Bug Report</button></div>
 <section id="home" class="section active" aria-label="Home">
 <div class="section-head" style="flex-wrap:wrap"><h2>Your garage</h2><div class="button-row" style="gap:7px"><button type="button" id="addVinButton" class="btn" style="min-width:100px;padding:10px">+ By VIN</button><button type="button" id="addVehicleButton" class="btn secondary" style="min-width:100px;padding:10px">+ Manual</button></div></div>
 <div id="vinEntryCard" class="card feature-card" hidden>
@@ -91,12 +92,31 @@ label.field{display:block;font-size:13px;font-weight:700;margin:13px 0 7px}input
 <div class="section-head"><h2>Graphs & insights</h2></div>
 <div id="graphsBody"></div>
 </section>
+<section id="feedback" class="section" aria-label="Alpha tester feedback">
+<div class="section-head"><h2>Tester feedback</h2></div>
+<div class="card"><h3 style="margin-top:0">Report a bug or suggest an improvement</h3>
+<p class="small muted">Your feedback is saved on this phone. Tap <strong>Save &amp; share</strong>, then choose a messaging or email app and the person to send it to. Nothing is uploaded automatically. Photos, VINs, mileage and your vehicle records are not attached; share screenshots separately if useful.</p>
+<form id="feedbackForm">
+<div class="grid2"><div><label class="field" for="feedbackType">Feedback type</label><select id="feedbackType"><option>Bug report</option><option>Feature request</option><option>UI / usability</option><option>Other</option></select></div>
+<div><label class="field" for="feedbackSeverity">Impact</label><select id="feedbackSeverity"><option>Minor</option><option>Major</option><option>Blocking</option><option>Suggestion</option></select></div></div>
+<label class="field" for="feedbackTitle">Short title</label><input id="feedbackTitle" type="text" required maxlength="120" placeholder="Expense amount isn't filled">
+<label class="field" for="feedbackDetails">What happened, or what should change?</label><textarea id="feedbackDetails" rows="4" required maxlength="2500" placeholder="Describe the problem or idea in detail"></textarea>
+<label class="field" for="feedbackSteps">Steps to reproduce (optional)</label><textarea id="feedbackSteps" rows="3" maxlength="1500" placeholder="1. Open Fuel; 2. Scan receipt; 3. ..."></textarea>
+<label class="field" for="feedbackContact">Reply contact (optional)</label><input id="feedbackContact" type="text" maxlength="120" placeholder="Email or preferred contact method">
+<button type="submit" class="btn full">Save &amp; share feedback</button>
+<button id="saveFeedbackOnly" type="button" class="btn secondary" style="margin-top:8px">Save feedback on this phone only</button></form>
+<p class="small muted">You will choose the recipient in Android's Share menu. MileSage cannot confirm whether a message was delivered. No central feedback inbox is connected yet.</p></div>
+<div class="card"><h3>Saved feedback reports</h3><div id="feedbackHistory"></div>
+<div class="button-row"><button id="feedbackExport" class="btn secondary" type="button">Export reports as JSON</button>
+<button id="feedbackClear" class="btn secondary" type="button">Clear local reports</button></div></div>
+<button id="feedbackBack" type="button" class="btn secondary">Back to Home</button>
+</section>
 <section id="data" class="section" aria-label="Data and backup">
 <div class="section-head"><h2>Data & backup</h2></div>
 <div class="card feature-card"><h3 style="margin-top:0">Recover or import your data safely</h3><p class="small muted">Your phone data is stored locally. GitHub is checked read-only and will <strong>never</strong> replace it automatically. GitHub vehicles.json may contain incomplete or demo records, not your live phone readings; all-zero placeholder imports are blocked. Importing a JSON file requires review and saves a local recovery snapshot first.</p>
-<div class="button-row"><button id="githubBackupRecovery" class="btn" type="button">Recover from saved GitHub backup</button><button id="fileImportButton" class="btn secondary" type="button">Import JSON file</button></div><button id="githubImport" class="btn secondary" type="button" style="margin-top:8px">Review GitHub vehicles.json</button><input id="jsonFile" type="file" accept=".json,application/json" hidden><p id="jsonImportStatus" class="small muted" role="status" aria-live="polite">No backup selected.</p><p class="note">The saved GitHub backup is older (November 2026), but has recorded odometer and tire pressure data. Recovery fills only currently missing readings and empty histories, retaining your phone settings. Check mileage against your actual odometer after recovery. This will not update the app code or install an APK.</p></div>
+<div class="button-row"><button id="githubBackupRecovery" class="btn" type="button" hidden disabled style="display:none">Developer backup recovery disabled</button><button id="fileImportButton" class="btn secondary" type="button">Import JSON file</button></div><button id="githubImport" class="btn secondary" type="button" hidden disabled style="display:none">Developer GitHub import disabled</button><input id="jsonFile" type="file" accept=".json,application/json" hidden><p id="jsonImportStatus" class="small muted" role="status" aria-live="polite">No backup selected.</p><p class="note">Second tester edition: developer GitHub backups are intentionally disabled. Start with your own vehicle or a fictional test vehicle. Only import JSON files that you personally select.</p></div>
 <div class="card"><h3 style="margin-top:0">Phone receipt photo folder</h3><p class="small muted">Choose a location on your phone; MileSage will create <strong>MileSage/Photos</strong> inside it and copy new fuel, service and other-expense receipts. This requires browser permission and may not work when opening HTML from Downloads. If unavailable, use Download photo in history and move it with Files.</p><button class="btn secondary" type="button" id="choosePhotoDir">Choose phone photo folder</button><p class="small muted" id="photoDirStatus">Phone photo folder not selected.</p></div><div class="card"><h3 style="margin-top:0">Save a backup</h3><p class="small muted">Phone edits are saved in this browser, not uploaded to GitHub or your laptop. Export regularly before clearing browser data or changing phones.</p><div class="button-row"><button id="exportPython" class="btn" type="button">Export vehicles.json</button><button id="exportFull" class="btn secondary" type="button">Full mobile backup</button><button id="undoImport" class="btn secondary" type="button">Saved backups &amp; snapshots</button></div><div id="savedBackupLibrary" hidden><p id="savedBackupStatus" class="small muted" role="status">Browse saved backups. Restoring a file does not remove it.</p><button id="browseSavedJson" class="btn secondary" type="button">Browse saved JSON files</button><p class="small muted">In Samsung My Files, look under <strong>Downloads / MileSage</strong>. You can import the same file more than once. Saved snapshots below belong to this installation only.</p><h4 style="margin:12px 0 8px">Reusable local recovery snapshots</h4><div id="savedLocalSnapshots" aria-live="polite"></div><p class="small muted">Only the three most recent local recovery snapshots are retained to conserve phone storage. For long-term storage use Full mobile backup; exported PDFs must be saved separately.</p></div><p class="small muted" style="margin-bottom:0">The Python export uses the same vehicle JSON structure as your desktop app. Mobile-only expense and mileage-log details are included in the full backup.</p></div>
-<div class="card"><h3 style="margin-top:0">About this version</h3><p class="small muted">MileSage Alpha 1.3.2 preview • Mobile Preview v8 • VIN-based vehicle entry using the NHTSA decoder (internet required), with review before saving • Fluid & filter buttons on the Service tab • Safe manual data restore • GitHub checks never overwrite records • Works with locally saved data offline. Added vehicle overview cards, fuel-type and octane fields, and three fuel insights charts. Full two-way cloud sync, push alerts, OBD-II and APK packaging are not implemented.</p><p class="small muted" id="storageNote"></p></div>
+<div class="card"><h3 style="margin-top:0">Tester feedback</h3><p class="small muted">Report a problem or improvement. Reports stay on your device until you choose where to share them.</p><button id="feedbackFromData" type="button" class="btn secondary">Open tester feedback form</button></div><div class="card"><h3 style="margin-top:0">About this version</h3><p class="small muted">MileSage Alpha 1.4.5 · Second-tester build. Offline vehicle records, fuel and service receipt OCR, multi-page PDF expenses, reusable JSON backups, mileage/maintenance graphs, manual resale valuation history, and a locally saved Feedback / Bug Report form. Feedback sharing requires the tester to choose a recipient. No live Kelley Blue Book API, automatic bug-report uploads or vehicle-cloud sync is connected.</p><p class="small muted" id="storageNote"></p></div>
 </section>
 </main>
 <nav class="bottom" aria-label="Main tabs"><div class="tabs">
@@ -110,6 +130,7 @@ label.field{display:block;font-size:13px;font-weight:700;margin:13px 0 7px}input
 <script>
 (()=>{'use strict';
 const KEY='milesage-mobile-offline-v1';
+const SECOND_TESTER_BUILD=true; // Disables developer GitHub backup import paths.
 const BASE_KEY='milesage-mobile-github-snapshot-v1';
 const RECOVERY_KEY='milesage-mobile-recovery-history-v1';
 const REMOTE='https://raw.githubusercontent.com/pmaylox/Vehicle-Management.io/main/vehicles.json';
@@ -128,7 +149,7 @@ function message(s){let t=$('toast');t.textContent=s;t.style.display='block';cle
 function validDate(s){if(!/^\d{4}-\d{2}-\d{2}$/.test(s))return false;const d=new Date(s+'T12:00:00');return !Number.isNaN(d.getTime())&&d.toISOString().slice(0,10)===s && s<=localDate()}
 function costCents(str,optional=false){const val=String(str).trim();if(optional&&val==='')return null;if(!/^(?:0|[1-9]\d*)(?:\.\d{1,2})?$/.test(val))throw Error('Enter a valid dollar amount (up to 2 decimal places).');const n=money(val);if(!Number.isSafeInteger(n))throw Error('Amount is too large.');return n}
 function whole(str,label,minimum=0){const n=Number(String(str).trim());if(!/^\d+$/.test(String(str).trim())||!Number.isSafeInteger(n)||n<minimum)throw Error(label+' must be a whole number of '+minimum+' or more.');return n}
-function normalize(data){if(!Array.isArray(data))throw Error('Expected a JSON list of vehicle records.');for(const item of data){for(const name of ['service_history','fuel_history','tire_pressure_history','fluid_check_history','air_filter_changes','mobile_expenses','mobile_mileage_log']){if(item&&item[name]!=null&&(!Array.isArray(item[name])||item[name].some(r=>!r||typeof r!=='object'||Array.isArray(r))))throw Error('Invalid '+name+' for '+String(item.name||'vehicle')+'. Import cancelled.');}}if(!data.every(x=>x&&typeof x==='object'&&!Array.isArray(x)&&typeof x.name==='string'&&Number.isSafeInteger(Number(x.mileage))&&Number(x.mileage)>=0))throw Error('The file contains invalid vehicle records.');return data.map(x=>({
+function normalize(data){if(!Array.isArray(data))throw Error('Expected a JSON list of vehicle records.');for(const item of data){for(const name of ['service_history','fuel_history','tire_pressure_history','fluid_check_history','air_filter_changes','mobile_expenses','mobile_mileage_log','resale_history']){if(item&&item[name]!=null&&(!Array.isArray(item[name])||item[name].some(r=>!r||typeof r!=='object'||Array.isArray(r))))throw Error('Invalid '+name+' for '+String(item.name||'vehicle')+'. Import cancelled.');}}if(!data.every(x=>x&&typeof x==='object'&&!Array.isArray(x)&&typeof x.name==='string'&&Number.isSafeInteger(Number(x.mileage))&&Number(x.mileage)>=0))throw Error('The file contains invalid vehicle records.');return data.map(x=>({
   ...x,
   year:Number(x.year)||new Date().getFullYear(),
   mileage:Number(x.mileage),starting_mileage:Number(x.starting_mileage??x.mileage),
@@ -146,11 +167,12 @@ function normalize(data){if(!Array.isArray(data))throw Error('Expected a JSON li
   fluid_check_history:Array.isArray(x.fluid_check_history)?x.fluid_check_history:[],
   air_filter_changes:Array.isArray(x.air_filter_changes)?x.air_filter_changes:[],
   mobile_expenses:Array.isArray(x.mobile_expenses)?x.mobile_expenses:[],
-  mobile_mileage_log:Array.isArray(x.mobile_mileage_log)?x.mobile_mileage_log:[]
+  mobile_mileage_log:Array.isArray(x.mobile_mileage_log)?x.mobile_mileage_log:[],
+  resale_history:Array.isArray(x.resale_history)?x.resale_history:[]
 }));}
 function save(){try{localStorage.setItem(KEY,JSON.stringify({vehicles,current}));hasStorage=true;}catch(e){hasStorage=false;message('Browser storage unavailable — export your data now!')}updateBanner()}
 function load(){try{const raw=localStorage.getItem(KEY);if(raw){const o=JSON.parse(raw);vehicles=normalize(o.vehicles||[]);current=Math.max(0,Math.min(Number(o.current)||0,vehicles.length-1));}}catch(e){hasStorage=false;vehicles=[]}updateBanner()}
-function updateBanner(){let text='';if(!hasStorage)text='<div class="note" role="alert"><strong>Warning:</strong> This browser is not keeping changes. Export a JSON backup after every change.</div>';else if(!vehicles.length)text='<div class="note info"><strong>Get started:</strong> In <strong>Data & backup</strong>, use <strong>Recover from saved GitHub backup</strong> for earlier recorded mileage and tire pressures. Avoid importing incomplete or demonstration GitHub records over your real odometer and pressure readings.</div>';else text='<div class="note info" style="margin-top:0"><strong>GitHub check:</strong> '+esc(syncStatus)+'<div style="margin-top:5px">GitHub checks do not change your phone data. Always export a full backup before restoring.</div></div>';$('notice').innerHTML=text;$('storageNote').textContent=hasStorage?'Browser storage is available. Keep an exported backup in case browser data is cleared.':'Browser storage is blocked/unavailable. Make a backup immediately.'}
+function updateBanner(){let text='';if(!hasStorage)text='<div class="note" role="alert"><strong>Warning:</strong> This browser is not keeping changes. Export a JSON backup after every change.</div>';else if(!vehicles.length)text='<div class="note info"><strong>Get started:</strong> Add your own vehicle using <strong>+ By VIN</strong> or <strong>+ Manual</strong>. This tester build never imports developer vehicle data.</div>';else text='<div class="note info" style="margin-top:0"><strong>GitHub check:</strong> '+esc(syncStatus)+'<div style="margin-top:5px">GitHub checks do not change your phone data. Always export a full backup before restoring.</div></div>';$('notice').innerHTML=text;$('storageNote').textContent=hasStorage?'Browser storage is available. Keep an exported backup in case browser data is cleared.':'Browser storage is blocked/unavailable. Make a backup immediately.'}
 function status(val,inter){if(!Number.isFinite(val))return ['Unknown','warn'];if(val<=0)return ['Due now','due'];if(val<=Math.max(500,inter*.12))return [`${num(val)} mi left`,'warn'];return [`${num(val)} mi left`,'good']}
 function vehicleTag(obj){const remain=Number(obj.service_interval)-Math.max(0,Number(obj.mileage)-Number(obj.last_service_mileage));const [s,cls]=status(remain,Number(obj.service_interval));return `<span class="pill ${cls}">Oil: ${esc(s)}</span>`}
 /* VEHICLE_PHOTOS_BEGIN */
@@ -1467,7 +1489,89 @@ $('extraForm').onsubmit=async e=>{
 };}
 function mpgSeries(a){let start=null,gallons=0;let values=[];for(const r of a.fuel_history){if(r.mileage==null){start=null;gallons=0;continue}let current=Number(r.mileage),g=Number(r.gallons);if(!Number.isFinite(current)||!Number.isFinite(g))continue;if(start==null){if(r.full_tank){start=current;gallons=0;}continue;}gallons+=g;if(r.full_tank){let miles=current-start;if(miles>0&&gallons>0)values.push({label:r.date||'',mpg:miles/gallons});start=current;gallons=0;}}return values;}
 function mpgChart(values){if(values.length<2)return `<p class="muted small">At least 2 completed MPG calculations are needed to draw a trend. A starting full tank and a later full tank establish the first result.</p>`;const vals=values.slice(-8),min=Math.min(...vals.map(x=>x.mpg)),max=Math.max(...vals.map(x=>x.mpg));const hi=max===min?max+1:max;const lo=max===min?Math.max(0,min-1):Math.max(0,min-1);let pts=vals.map((x,i)=>`${(15+i*270/Math.max(1,vals.length-1)).toFixed(1)},${(145-120*(x.mpg-lo)/(hi-lo)).toFixed(1)}`).join(' ');return `<svg viewBox="0 0 300 170" class="linechart" role="img" aria-label="Recent fuel economy trend from ${min.toFixed(1)} to ${max.toFixed(1)} miles per gallon"><path d="M15 15V145H285" stroke="#cbd6df" stroke-width="2" fill="none"/><polyline points="${pts}" fill="none" stroke="#9e3b1b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>${vals.map((x,i)=>`<circle cx="${(15+i*270/Math.max(1,vals.length-1)).toFixed(1)}" cy="${(145-120*(x.mpg-lo)/(hi-lo)).toFixed(1)}" r="4" fill="#9e3b1b"/>`).join('')}<text x="18" y="12" font-size="11" fill="#5d6972">${max.toFixed(1)} MPG</text><text x="18" y="163" font-size="11" fill="#5d6972">${min.toFixed(1)} MPG</text></svg>`}
-function renderGraphs(){const a=v(),el=$('graphsBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}const t=expenseSummary(a),arr=[['Service',t.service],['Fuel',t.fuel],['Other',t.extra]],max=Math.max(1,...arr.map(x=>x[1])),mpgs=mpgSeries(a);const oilRem=Number(a.service_interval)-(Number(a.mileage)-Number(a.last_service_mileage));el.innerHTML=`<div class="card"><h3 style="margin-top:0">Recorded spending by category</h3><div class="chart-bars">${arr.map(([name,c])=>`<div class="chart-col"><div>${usd(c)}</div><div class="chart-bar" style="height:${Math.max(2,Math.round(c/max*130))}px"></div><div class="muted">${name}</div></div>`).join('')}</div></div><div class="card"><h3 style="margin-top:0">Fuel economy trend</h3>${mpgChart(mpgs)}${mpgs.length?`<p class="small muted">Most recent calculated MPG: <strong>${mpgs[mpgs.length-1].mpg.toFixed(2)}</strong> (${mpgs.length} valid full-tank cycle${mpgs.length===1?'':'s'} recorded)</p>`:''}</div><div class="card"><h3 style="margin-top:0">Explainable health snapshot</h3><p><strong>Oil service:</strong> ${oilRem<=0?'Due now or overdue by '+num(-oilRem)+' miles':num(oilRem)+' miles remaining until the next scheduled oil service'}.</p><p><strong>Last oil-service mileage:</strong> ${num(a.last_service_mileage)}. <strong>Interval:</strong> ${num(a.service_interval)} miles.</p><div class="note info">These are mileage-based tracking indicators, not mechanical diagnostics. Follow the vehicle manufacturer’s maintenance guidance.</div></div>`;el.innerHTML+=additionalGraphCards(a);}
+/* RESALE_TRACKER_BEGIN */
+function resaleRows(a){
+ return (a.resale_history||[]).filter(r=>r&&Number.isSafeInteger(r.mileage)&&
+  (Number.isSafeInteger(r.trade_in_cents)||Number.isSafeInteger(r.private_party_cents)))
+  .slice().sort((x,y)=>x.mileage-y.mileage||String(x.date).localeCompare(String(y.date)));
+}
+function resaleGraph(rows){
+ if(!rows.length)return '<p class="small muted">No recorded valuations yet.</p>';
+ const nums=rows.flatMap(r=>[r.trade_in_cents,r.private_party_cents]).filter(v=>Number.isSafeInteger(v));
+ const minM=rows[0].mileage,maxM=rows[rows.length-1].mileage;
+ const minV=Math.max(0,Math.min(...nums)/100-500),maxV=Math.max(minV+1000,Math.max(...nums)/100+500);
+ const x=m=>35+330*(m-minM)/(maxM-minM||1);
+ const y=c=>155-125*(c/100-minV)/(maxV-minV);
+ const plot=(key,color)=>{
+  const pts=rows.filter(r=>Number.isSafeInteger(r[key]));
+  return '<path d="'+pts.map((r,i)=>(i?'L':'M')+x(r.mileage).toFixed(1)+' '+y(r[key]).toFixed(1)).join(' ')+'" fill="none" stroke="'+color+'" stroke-width="2.5"/>'+
+   pts.map(r=>'<circle cx="'+x(r.mileage).toFixed(1)+'" cy="'+y(r[key]).toFixed(1)+'" r="3.5" fill="'+color+'"><title>'+esc(r.date)+' '+num(r.mileage)+' miles '+usd(r[key])+'</title></circle>').join('');
+ };
+ return '<svg viewBox="0 0 400 195" role="img" aria-label="Recorded vehicle resale values versus mileage" style="width:100%;height:auto"><line x1="35" y1="18" x2="35" y2="155" stroke="#999"/><line x1="35" y1="155" x2="365" y2="155" stroke="#999"/>'+
+ '<text x="35" y="14" font-size="11" fill="currentColor">'+usd(Math.round(maxV*100))+'</text>'+
+ '<text x="35" y="175" font-size="11" fill="currentColor">'+num(minM)+' mi</text>'+
+ '<text x="365" y="175" font-size="11" text-anchor="end" fill="currentColor">'+num(maxM)+' mi</text>'+
+ plot('trade_in_cents','#a44828')+plot('private_party_cents','#28778f')+
+ '</svg><p class="small muted"><span style="color:#a44828">●</span> Trade-in &nbsp; <span style="color:#28778f">●</span> Private party · X-axis = odometer</p>';
+}
+function resaleCard(a){
+ const rows=resaleRows(a),latest=rows.slice().sort((x,y)=>String(y.date).localeCompare(String(x.date)))[0];
+ return '<div class="card"><h3 style="margin-top:0">Resale value vs. odometer</h3>'+
+ '<p class="small muted">Manually entered quotes; no live KBB connection or automatic valuation. Mileage alone cannot determine resale value.</p>'+
+ '<p><strong>Current odometer:</strong> '+num(a.mileage)+' miles</p>'+
+ (latest?'<p class="small">Latest quote: '+esc(latest.date)+' at '+num(latest.mileage)+' miles.'+(latest.mileage!==a.mileage?' Current odometer differs; the value has not been recalculated.':'')+'</p>':'')+
+ resaleGraph(rows)+
+ '<button id="lookupKBB" class="btn secondary" type="button">Open Kelley Blue Book valuation</button>'+
+ '<form id="resaleForm" style="margin-top:12px"><h4>Record a valuation</h4>'+
+ '<div class="grid2"><div><label class="field" for="resaleDate">Quote date</label><input id="resaleDate" type="date" required value="'+localDate()+'"></div>'+
+ '<div><label class="field" for="resaleMileage">Mileage when quoted</label><input id="resaleMileage" type="number" min="0" max="9999999" step="1" required value="'+Number(a.mileage)+'"></div></div>'+
+ '<label class="field" for="resaleSource">Source</label><select id="resaleSource"><option>Kelley Blue Book (manual)</option><option>Dealer offer</option><option>Other valuation</option></select>'+
+ '<div class="grid2"><div><label class="field" for="resaleTrade">Trade-in ($)</label><input id="resaleTrade" type="text" inputmode="decimal" placeholder="23000.00"></div>'+
+ '<div><label class="field" for="resalePrivate">Private-party ($)</label><input id="resalePrivate" type="text" inputmode="decimal" placeholder="26000.00"></div></div>'+
+ '<label class="field" for="resaleCondition">Condition</label><select id="resaleCondition"><option>Not recorded</option><option>Excellent</option><option>Very good</option><option>Good</option><option>Fair</option><option>Poor</option></select>'+
+ '<label class="field" for="resaleNotes">Trim / notes (optional)</label><input id="resaleNotes" type="text" maxlength="150" placeholder="Trim, location, quote details">'+
+ '<button class="btn full" type="submit">Save resale snapshot</button></form>'+
+ '<h4>Valuation history ('+rows.length+')</h4>'+
+ (rows.length?rows.slice().reverse().map(r=>{
+  const index=a.resale_history.indexOf(r);
+  return '<div class="card" style="margin:6px 0;padding:10px"><strong>'+esc(r.date)+'</strong> · '+num(r.mileage)+' miles · '+esc(r.source)+
+   '<p class="small">Trade-in: '+(r.trade_in_cents==null?'Not recorded':usd(r.trade_in_cents))+
+   ' · Private party: '+(r.private_party_cents==null?'Not recorded':usd(r.private_party_cents))+'</p>'+
+   '<p class="small muted">'+esc(r.condition||'')+' '+esc(r.notes||'')+'</p>'+
+   '<button class="btn secondary" type="button" data-resale-delete="'+index+'">Delete quote</button></div>';
+ }).join(''):'<p class="small muted">None saved yet.</p>')+
+ '<p class="small muted">Quotes are stored per vehicle in Full mobile JSON backups. Market conditions, trim, condition and location affect resale estimates.</p></div>';
+}
+function wireResale(a){
+ $('lookupKBB').onclick=()=>{
+  if(window.MileSageAndroid?.openResaleValuation)window.MileSageAndroid.openResaleValuation();
+  else window.open('https://www.kbb.com/whats-my-car-worth/','_blank','noopener,noreferrer');
+ };
+ $('resaleForm').onsubmit=e=>{
+  e.preventDefault();try{
+   if(v()!==a)throw Error('Vehicle selection changed.');
+   const date=$('resaleDate').value,mileage=whole($('resaleMileage').value,'Mileage',0);
+   if(!validDate(date)||mileage>9999999)throw Error('Enter a valid quote date and mileage.');
+   const trade=costCents($('resaleTrade').value,true),privateValue=costCents($('resalePrivate').value,true);
+   if(trade===null&&privateValue===null)throw Error('At least one value is required.');
+   if([trade,privateValue].some(x=>x!==null&&(x<0||x>100000000)))throw Error('Quote cannot exceed $1 million.');
+   if(!Array.isArray(a.resale_history))a.resale_history=[];
+   a.resale_history.push({date,mileage,source:$('resaleSource').value,
+    trade_in_cents:trade,private_party_cents:privateValue,
+    condition:$('resaleCondition').value,notes:$('resaleNotes').value.trim().slice(0,150)});
+   save();renderGraphs();message('Resale quote saved to selected vehicle.');
+  }catch(err){alert(err.message);}
+ };
+ $('graphsBody').querySelectorAll('[data-resale-delete]').forEach(btn=>btn.onclick=()=>{
+  const index=Number(btn.dataset.resaleDelete),r=a.resale_history?.[index];
+  if(!r||v()!==a)return;
+  if(!confirm('Delete the '+r.date+' resale quote at '+num(r.mileage)+' miles?'))return;
+  a.resale_history.splice(index,1);save();renderGraphs();message('Quote deleted.');
+ });
+}
+/* RESALE_TRACKER_END */
+
+function renderGraphs(){const a=v(),el=$('graphsBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}const t=expenseSummary(a),arr=[['Service',t.service],['Fuel',t.fuel],['Other',t.extra]],max=Math.max(1,...arr.map(x=>x[1])),mpgs=mpgSeries(a);const oilRem=Number(a.service_interval)-(Number(a.mileage)-Number(a.last_service_mileage));el.innerHTML=`<div class="card"><h3 style="margin-top:0">Recorded spending by category</h3><div class="chart-bars">${arr.map(([name,c])=>`<div class="chart-col"><div>${usd(c)}</div><div class="chart-bar" style="height:${Math.max(2,Math.round(c/max*130))}px"></div><div class="muted">${name}</div></div>`).join('')}</div></div><div class="card"><h3 style="margin-top:0">Fuel economy trend</h3>${mpgChart(mpgs)}${mpgs.length?`<p class="small muted">Most recent calculated MPG: <strong>${mpgs[mpgs.length-1].mpg.toFixed(2)}</strong> (${mpgs.length} valid full-tank cycle${mpgs.length===1?'':'s'} recorded)</p>`:''}</div><div class="card"><h3 style="margin-top:0">Explainable health snapshot</h3><p><strong>Oil service:</strong> ${oilRem<=0?'Due now or overdue by '+num(-oilRem)+' miles':num(oilRem)+' miles remaining until the next scheduled oil service'}.</p><p><strong>Last oil-service mileage:</strong> ${num(a.last_service_mileage)}. <strong>Interval:</strong> ${num(a.service_interval)} miles.</p><div class="note info">These are mileage-based tracking indicators, not mechanical diagnostics. Follow the vehicle manufacturer’s maintenance guidance.</div></div>`;el.innerHTML=resaleCard(a)+el.innerHTML;el.innerHTML+=additionalGraphCards(a);wireResale(a);}
 
 const receiptFiles={fuel:null,service:null,expense:null};
 let photoDir=null;
@@ -1561,11 +1665,104 @@ async function storeReceipt(vehicle,kind,record,mutate){
  if(note)alert(note);
 }
 
+/* TESTER_FEEDBACK_BEGIN */
+const FEEDBACK_KEY='milesage-alpha145-tester-feedback-v1';
+const FEEDBACK_VERSION='MileSage Alpha 1.4.5 · tester build';
+function savedFeedback(){
+ try{
+  const rows=JSON.parse(localStorage.getItem(FEEDBACK_KEY)||'[]');
+  return Array.isArray(rows)?rows.filter(r=>r&&typeof r==='object').slice(0,30):[];
+ }catch(e){return [];}
+}
+function feedbackText(report){
+ return [
+  'MileSage Alpha Tester Feedback',
+  'App: '+FEEDBACK_VERSION,
+  'Date (UTC): '+report.created_at,
+  'Type: '+report.kind,
+  'Impact: '+report.severity,
+  'Subject: '+report.title,
+  'What happened / suggestion:',report.details,
+  'Steps to reproduce:',report.steps||'Not provided',
+  'Reply contact (optional):',report.contact||'Not provided',
+  '',
+  'Sent by tester after choosing a share destination. No VIN, mileage, photos or vehicle history attached automatically.'
+ ].join('\n');
+}
+function shareTesterFeedback(report){
+ const content=feedbackText(report);
+ if(window.MileSageAndroid&&typeof window.MileSageAndroid.shareTesterFeedback==='function'){
+  window.MileSageAndroid.shareTesterFeedback(content);
+  message('Share chooser opened. Choose who receives this report.');
+ }else if(navigator.share){
+  navigator.share({title:'MileSage Alpha Tester Feedback',text:content})
+   .catch(()=>message('Share cancelled. Report is still saved on this device.'));
+ }else{
+  download('MileSage-feedback-'+localDate()+'.json',{version:FEEDBACK_VERSION,reports:[report]});
+  message('No share app available. Feedback JSON downloaded; send it to the app developer.');
+ }
+}
+function recordTesterFeedback(shareNow){
+ const type=$('feedbackType'),title=$('feedbackTitle'),details=$('feedbackDetails'),
+  steps=$('feedbackSteps'),severity=$('feedbackSeverity'),contact=$('feedbackContact');
+ if(!type||!title||!details)return false;
+ const label=title.value.trim(),description=details.value.trim();
+ if(label.length<3||description.length<10){
+  alert('Please give a short title and at least 10 characters describing the issue.');return false;
+ }
+ const report={
+  id:'fb-'+Date.now()+'-'+Math.floor(Math.random()*1000000),
+  created_at:new Date().toISOString(),version:FEEDBACK_VERSION,
+  kind:type.value,severity:severity.value,title:label.slice(0,120),
+  details:description.slice(0,2500),steps:steps.value.trim().slice(0,1500),
+  contact:contact.value.trim().slice(0,120)
+ };
+ const records=savedFeedback();records.unshift(report);
+ try{localStorage.setItem(FEEDBACK_KEY,JSON.stringify(records.slice(0,30)));}
+ catch(e){alert('Could not save feedback locally. No report was sent. Free up phone storage and try again.');return false;}
+ renderTesterFeedback();
+ message('Feedback saved on this phone. Sharing requires choosing a destination.');
+ if(shareNow)shareTesterFeedback(report);
+ return true;
+}
+function renderTesterFeedback(){
+ const history=$('feedbackHistory');
+ if(!history)return;
+ const reports=savedFeedback();
+ history.innerHTML=reports.length?reports.map(r=>
+  '<div class="card" style="padding:11px;margin:9px 0"><strong>'+esc(r.title||'Feedback')+
+  '</strong><p class="small muted">'+esc(r.created_at||'')+' · '+esc(r.kind||'')+
+  ' · '+esc(r.severity||'')+'</p><button type="button" class="btn secondary" data-feedback-share="'+esc(r.id)+'">Share again</button></div>'
+ ).join(''):'<p class="small muted">No reports yet. Your reports stay on this phone until you choose to share them.</p>';
+ history.querySelectorAll('[data-feedback-share]').forEach(b=>b.onclick=()=>{
+  const r=savedFeedback().find(x=>x.id===b.dataset.feedbackShare);
+  if(r)shareTesterFeedback(r);
+ });
+ $('feedbackForm').onsubmit=e=>{e.preventDefault();recordTesterFeedback(true);};
+ $('saveFeedbackOnly').onclick=()=>recordTesterFeedback(false);
+ $('feedbackExport').onclick=()=>{
+  const rows=savedFeedback();
+  if(!rows.length){message('No reports to export.');return;}
+  download('MileSage-tester-feedback-'+localDate()+'.json',
+   {format:'MileSage-Alpha-Feedback-v1',version:FEEDBACK_VERSION,reports:rows});
+ };
+ $('feedbackClear').onclick=()=>{
+  if(!reports.length)return;
+  if(!confirm('Clear '+reports.length+' locally saved feedback report(s)? This cannot be undone.'))return;
+  localStorage.removeItem(FEEDBACK_KEY);renderTesterFeedback();
+ };
+}
+function openTesterFeedback(){
+ renderTesterFeedback();
+ switchTab('feedback');
+}
+/* TESTER_FEEDBACK_END */
+
 function renderAll(){renderHome();renderService();renderFuel();renderExpenses();renderGraphs();updateBanner();}
 function switchTab(id){tab=id;document.querySelectorAll('.section').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('.tab').forEach(x=>{x.classList.toggle('active',x.dataset.tab===id);x.setAttribute('aria-current',x.dataset.tab===id?'page':'false')});window.scrollTo({top:0,behavior:'instant'})}
 function filename(prefix){return `${prefix}-${localDate()}.json`}
 function download(name,data){const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);message('Backup prepared. Check Downloads on your phone.');}
-function pythonExport(){return vehicles.map(({mobile_expenses,mobile_mileage_log,...obj})=>({...obj,service_history:(obj.service_history||[]).map(({receipt_photo,...r})=>r),fuel_history:(obj.fuel_history||[]).map(({receipt_photo,...r})=>r)}))}
+function pythonExport(){return vehicles.map(({mobile_expenses,mobile_mileage_log,resale_history,...obj})=>({...obj,service_history:(obj.service_history||[]).map(({receipt_photo,...r})=>r),fuel_history:(obj.fuel_history||[]).map(({receipt_photo,...r})=>r)}))}
 /* RESTORE_GUARDS_BEGIN */
 function vehicleID(a){return a.vin?'vin:'+String(a.vin).toUpperCase():'name:'+String(a.year)+'|'+String(a.name).trim().toLowerCase();}
 function isBlankSeed(recs){
@@ -1589,7 +1786,7 @@ function destructiveDiffs(existing,incoming){
     problems.push(local.name+': '+key.replace('_',' ')+' pressure would be cleared');
   }
   for(const key of ['service_history','fuel_history','tire_pressure_history',
-    'fluid_check_history','air_filter_changes','mobile_expenses','mobile_mileage_log']){
+    'fluid_check_history','air_filter_changes','mobile_expenses','mobile_mileage_log','resale_history']){
    if((next[key]||[]).length<(local[key]||[]).length)
     problems.push(local.name+': '+key.replaceAll('_',' ')+' would lose entries');
   }
@@ -1615,7 +1812,7 @@ function mergeRecovery(existing,backups){
     item.starting_tire_pressures[name]=backup.starting_tire_pressures[name];
   }
   for(const key of ['service_history','fuel_history','tire_pressure_history',
-      'fluid_check_history','air_filter_changes','mobile_expenses','mobile_mileage_log']){
+      'fluid_check_history','air_filter_changes','mobile_expenses','mobile_mileage_log','resale_history']){
    if(!item[key]?.length && backup[key]?.length)
     item[key]=JSON.parse(JSON.stringify(backup[key]));
   }
@@ -1794,6 +1991,7 @@ function showSavedBackupLibrary(){
 }
 /* REUSABLE_BACKUP_LIBRARY_END */
 async function autoRefreshGitHub(){
+ if(SECOND_TESTER_BUILD){syncStatus='Tester build: developer GitHub import is disabled.';updateBanner();return;}
  if(checkingGitHub||document.hidden)return;
  checkingGitHub=true;
  try{
@@ -1953,6 +2151,9 @@ function init(){
  load();renderAll();
  for(const b of document.querySelectorAll('[data-tab]'))b.onclick=()=>switchTab(b.dataset.tab);
  $('dataButton').onclick=()=>switchTab('data');
+ $('feedbackShortcut').onclick=openTesterFeedback;
+ $('feedbackFromData').onclick=openTesterFeedback;
+ $('feedbackBack').onclick=()=>switchTab('home');
  $('addVehicleButton').onclick=addVehicle;
  wireVehicleControls();
  wireVehiclePhotos();

@@ -1,7 +1,8 @@
-name: Build MileSage Alpha 1.4.4 Saved Backup Browser APK
+name: Build MileSage Alpha 1.4.5 Resale and Tester Feedback APK
 on:
   push:
     branches:
+      - feature/resale-valuation-tester-feedback-alpha145-20261119
       - feature/backup-library-reusable-restore-alpha144-20261119
       - fix/expense-pdf-find-and-autofill-alpha143-20261119
       - feature/expense-multipage-pdf-alpha142-20261119
@@ -14,13 +15,13 @@ on:
       - "mobile/**"
       - ".github/workflows/build-milesage-android-apk.yml"
   pull_request:
-    branches: [main, fix/expense-pdf-find-and-autofill-alpha143-20261119]
+    branches: [main, feature/backup-library-reusable-restore-alpha144-20261119]
   workflow_dispatch:
 
 jobs:
   build:
     concurrency:
-      group: milesage-alpha144-${{ github.sha }}
+      group: milesage-alpha145-${{ github.sha }}
       cancel-in-progress: true
     runs-on: ubuntu-latest
     permissions:
@@ -58,35 +59,36 @@ jobs:
         run: |
           mkdir -p android/app/src/main/assets release
           cp mobile/MileSage_Alpha_1_3_2_VIN_Lookup.html android/app/src/main/assets/index.html
-          sed -i 's/Alpha 1.3.2/Alpha 1.4.3 Expense OCR/g' android/app/src/main/assets/index.html
-          cp android/app/src/main/assets/index.html release/MileSage_Alpha_1_4_4_Reusable_Backups.html
-          printf '%s\n' "MileSage Alpha 1.4.4 - reusable backup browser and local snapshots, with tested Fuel, Service, Expense scanners preserved" \
+          sed -i 's/Alpha 1.3.2/Alpha 1.4.5 Tester #2/g' android/app/src/main/assets/index.html
+          cp android/app/src/main/assets/index.html release/MileSage_Alpha_1_4_5_Tester_Resale_Feedback.html
+          printf '%s\n' "MileSage Alpha 1.4.5 - Closed Alpha Tester #2: resale tracking and in-app feedback" \
             "Do NOT uninstall or clear existing MileSage apps. This separately installed test copy has independent storage." \
-            "Back up your existing phone data before importing anything into the test copy." \
-            "This APK has its own application ID and cannot overwrite previous MileSage test apps. Import a Full mobile backup to copy data into it." \
-            "Use Data & backup > Import JSON file with YOUR full phone backup." \
+            "If upgrading from an earlier tester version, save YOUR own Full mobile JSON backup first." \
+            "This APK installs separately. Start with an empty garage. NEVER import the developer's personal vehicle backup." \
+            "For your own existing test records only: use Data & backup > Import JSON file with YOUR previously saved backup." \
             "Data & backup > Saved backups & snapshots lists local undo copies and offers Browse saved JSON files in Downloads/MileSage. Restoring does not delete downloaded JSON. The three most recent app-local snapshots are retained." \
-            "Confirm the real Tacoma and Explorer plus their histories after import." \
+            "Use your own vehicle or a fictional test vehicle, and confirm your own records persist after restarting." \
             "The Fuel and Service receipt buttons each open a one-page crop-and-straighten document scanner, with native offline OCR and editable suggestions. The independent Service multi-page PDF scanner remains available." \
             "Expenses > Scan multi-page document produces a 30-page PDF and recognizes dates, invoice totals and body repair descriptions for confirmation. View the PDF before saving the expense." \
             "The separate Service scanner still supports up to 30 invoice pages." \
             "For expense PDF files: tap Save PDF to My Files; Samsung My Files > Downloads > MileSage > Expenses. Full mobile JSON backups include PDF references, NOT PDF bytes." \
             "Test with disposable Expense, Service and Fuel records first; preserve original MileSage." \
-            "This APK is DEBUG-SIGNED for testing and not for production distribution." \
-            "OCR, PDF opening/sharing and attachments require Samsung phone testing." > release/READ_ME_FIRST.txt
+            "Tester Feedback is saved locally until you tap Share and choose a recipient. This is a DEBUG-SIGNED alpha APK, not a Google Play release." \
+            "Graphs > Resale value records your own mileage-linked trade-in/private-party quotes; no live KBB API is included." > release/READ_ME_FIRST.txt
       - name: Validate JavaScript and mobile regression tests
         run: |
           python - <<'PY'
           from pathlib import Path
           s=Path("android/app/src/main/assets/index.html").read_text(encoding="utf-8")
           assert s.rstrip().endswith("</body></html>"), "Unexpected trailing content after HTML document"
-          for phrase in ("mobile_photo","chooseVehiclePhoto","takeVehiclePhoto","removeVehiclePhoto","milesage-mobile-offline-v1","+ By VIN","Take receipt photo","Take fuel receipt photo","choosePhotoDir","odometer-controls","receipt_photo",'id="editVehicle"','id="removeVehicle"','id="scanServicePdf"','function parseGallonsInput(','FUEL_SCANNER_V2_BEGIN','window.milesageFuelScanComplete','window.milesageServiceReceiptComplete','EXPENSE_MULTIPAGE_PDF_BEGIN','EXPENSE_PDF_OCR_BEGIN','window.milesageExpenseOCRComplete','REUSABLE_BACKUP_LIBRARY_BEGIN','id="savedBackupLibrary"','id="viewExpensePdfDraft"','window.milesageExpenseScannerComplete'):
+          for phrase in ("mobile_photo","chooseVehiclePhoto","takeVehiclePhoto","removeVehiclePhoto","milesage-mobile-offline-v1","+ By VIN","Take receipt photo","Take fuel receipt photo","choosePhotoDir","odometer-controls","receipt_photo",'id="editVehicle"','id="removeVehicle"','id="scanServicePdf"','function parseGallonsInput(','FUEL_SCANNER_V2_BEGIN','window.milesageFuelScanComplete','window.milesageServiceReceiptComplete','EXPENSE_MULTIPAGE_PDF_BEGIN','EXPENSE_PDF_OCR_BEGIN','window.milesageExpenseOCRComplete','REUSABLE_BACKUP_LIBRARY_BEGIN','id="savedBackupLibrary"','RESALE_TRACKER_BEGIN','TESTER_FEEDBACK_BEGIN','id="feedbackForm"','id="resaleForm"','id="viewExpensePdfDraft"','window.milesageExpenseScannerComplete'):
               assert phrase in s, phrase
           Path("/tmp/milesage-inline.js").write_text(s.split("<script>",1)[1].split("</script>",1)[0],encoding="utf-8")
           PY
           node --check /tmp/milesage-inline.js
           node mobile/test_restore_safety.cjs
           node mobile/test_backup_library.cjs
+          node mobile/test_resale_feedback.cjs
           node mobile/test_vin_lookup.cjs
           node mobile/test_vehicle_management.cjs
           node mobile/test_vehicle_photos.cjs
@@ -119,13 +121,14 @@ jobs:
           done
       - name: Collect build files
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk release/MileSage_Alpha_1_4_4_Reusable_Backups.apk
-          python mobile/validate_mobile_html.py release/MileSage_Alpha_1_4_4_Reusable_Backups.apk
-          unzip -t release/MileSage_Alpha_1_4_4_Reusable_Backups.apk | tail -1
-          sha256sum release/MileSage_Alpha_1_4_4_Reusable_Backups.apk > release/APK_SHA256.txt
+          cp android/app/build/outputs/apk/debug/app-debug.apk release/MileSage_Alpha_1_4_5_Tester_Resale_Feedback.apk
+          python mobile/validate_mobile_html.py release/MileSage_Alpha_1_4_5_Tester_Resale_Feedback.apk
+          unzip -t release/MileSage_Alpha_1_4_5_Tester_Resale_Feedback.apk | tail -1
+          sha256sum release/MileSage_Alpha_1_4_5_Tester_Resale_Feedback.apk > release/APK_SHA256.txt
+          cp docs/ALPHA_1_4_5_SECOND_TESTER_GUIDE.md release/Second_Tester_Guide.md
       - uses: actions/upload-artifact@v4
         with:
-          name: MileSage-Alpha-1.4.4-Reusable-Backups
+          name: MileSage-Alpha-1.4.5-Tester2-Feedback
           path: release/
           retention-days: 90
       - name: Test complete app in a phone-sized browser
