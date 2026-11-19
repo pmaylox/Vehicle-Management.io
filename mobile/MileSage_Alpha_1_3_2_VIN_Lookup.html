@@ -1765,6 +1765,17 @@ function restoreSavedSnapshot(index){
   // importing a downloaded JSON file.
   const accepted=replace({format:'MileSage-Mobile-v1',
    vehicles:saved.vehicles,current:saved.current});
+  if(accepted){
+   // The automatic pre-import safeguard retains only three slots. Protect
+   // the exact snapshot just restored, even if it was the oldest of three.
+   const recent=readSnapshots();
+   if(!recent.some(x=>x.created_at===saved.created_at)){
+    if(recent.length>=3)recent[recent.length-1]=saved;
+    else recent.push(saved);
+    try{localStorage.setItem(RECOVERY_KEY,JSON.stringify(recent.slice(0,3)));}
+    catch(e){alert('Restored successfully, but could not retain this local snapshot. Keep a Full mobile JSON backup in Downloads.');}
+   }
+  }
   renderSavedBackups();
   if(accepted)message('Saved snapshot restored. You can choose it again later.');
   return accepted;
