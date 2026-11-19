@@ -219,17 +219,39 @@ if(!files.length)files.push('mobile/MileSage_Mobile_Auto_Refresh.html','mobile/M
     await page.evaluate(()=>{
       window.MileSageAndroid={
         ...window.MileSageAndroid,
-        scanExpenseDocument:()=>window.milesageExpenseScannerComplete({
-          id:'da1e216e-490b-4f1e-8bbd-50ca81aab111',
-          pages:3,name:'MileSage-Expense-da1e216e-490b-4f1e-8bbd-50ca81aab111.pdf'
-        }),
+        scanExpenseDocument:()=>{
+          const id='da1e216e-490b-4f1e-8bbd-50ca81aab111';
+          window.milesageExpenseScannerComplete({
+            id,pages:3,ocr_pending:true,name:'MileSage-Expense-'+id+'.pdf'
+          });
+          window.milesageExpenseOCRComplete({
+            id,ocr_pages:3,
+            text:'--- PAGE 1 ---\nBODY REPAIR ESTIMATE\nINVOICE DATE 11/14/2026\nBUMPER $350.00\n--- PAGE 2 ---\nPARTS TOTAL $350.00\nLABOR TOTAL $650.00\n--- PAGE 3 ---\nTOTAL REPAIR COST $1,500.75'
+          });
+        },
         openExpenseDocument:id=>{window.__lastOpenedExpensePDF=id;},
-        shareExpenseDocument:id=>{window.__lastSharedExpensePDF=id;}
+        shareExpenseDocument:id=>{window.__lastSharedExpensePDF=id;},
+        saveExpenseDocument:id=>{window.__lastExportedExpensePDF=id;}
       };
     });
     await page.locator('#scanExpensePdf').click();
     assert.equal(await page.locator('#expensePdfPreview').isVisible(),true);
-    assert.ok((await page.locator('#expensePdfScanStatus').innerText()).includes('3 page'));
+    assert.equal(await page.locator('#expensePdfActions').isVisible(),true);
+    assert.equal(await page.locator('#expensePdfTextReview').isVisible(),true);
+    assert.equal(await page.locator('#extraDate').inputValue(),'2026-11-14');
+    assert.equal(await page.locator('#extraCost').inputValue(),'1500.75');
+    assert.equal(await page.locator('#extraDesc').inputValue(),'Body repair estimate');
+    await page.locator('#viewExpensePdfDraft').click();
+    await page.locator('#saveExpensePdfDraft').click();
+    await page.locator('#shareExpensePdfDraft').click();
+    const draftActions=await page.evaluate(()=>({
+      viewed:window.__lastOpenedExpensePDF,
+      exported:window.__lastExportedExpensePDF,
+      shared:window.__lastSharedExpensePDF
+    }));
+    assert.equal(draftActions.viewed,'da1e216e-490b-4f1e-8bbd-50ca81aab111');
+    assert.equal(draftActions.exported,draftActions.viewed);
+    assert.equal(draftActions.shared,draftActions.viewed);
     assert.equal(JSON.parse(await page.evaluate(()=>localStorage.getItem('milesage-mobile-offline-v1')))
       .vehicles[0].mobile_expenses.length,1,'Scanning alone must not save a new expense');
     await page.locator('#clearExpensePdf').click();
@@ -245,8 +267,10 @@ if(!files.length)files.push('mobile/MileSage_Mobile_Auto_Refresh.html','mobile/M
     },null,{timeout:15000});
     assert.equal(await page.locator('[data-expense-pdf="1"]').count(),1);
     assert.equal(await page.locator('[data-expense-pdf-share="1"]').count(),1);
+    assert.equal(await page.locator('[data-expense-pdf-save="1"]').count(),1);
     await page.locator('[data-expense-pdf="1"]').click();
     await page.locator('[data-expense-pdf-share="1"]').click();
+    await page.locator('[data-expense-pdf-save="1"]').click();
     const routed=await page.evaluate(()=>({
       opened:window.__lastOpenedExpensePDF,shared:window.__lastSharedExpensePDF
     }));
