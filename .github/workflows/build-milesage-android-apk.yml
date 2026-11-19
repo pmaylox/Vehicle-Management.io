@@ -125,6 +125,7 @@ jobs:
           python mobile/validate_mobile_html.py release/MileSage_Alpha_1_4_5_Tester_Resale_Feedback.apk
           unzip -t release/MileSage_Alpha_1_4_5_Tester_Resale_Feedback.apk | tail -1
           sha256sum release/MileSage_Alpha_1_4_5_Tester_Resale_Feedback.apk > release/APK_SHA256.txt
+          cp docs/ALPHA_1_4_5_SECOND_TESTER_GUIDE.md release/Second_Tester_Guide.md
       - uses: actions/upload-artifact@v4
         with:
           name: MileSage-Alpha-1.4.5-Tester2-Feedback
