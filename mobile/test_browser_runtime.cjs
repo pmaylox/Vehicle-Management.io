@@ -87,13 +87,40 @@ if(!files.length)files.push('mobile/MileSage_Mobile_Auto_Refresh.html','mobile/M
     assert.equal(await page.locator('#fuelDate').inputValue(),'2026-10-14');
     assert.equal(await page.locator('#fullTank').isChecked(),false,
       'OCR must never assume the tank was filled completely');
-    assert.ok((await page.locator('#fuelReceiptProgress').innerText()).includes('Suggested from photo:'));
+    assert.ok((await page.locator('#fuelReceiptProgress').innerText()).includes('Recognized:'));
     assert.equal(await page.locator('#fuelPhotoPreview').isVisible(),true);
     assert.ok((await page.locator('#fuelReceiptOcrText').textContent()).includes('GALLONS 10.882'),
       'OCR text should be present even when the review details are collapsed');
     // No entry is saved merely by scanning; the user must review and save.
     assert.equal(JSON.parse(await page.evaluate(()=>localStorage.getItem('milesage-mobile-offline-v1')))
       .vehicles[0].fuel_history.length,3);
+
+
+    // New native document-scan callback: cropped JPEG and OCR text arrive as one
+    // reviewed draft, with no automatic fuel-history write.
+    await page.evaluate(()=>{
+      window.MileSageAndroid.scanFuelReceipt=()=>{
+        const canvas=document.createElement('canvas');
+        canvas.width=16; canvas.height=16;
+        const context=canvas.getContext('2d'); context.fillStyle='#ffffff';
+        context.fillRect(0,0,16,16);
+        window.milesageFuelScanComplete({
+          text:'ALLSUPS\nDATE 10/14/2026\nPRODUCT UNL 10.882\nGALL0NS $3.599\nFUEL 5ALE $39.16',
+          image:canvas.toDataURL('image/jpeg',0.85)
+        });
+      };
+    });
+    await page.locator('[data-tab="home"]').click();
+    await page.locator('[data-tab="fuel"]').click();
+    assert.equal(await page.locator('#fuelCameraButton').innerText(),'Scan fuel receipt');
+    await page.locator('#fuelCameraButton').click();
+    await page.waitForFunction(()=>
+      document.querySelector('#fuelGallons')?.value==='10.882' &&
+      document.querySelector('#fuelCost')?.value==='39.16' &&
+      document.querySelector('#fuelPhotoPreview')?.hidden===false);
+    assert.ok((await page.locator('#fuelReceiptProgress').innerText()).includes('Verified calculation'));
+    assert.equal(JSON.parse(await page.evaluate(()=>localStorage.getItem('milesage-mobile-offline-v1')))
+      .vehicles[0].fuel_history.length,3,'native scan must not save until user confirms');
 
     // End-to-end expense receipt attachment: use a small camera/gallery image,
     // save the expense, check persisted compressed JPEG and full JSON backup.
