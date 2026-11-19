@@ -5,7 +5,7 @@ const assert=require('node:assert/strict');
 
 const paths=[
  'mobile/MileSage_Mobile_Auto_Refresh.html',
- 'mobile/MileSage_Alpha_1_3_2_VIN_Lookup.html'
+ 'mobile/MileSage_Alpha_1_3_3_Car_History.html'
 ];
 const files=paths.map(p=>fs.readFileSync(p,'utf8'));
 assert.equal(files[0],files[1],'Both distributed mobile builds must stay identical');
