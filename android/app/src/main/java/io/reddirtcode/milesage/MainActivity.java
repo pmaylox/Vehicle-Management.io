@@ -823,6 +823,35 @@ public class MainActivity extends Activity {
         @JavascriptInterface public void openExpenseDocument(String id) {
             runOnUiThread(() -> openSavedExpenseDocument(id));
         }
+        // User-directed feedback sharing. No recipient and no automatic uploads.
+        @JavascriptInterface public void shareTesterFeedback(String report) {
+            if (report == null || report.length() < 1 || report.length() > 8000) {
+                showToast("Feedback message is empty or too long.");
+                return;
+            }
+            runOnUiThread(() -> {
+                try {
+                    Intent intent = new Intent(Intent.ACTION_SEND);
+                    intent.setType("text/plain");
+                    intent.putExtra(Intent.EXTRA_SUBJECT, "MileSage Alpha Tester Feedback");
+                    intent.putExtra(Intent.EXTRA_TEXT, report);
+                    startActivity(Intent.createChooser(intent, "Send MileSage feedback"));
+                } catch (Exception error) {
+                    showToast("Could not open share menu. Export feedback JSON in MileSage instead.");
+                }
+            });
+        }
+        // Fixed official valuation site; never embed KBB credentials in this APK.
+        @JavascriptInterface public void openResaleValuation() {
+            runOnUiThread(() -> {
+                try {
+                    startActivity(new Intent(Intent.ACTION_VIEW,
+                        Uri.parse("https://www.kbb.com/whats-my-car-worth/")));
+                } catch (Exception error) {
+                    showToast("No browser found for Kelley Blue Book.");
+                }
+            });
+        }
         @JavascriptInterface public void shareExpenseDocument(String id) {
             runOnUiThread(() -> shareSavedExpenseDocument(id));
         }
