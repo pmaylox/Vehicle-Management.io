@@ -36,6 +36,7 @@ label.field{display:block;font-size:13px;font-weight:700;margin:13px 0 7px}input
 <header class="top"><div class="topline"><div class="brand"><div class="logo" aria-hidden="true"><svg width="37" height="37" viewBox="0 0 40 40" fill="none"><path d="M8 31 L12 9 L20 20 L28 9 L32 31" stroke="#f4cfb2" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 4 V10 M20 14 V18 M20 25 V29 M20 33 V37" stroke="#fff" stroke-width="2" stroke-dasharray="3 4"/></svg></div><div><h1>MileSage</h1><small>Vehicle intelligence · Alpha 1.3.2 VIN lookup</small></div></div><button class="top-action" id="dataButton" type="button">Data & backup</button></div></header>
 <main>
 <div id="notice" class="notice" role="status"></div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 12px 8px"><span class="small muted">MileSage · Alpha Tester #2</span><button id="feedbackShortcut" class="btn secondary" type="button" style="min-width:0;padding:9px 12px">Feedback / Bug Report</button></div>
 <section id="home" class="section active" aria-label="Home">
 <div class="section-head" style="flex-wrap:wrap"><h2>Your garage</h2><div class="button-row" style="gap:7px"><button type="button" id="addVinButton" class="btn" style="min-width:100px;padding:10px">+ By VIN</button><button type="button" id="addVehicleButton" class="btn secondary" style="min-width:100px;padding:10px">+ Manual</button></div></div>
 <div id="vinEntryCard" class="card feature-card" hidden>
@@ -91,12 +92,31 @@ label.field{display:block;font-size:13px;font-weight:700;margin:13px 0 7px}input
 <div class="section-head"><h2>Graphs & insights</h2></div>
 <div id="graphsBody"></div>
 </section>
+<section id="feedback" class="section" aria-label="Alpha tester feedback">
+<div class="section-head"><h2>Tester feedback</h2></div>
+<div class="card"><h3 style="margin-top:0">Report a bug or suggest an improvement</h3>
+<p class="small muted">Your feedback is saved on this phone. Tap <strong>Save &amp; share</strong>, then choose a messaging or email app and the person to send it to. Nothing is uploaded automatically. Photos, VINs, mileage and your vehicle records are not attached; share screenshots separately if useful.</p>
+<form id="feedbackForm">
+<div class="grid2"><div><label class="field" for="feedbackType">Feedback type</label><select id="feedbackType"><option>Bug report</option><option>Feature request</option><option>UI / usability</option><option>Other</option></select></div>
+<div><label class="field" for="feedbackSeverity">Impact</label><select id="feedbackSeverity"><option>Minor</option><option>Major</option><option>Blocking</option><option>Suggestion</option></select></div></div>
+<label class="field" for="feedbackTitle">Short title</label><input id="feedbackTitle" required maxlength="120" placeholder="Expense amount isn't filled">
+<label class="field" for="feedbackDetails">What happened, or what should change?</label><textarea id="feedbackDetails" rows="4" required maxlength="2500" placeholder="Describe the problem or idea in detail"></textarea>
+<label class="field" for="feedbackSteps">Steps to reproduce (optional)</label><textarea id="feedbackSteps" rows="3" maxlength="1500" placeholder="1. Open Fuel; 2. Scan receipt; 3. ..."></textarea>
+<label class="field" for="feedbackContact">Reply contact (optional)</label><input id="feedbackContact" maxlength="120" placeholder="Email or preferred contact method">
+<button type="submit" class="btn full">Save &amp; share feedback</button>
+<button id="saveFeedbackOnly" type="button" class="btn secondary" style="margin-top:8px">Save feedback on this phone only</button></form>
+<p class="small muted">You will choose the recipient in Android's Share menu. MileSage cannot confirm whether a message was delivered. No central feedback inbox is connected yet.</p></div>
+<div class="card"><h3>Saved feedback reports</h3><div id="feedbackHistory"></div>
+<div class="button-row"><button id="feedbackExport" class="btn secondary" type="button">Export reports as JSON</button>
+<button id="feedbackClear" class="btn secondary" type="button">Clear local reports</button></div></div>
+<button id="feedbackBack" type="button" class="btn secondary">Back to Home</button>
+</section>
 <section id="data" class="section" aria-label="Data and backup">
 <div class="section-head"><h2>Data & backup</h2></div>
 <div class="card feature-card"><h3 style="margin-top:0">Recover or import your data safely</h3><p class="small muted">Your phone data is stored locally. GitHub is checked read-only and will <strong>never</strong> replace it automatically. GitHub vehicles.json may contain incomplete or demo records, not your live phone readings; all-zero placeholder imports are blocked. Importing a JSON file requires review and saves a local recovery snapshot first.</p>
 <div class="button-row"><button id="githubBackupRecovery" class="btn" type="button">Recover from saved GitHub backup</button><button id="fileImportButton" class="btn secondary" type="button">Import JSON file</button></div><button id="githubImport" class="btn secondary" type="button" style="margin-top:8px">Review GitHub vehicles.json</button><input id="jsonFile" type="file" accept=".json,application/json" hidden><p id="jsonImportStatus" class="small muted" role="status" aria-live="polite">No backup selected.</p><p class="note">The saved GitHub backup is older (November 2026), but has recorded odometer and tire pressure data. Recovery fills only currently missing readings and empty histories, retaining your phone settings. Check mileage against your actual odometer after recovery. This will not update the app code or install an APK.</p></div>
 <div class="card"><h3 style="margin-top:0">Phone receipt photo folder</h3><p class="small muted">Choose a location on your phone; MileSage will create <strong>MileSage/Photos</strong> inside it and copy new fuel, service and other-expense receipts. This requires browser permission and may not work when opening HTML from Downloads. If unavailable, use Download photo in history and move it with Files.</p><button class="btn secondary" type="button" id="choosePhotoDir">Choose phone photo folder</button><p class="small muted" id="photoDirStatus">Phone photo folder not selected.</p></div><div class="card"><h3 style="margin-top:0">Save a backup</h3><p class="small muted">Phone edits are saved in this browser, not uploaded to GitHub or your laptop. Export regularly before clearing browser data or changing phones.</p><div class="button-row"><button id="exportPython" class="btn" type="button">Export vehicles.json</button><button id="exportFull" class="btn secondary" type="button">Full mobile backup</button><button id="undoImport" class="btn secondary" type="button">Saved backups &amp; snapshots</button></div><div id="savedBackupLibrary" hidden><p id="savedBackupStatus" class="small muted" role="status">Browse saved backups. Restoring a file does not remove it.</p><button id="browseSavedJson" class="btn secondary" type="button">Browse saved JSON files</button><p class="small muted">In Samsung My Files, look under <strong>Downloads / MileSage</strong>. You can import the same file more than once. Saved snapshots below belong to this installation only.</p><h4 style="margin:12px 0 8px">Reusable local recovery snapshots</h4><div id="savedLocalSnapshots" aria-live="polite"></div><p class="small muted">Only the three most recent local recovery snapshots are retained to conserve phone storage. For long-term storage use Full mobile backup; exported PDFs must be saved separately.</p></div><p class="small muted" style="margin-bottom:0">The Python export uses the same vehicle JSON structure as your desktop app. Mobile-only expense and mileage-log details are included in the full backup.</p></div>
-<div class="card"><h3 style="margin-top:0">About this version</h3><p class="small muted">MileSage Alpha 1.3.2 preview • Mobile Preview v8 • VIN-based vehicle entry using the NHTSA decoder (internet required), with review before saving • Fluid & filter buttons on the Service tab • Safe manual data restore • GitHub checks never overwrite records • Works with locally saved data offline. Added vehicle overview cards, fuel-type and octane fields, and three fuel insights charts. Full two-way cloud sync, push alerts, OBD-II and APK packaging are not implemented.</p><p class="small muted" id="storageNote"></p></div>
+<div class="card"><h3 style="margin-top:0">Tester feedback</h3><p class="small muted">Report a problem or improvement. Reports stay on your device until you choose where to share them.</p><button id="feedbackFromData" type="button" class="btn secondary">Open tester feedback form</button></div><div class="card"><h3 style="margin-top:0">About this version</h3><p class="small muted">MileSage Alpha 1.3.2 preview • Mobile Preview v8 • VIN-based vehicle entry using the NHTSA decoder (internet required), with review before saving • Fluid & filter buttons on the Service tab • Safe manual data restore • GitHub checks never overwrite records • Works with locally saved data offline. Added vehicle overview cards, fuel-type and octane fields, and three fuel insights charts. Full two-way cloud sync, push alerts, OBD-II and APK packaging are not implemented.</p><p class="small muted" id="storageNote"></p></div>
 </section>
 </main>
 <nav class="bottom" aria-label="Main tabs"><div class="tabs">
@@ -1644,6 +1664,99 @@ async function storeReceipt(vehicle,kind,record,mutate){
  if(note)alert(note);
 }
 
+/* TESTER_FEEDBACK_BEGIN */
+const FEEDBACK_KEY='milesage-alpha145-tester-feedback-v1';
+const FEEDBACK_VERSION='MileSage Alpha 1.4.5 · tester build';
+function savedFeedback(){
+ try{
+  const rows=JSON.parse(localStorage.getItem(FEEDBACK_KEY)||'[]');
+  return Array.isArray(rows)?rows.filter(r=>r&&typeof r==='object').slice(0,30):[];
+ }catch(e){return [];}
+}
+function feedbackText(report){
+ return [
+  'MileSage Alpha Tester Feedback',
+  'App: '+FEEDBACK_VERSION,
+  'Date (UTC): '+report.created_at,
+  'Type: '+report.kind,
+  'Impact: '+report.severity,
+  'Subject: '+report.title,
+  'What happened / suggestion:',report.details,
+  'Steps to reproduce:',report.steps||'Not provided',
+  'Reply contact (optional):',report.contact||'Not provided',
+  '',
+  'Sent by tester after choosing a share destination. No VIN, mileage, photos or vehicle history attached automatically.'
+ ].join('\n');
+}
+function shareTesterFeedback(report){
+ const content=feedbackText(report);
+ if(window.MileSageAndroid&&typeof window.MileSageAndroid.shareTesterFeedback==='function'){
+  window.MileSageAndroid.shareTesterFeedback(content);
+  message('Share chooser opened. Choose who receives this report.');
+ }else if(navigator.share){
+  navigator.share({title:'MileSage Alpha Tester Feedback',text:content})
+   .catch(()=>message('Share cancelled. Report is still saved on this device.'));
+ }else{
+  download('MileSage-feedback-'+localDate()+'.json',{version:FEEDBACK_VERSION,reports:[report]});
+  message('No share app available. Feedback JSON downloaded; send it to the app developer.');
+ }
+}
+function recordTesterFeedback(shareNow){
+ const type=$('feedbackType'),title=$('feedbackTitle'),details=$('feedbackDetails'),
+  steps=$('feedbackSteps'),severity=$('feedbackSeverity'),contact=$('feedbackContact');
+ if(!type||!title||!details)return false;
+ const label=title.value.trim(),description=details.value.trim();
+ if(label.length<3||description.length<10){
+  alert('Please give a short title and at least 10 characters describing the issue.');return false;
+ }
+ const report={
+  id:'fb-'+Date.now()+'-'+Math.floor(Math.random()*1000000),
+  created_at:new Date().toISOString(),version:FEEDBACK_VERSION,
+  kind:type.value,severity:severity.value,title:label.slice(0,120),
+  details:description.slice(0,2500),steps:steps.value.trim().slice(0,1500),
+  contact:contact.value.trim().slice(0,120)
+ };
+ const records=savedFeedback();records.unshift(report);
+ try{localStorage.setItem(FEEDBACK_KEY,JSON.stringify(records.slice(0,30)));}
+ catch(e){alert('Could not save feedback locally. No report was sent. Free up phone storage and try again.');return false;}
+ renderTesterFeedback();
+ message('Feedback saved on this phone. Sharing requires choosing a destination.');
+ if(shareNow)shareTesterFeedback(report);
+ return true;
+}
+function renderTesterFeedback(){
+ const history=$('feedbackHistory');
+ if(!history)return;
+ const reports=savedFeedback();
+ history.innerHTML=reports.length?reports.map(r=>
+  '<div class="card" style="padding:11px;margin:9px 0"><strong>'+esc(r.title||'Feedback')+
+  '</strong><p class="small muted">'+esc(r.created_at||'')+' · '+esc(r.kind||'')+
+  ' · '+esc(r.severity||'')+'</p><button type="button" class="btn secondary" data-feedback-share="'+esc(r.id)+'">Share again</button></div>'
+ ).join(''):'<p class="small muted">No reports yet. Your reports stay on this phone until you choose to share them.</p>';
+ history.querySelectorAll('[data-feedback-share]').forEach(b=>b.onclick=()=>{
+  const r=savedFeedback().find(x=>x.id===b.dataset.feedbackShare);
+  if(r)shareTesterFeedback(r);
+ });
+ $('feedbackForm').onsubmit=e=>{e.preventDefault();recordTesterFeedback(true);};
+ $('saveFeedbackOnly').onclick=()=>recordTesterFeedback(false);
+ $('feedbackExport').onclick=()=>{
+  const rows=savedFeedback();
+  if(!rows.length){message('No reports to export.');return;}
+  download('MileSage-tester-feedback-'+localDate()+'.json',
+   {format:'MileSage-Alpha-Feedback-v1',version:FEEDBACK_VERSION,reports:rows});
+ };
+ $('feedbackClear').onclick=()=>{
+  if(!reports.length)return;
+  if(!confirm('Clear '+reports.length+' locally saved feedback report(s)? This cannot be undone.'))return;
+  localStorage.removeItem(FEEDBACK_KEY);renderTesterFeedback();
+ };
+}
+function openTesterFeedback(){
+ renderTesterFeedback();
+ switchTab('feedback');
+}
+/* TESTER_FEEDBACK_END */
+
 function renderAll(){renderHome();renderService();renderFuel();renderExpenses();renderGraphs();updateBanner();}
 function switchTab(id){tab=id;document.querySelectorAll('.section').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('.tab').forEach(x=>{x.classList.toggle('active',x.dataset.tab===id);x.setAttribute('aria-current',x.dataset.tab===id?'page':'false')});window.scrollTo({top:0,behavior:'instant'})}
 function filename(prefix){return `${prefix}-${localDate()}.json`}
@@ -2036,6 +2149,9 @@ function init(){
  load();renderAll();
  for(const b of document.querySelectorAll('[data-tab]'))b.onclick=()=>switchTab(b.dataset.tab);
  $('dataButton').onclick=()=>switchTab('data');
+ $('feedbackShortcut').onclick=openTesterFeedback;
+ $('feedbackFromData').onclick=openTesterFeedback;
+ $('feedbackBack').onclick=()=>switchTab('home');
  $('addVehicleButton').onclick=addVehicle;
  wireVehicleControls();
  wireVehiclePhotos();
