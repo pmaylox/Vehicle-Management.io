@@ -48,6 +48,8 @@ public class MainActivity extends Activity {
     private static final int FILE_CHOOSER_CODE = 218;
     private static final int SERVICE_DOCUMENT_SCAN_CODE = 219;
     private static final int FUEL_DOCUMENT_SCAN_CODE = 220;
+    private static final int SERVICE_RECEIPT_SCAN_CODE = 221;
+    private boolean serviceReceiptScanOpen = false;
     private boolean fuelScanOpen = false;
     private boolean serviceScanOpen = false;
     private WebView web;
@@ -185,6 +187,44 @@ public class MainActivity extends Activity {
                     });
             } catch (Exception error) {
                 fuelScanResult(null, null, "Fuel scanner could not finish: " + error.getMessage());
+            }
+            return;
+        }
+        if (requestCode == SERVICE_RECEIPT_SCAN_CODE) {
+            serviceReceiptScanOpen = false;
+            if (resultCode != RESULT_OK) {
+                serviceReceiptScanResult(null, null, "Service receipt scan cancelled. No record changed.");
+                return;
+            }
+            try {
+                GmsDocumentScanningResult scan = GmsDocumentScanningResult.fromActivityResultIntent(data);
+                if (scan == null || scan.getPages() == null || scan.getPages().isEmpty())
+                    throw new IOException("No service receipt image returned.");
+                Uri receipt = scan.getPages().get(0).getImageUri();
+                InputImage image = InputImage.fromFilePath(this, receipt);
+                TextRecognizer recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
+                recognizer.process(image)
+                    .addOnSuccessListener(found -> {
+                        try {
+                            serviceReceiptScanResult(found.getText(), fuelScanPreview(receipt), null);
+                        } catch (Exception error) {
+                            serviceReceiptScanResult(found.getText(), null,
+                                "Service receipt preview failed: " + error.getMessage());
+                        } finally {
+                            recognizer.close();
+                        }
+                    })
+                    .addOnFailureListener(error -> {
+                        recognizer.close();
+                        try {
+                            serviceReceiptScanResult("", fuelScanPreview(receipt),
+                                "Text recognition failed; enter service details manually.");
+                        } catch (Exception imageError) {
+                            serviceReceiptScanResult(null, null, "Could not read service receipt: " + imageError.getMessage());
+                        }
+                    });
+            } catch (Exception error) {
+                serviceReceiptScanResult(null, null, "Service receipt scanner failed: " + error.getMessage());
             }
             return;
         }
@@ -354,6 +394,51 @@ public class MainActivity extends Activity {
         }
     }
 
+    // One-page service OCR; separate from the thirty-page PDF scanner.
+    private void serviceReceiptScanResult(String text, String photo, String error) {
+        try {
+            JSONObject payload = new JSONObject();
+            if (text != null) payload.put("text", text);
+            if (photo != null) payload.put("image", photo);
+            if (error != null) payload.put("error", error);
+            String script = "if(window.milesageServiceReceiptComplete)window.milesageServiceReceiptComplete("
+                + payload.toString() + ");";
+            runOnUiThread(() -> {
+                if (web != null) web.evaluateJavascript(script, null);
+            });
+        } catch (Exception ignored) {
+            showToast("Unable to return service receipt scan.");
+        }
+    }
+    private void beginServiceReceiptScan() {
+        if (serviceReceiptScanOpen) return;
+        serviceReceiptScanOpen = true;
+        try {
+            GmsDocumentScannerOptions options = new GmsDocumentScannerOptions.Builder()
+                .setGalleryImportAllowed(true)
+                .setPageLimit(1)
+                .setResultFormats(GmsDocumentScannerOptions.RESULT_FORMAT_JPEG)
+                .setScannerMode(GmsDocumentScannerOptions.SCANNER_MODE_FULL)
+                .build();
+            GmsDocumentScanning.getClient(options).getStartScanIntent(this)
+                .addOnSuccessListener(intent -> {
+                    try {
+                        startIntentSenderForResult(intent, SERVICE_RECEIPT_SCAN_CODE,
+                            null, 0, 0, 0);
+                    } catch (IntentSender.SendIntentException e) {
+                        serviceReceiptScanOpen = false;
+                        serviceReceiptScanResult(null, null, "Could not launch service receipt scanner.");
+                    }
+                }).addOnFailureListener(error -> {
+                    serviceReceiptScanOpen = false;
+                    serviceReceiptScanResult(null, null,
+                        "Service receipt scanner unavailable: " + error.getMessage());
+                });
+        } catch (Exception error) {
+            serviceReceiptScanOpen = false;
+            serviceReceiptScanResult(null, null, "Service receipt scanner unavailable: " + error.getMessage());
+        }
+    }
     private void beginServiceDocumentScan() {
         if (serviceScanOpen) return;
         serviceScanOpen = true;
@@ -488,6 +573,9 @@ public class MainActivity extends Activity {
         }
         @JavascriptInterface public void scanFuelReceipt() {
             runOnUiThread(() -> beginFuelDocumentScan());
+        }
+        @JavascriptInterface public void scanServiceReceipt() {
+            runOnUiThread(() -> beginServiceReceiptScan());
         }
         @JavascriptInterface public void scanServiceInvoice() {
             runOnUiThread(() -> beginServiceDocumentScan());

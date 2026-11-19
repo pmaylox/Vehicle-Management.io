@@ -7,11 +7,11 @@ android {
     compileSdk 35
 
     defaultConfig {
-        applicationId 'io.reddirtcode.milesage.alpha140fuelscan'
+        applicationId 'io.reddirtcode.milesage.alpha141servicescan'
         minSdk 26
         targetSdk 35
-        versionCode 140
-        versionName '1.4.0-fuel-scanner'
+        versionCode 141
+        versionName '1.4.1-fuel-and-service-scanner'
     }
     buildTypes {
         release {

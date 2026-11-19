@@ -878,66 +878,117 @@ function clearReceiptPreview(kind){
  if(receiptPreviewUrls[kind])URL.revokeObjectURL(receiptPreviewUrls[kind]);
  receiptPreviewUrls[kind]=null;
 }
+/* SERVICE_RECEIPT_V2_BEGIN */
+let serviceReceiptScanOwner=null,serviceReceiptScanEpoch=null;
+function applyServiceScanV2(raw,a,origin){
+ const status=$('receiptProgress');
+ if(!status||v()!==a)throw Error('Selected vehicle changed during scan.');
+ $('receiptTextReview').style.display='';
+ $('receiptOcrText').textContent=String(raw||'').slice(0,12000);
+ const found=parseServiceReceiptText(raw,localDate());
+ const fields=[];
+ if(found.description){
+  // Do not overwrite work already typed by the user.
+  if(!$('serviceDesc').value.trim()){
+   $('serviceDesc').value=found.description;
+   fields.push('work performed');
+  }
+ }
+ if(found.date){$('serviceDate').value=found.date;fields.push('service date');}
+ if(found.mileage!=null){
+  if(found.mileage<=a.mileage){
+   $('serviceOdo').value=String(found.mileage);fields.push('odometer');
+  }else status.textContent='Receipt odometer exceeds vehicle mileage; verify on Home.';
+ }
+ if(found.cost!=null){$('serviceCost').value=found.cost;fields.push('cost ($'+found.cost+')');}
+ // OCR cannot prove actual work or establish whether a service reset occurred.
+ // Suggest maintenance checkboxes for review; never save or reset automatically.
+ for(const [flag,id,label] of [
+  ['oil','oilReset','oil service'],['tire','tireReset','tire rotation'],
+  ['cabin','cabinReplaced','cabin filter'],['engine','engineReplaced','engine filter']
+ ]){
+  if(found[flag]){$(id).checked=true;fields.push(label);}
+ }
+ status.textContent=(fields.length?'Suggested from scanned service receipt: '+fields.join(', ')+'.'
+  :'No reliable service details identified. Review recognized text and enter fields manually.')+
+  ' REVIEW all fields, especially service resets, before saving.'+
+  (found.mileage!=null&&found.mileage>a.mileage
+   ?' Receipt odometer is ahead of this vehicle; update Home only after checking your odometer.':'');
+ message(origin+' complete. Review and save the service entry manually.');
+}
+window.milesageServiceReceiptComplete=async function(data){
+ const status=$('receiptProgress');
+ const buttons=[$('serviceCameraButton'),$('serviceGalleryButton')];
+ buttons.forEach(b=>{if(b)b.disabled=false;});
+ const owner=serviceReceiptScanOwner,epoch=serviceReceiptScanEpoch;
+ serviceReceiptScanOwner=null;serviceReceiptScanEpoch=null;
+ if(!status||!owner||v()!==owner||epoch!==serviceDraftEpoch)return;
+ try{
+  if(data?.image){
+   if(!/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(data.image)||
+      data.image.length>5000000)throw Error('Invalid receipt preview from scanner.');
+   const blob=await (await fetch(data.image)).blob();
+   if(epoch!==serviceDraftEpoch||v()!==owner)return;
+   const file=new File([blob],'MileSage-Service-Scan-'+Date.now()+'.jpg',{type:'image/jpeg'});
+   showReceiptPreview('service',file);
+  }
+  if(epoch!==serviceDraftEpoch||v()!==owner)return;
+  if(!data?.text){
+   status.textContent=(data?.error||'No readable service text detected.')+
+    ' Photo remains attached for manual entry; nothing was saved.';
+   return;
+  }
+  applyServiceScanV2(data.text,owner,'Service document scan');
+  if(data?.error)status.textContent+=' Scanner note: '+data.error;
+ }catch(error){
+  if(epoch!==serviceDraftEpoch)return;
+  status.textContent='Could not fill service details: '+error.message+
+   '. Keep the photo and enter service information manually.';
+ }
+};
 function wireServiceReceiptPhoto(a){
  const camera=$('serviceCameraInput'),gallery=$('serviceGalleryInput');
  const buttons=[$('serviceCameraButton'),$('serviceGalleryButton')];
- $('serviceCameraButton').onclick=()=>{$('receiptProgress').textContent='Opening camera… Take a photo and confirm Use photo to return to MileSage.';camera.click();};
+ const nativeAvailable=()=>!!(window.MileSageAndroid&&
+   typeof window.MileSageAndroid.scanServiceReceipt==='function');
+ $('serviceCameraButton').textContent=nativeAvailable()?'Scan service receipt':'Take receipt photo';
+ $('serviceCameraButton').onclick=()=>{
+  if(nativeAvailable()){
+   serviceReceiptScanOwner=a;
+   serviceReceiptScanEpoch=serviceDraftEpoch;
+   buttons.forEach(x=>x.disabled=true);
+   $('receiptProgress').textContent='Opening one-page document scanner. Crop and straighten the service receipt, then tap Done.';
+   try{window.MileSageAndroid.scanServiceReceipt();}
+   catch(error){
+    serviceReceiptScanOwner=null;serviceReceiptScanEpoch=null;
+    buttons.forEach(x=>x.disabled=false);
+    $('receiptProgress').textContent='Could not open document scanner: '+error.message;
+   }
+  }else{
+   $('receiptProgress').textContent='Opening camera… Take a clear, close-up service receipt photo.';
+   camera.click();
+  }
+ };
  $('serviceGalleryButton').onclick=()=>gallery.click();
  const read=async input=>{
   const file=input.files?.[0];
   if(!file)return;
   const requestEpoch=serviceDraftEpoch;
-  if(!file.type.startsWith('image/')){alert('Choose an image of the receipt.');input.value='';return;}
-  if(file.size>15_000_000){alert('Receipt photo is too large. Use an image under 15 MB.');input.value='';return;}
+  if(!file.type.startsWith('image/')){alert('Select a service receipt photo.');input.value='';return;}
+  if(file.size>15_000_000){alert('Service receipt photo exceeds 15 MB.');input.value='';return;}
   showReceiptPreview('service',file);
   buttons.forEach(x=>x.disabled=true);
-  const status=$('receiptProgress');
-  status.textContent='Photo received. Preparing receipt reader… (Android OCR works offline; browser-only scans may need internet).';
   try{
-   if(requestEpoch!==serviceDraftEpoch)return;
-   status.textContent='Reading receipt on this device…';
-   const text=(await recognizeReceiptPhoto(file)).trim();
-   if(requestEpoch!==serviceDraftEpoch)return;
-   if(v()!==a)throw Error('Selected vehicle changed during scanning. Select the correct vehicle and rescan.');
-   if(!text)throw Error('No readable text found. Try retaking the photo in better light.');
-   const details=$('receiptTextReview');
-   const textArea=$('receiptOcrText');
-   details.style.display='';
-   textArea.textContent=text.slice(0,12000);
-   const suggestion=parseServiceReceiptText(text,localDate());
-   const fields=[];
-   if(suggestion.description){
-    if(!$('serviceDesc').value.trim()){
-     $('serviceDesc').value=suggestion.description;
-     fields.push('work performed');
-    }else status.textContent='Existing service description kept; review extracted text below.';
-   }
-   if(suggestion.date){$('serviceDate').value=suggestion.date;fields.push('date');}
-   if(suggestion.mileage!=null){
-    $('serviceOdo').value=String(suggestion.mileage);fields.push('mileage');
-   }
-   if(suggestion.cost){
-    $('serviceCost').value=suggestion.cost;fields.push('total cost');
-   }
-   if(suggestion.oil)$('oilReset').checked=true;
-   if(suggestion.tire)$('tireReset').checked=true;
-   if(suggestion.cabin)$('cabinReplaced').checked=true;
-   if(suggestion.engine)$('engineReplaced').checked=true;
-   const flags=[suggestion.oil&&'oil countdown',suggestion.tire&&'tire countdown',
-                suggestion.cabin&&'cabin filter',suggestion.engine&&'engine filter'].filter(Boolean);
-   if(flags.length)fields.push(...flags);
-   status.textContent=fields.length
-      ?'Suggested from photo: '+fields.join(', ')+'. REVIEW before saving.'
-      :'Photo captured and text recognized, but no reliable fields identified. Open View recognized text to compare the receipt, then enter missing details manually.';
-   if(suggestion.mileage!=null&&suggestion.mileage>a.mileage)
-    status.textContent+=' Photo mileage exceeds the current odometer. Update mileage on Home first, then rescan.';
-   message('Receipt scanned; review the suggested service fields.');
+   $('receiptProgress').textContent='Recognizing saved service receipt photo…';
+   const raw=(await recognizeReceiptPhoto(file)).trim();
+   if(requestEpoch!==serviceDraftEpoch||v()!==a)return;
+   if(!raw)throw Error('No readable text. Try Scan service receipt for automatic crop and enhancement.');
+   applyServiceScanV2(raw,a,'Service photo');
   }catch(error){
    if(requestEpoch!==serviceDraftEpoch)return;
-   status.textContent='Photo preview is shown, but receipt scanning failed: '+error.message+
+   $('receiptProgress').textContent='Photo preview is shown, but receipt scanning failed: '+error.message+
       ' You can still enter the service details manually.';
   }finally{
-
    buttons.forEach(x=>x.disabled=false);
    input.value='';
   }
@@ -945,6 +996,7 @@ function wireServiceReceiptPhoto(a){
  camera.onchange=()=>read(camera);
  gallery.onchange=()=>read(gallery);
 }
+/* SERVICE_RECEIPT_V2_END */
 
 /* SERVICE_MULTIPAGE_PDF_BEGIN */
 let servicePdfDraft=null, servicePdfScanOwner=null;
@@ -999,6 +1051,7 @@ function cancelServiceEntry(a){
  const form=$('serviceForm');
  if(!form)return;
  serviceDraftEpoch++;
+ serviceReceiptScanOwner=null;serviceReceiptScanEpoch=null;
  form.reset();
  $('serviceDate').value=localDate();
  $('serviceOdo').value=String(a.mileage);
@@ -1019,7 +1072,7 @@ function cancelServiceEntry(a){
  message('Service entry canceled. No record saved.');
 }
 
-function renderService(){clearReceiptPreview('service');const a=v(), el=$('serviceBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}el.innerHTML=tirePressureCard(a)+`<div class="card feature-card"><h3 style="margin-top:0">Log maintenance</h3>${formVehicleName(a)}<form id="serviceForm"><div class="note info"><strong>Service receipt photo</strong><div class="small">Take a photo or choose an existing image. MileSage will attempt to fill the date, mileage, service description and cost; review all fields before saving. Android receipt scanning works offline; browser-only OCR downloads recognition tools when connected, and the photo is attached to the entry and Full mobile backup. Choose a phone photo folder in Data & backup for a MileSage/Photos copy.</div></div><div class="card" style="margin:12px 0;padding:12px;background:#f7fafc"><strong>Multi-page dealership or repair invoice</strong><p class="small muted">Scan up to 30 pages in one session. Review page order in the scanner. One PDF is attached when you save this service entry. Scanned PDFs stay in this app and are not included in JSON backups; share/export them separately before changing phones.</p><button id="scanServicePdf" class="btn secondary" type="button">Scan multi-page service invoice</button><p id="servicePdfScanStatus" class="small muted" role="status">No multi-page PDF scanned yet.</p><p id="servicePdfPreview" class="note info" hidden></p></div><div class="button-row"><button id="serviceCameraButton" class="btn secondary" type="button">Take receipt photo</button><button id="serviceGalleryButton" class="btn secondary" type="button">Choose photo</button></div><input id="serviceCameraInput" type="file" accept="image/*" capture="environment" hidden><input id="serviceGalleryInput" type="file" accept="image/*" hidden><div id="receiptProgress" class="small muted" role="status" aria-live="polite">No receipt scanned yet.</div><div id="servicePhotoPreview" class="note info" hidden><strong>Photo ready to attach</strong><img id="servicePhotoImage" alt="Selected service receipt" style="display:block;max-width:100%;max-height:230px;object-fit:contain;margin:8px auto;border-radius:8px"><div id="servicePhotoInfo" class="small"></div></div><details id="receiptTextReview" style="display:none"><summary>View recognized text</summary><pre id="receiptOcrText" style="white-space:pre-wrap;word-wrap:break-word;max-height:180px;overflow:auto"></pre></details><label class="field" for="serviceDesc">Work performed</label><input id="serviceDesc" type="text" required maxlength="180" placeholder="Oil change, tire rotation…"><div class="grid2"><div><label class="field" for="serviceDate">Date</label><input type="date" id="serviceDate" required value="${localDate()}"></div><div><label class="field" for="serviceOdo">Odometer</label><input type="number" id="serviceOdo" inputmode="numeric" min="0" required step="1" value="${a.mileage}"></div></div><label class="field" for="serviceCost">Cost in dollars (optional)</label><input id="serviceCost" inputmode="decimal" type="text" placeholder="89.95"><div class="check"><input type="checkbox" id="oilReset"><label for="oilReset">Reset oil-change countdown</label></div><div class="check"><input type="checkbox" id="tireReset"><label for="tireReset">Reset tire-rotation countdown</label></div><div class="check"><input type="checkbox" id="cabinReplaced"><label for="cabinReplaced">Cabin air filter replaced (log replacement)</label></div><div class="check"><input type="checkbox" id="engineReplaced"><label for="engineReplaced">Engine air filter replaced (log replacement)</label></div><div class="button-row" style="margin-top:12px"><button type="submit" class="btn">Save service record</button><button id="cancelServiceEntry" type="button" class="btn secondary">Cancel</button></div></form></div><div class="card"><h3 style="margin-top:0">Service history (${num(a.service_history.length)})</h3>${recordList(a.service_history,'service')}</div>`+fluidFilterCard(a);
+function renderService(){serviceDraftEpoch++;serviceReceiptScanOwner=null;serviceReceiptScanEpoch=null;clearReceiptPreview('service');const a=v(), el=$('serviceBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}el.innerHTML=tirePressureCard(a)+`<div class="card feature-card"><h3 style="margin-top:0">Log maintenance</h3>${formVehicleName(a)}<form id="serviceForm"><div class="note info"><strong>Service receipt photo</strong><div class="small">Scan a one-page receipt with crop and straightening, or choose a saved image. MileSage suggests date, mileage, work performed and cost. Confirm all fields and resets before saving. Android receipt scanning works offline; browser-only OCR downloads recognition tools when connected, and the photo is attached to the entry and Full mobile backup. Choose a phone photo folder in Data & backup for a MileSage/Photos copy.</div></div><div class="card" style="margin:12px 0;padding:12px;background:#f7fafc"><strong>Multi-page dealership or repair invoice</strong><p class="small muted">Scan up to 30 pages in one session. Review page order in the scanner. One PDF is attached when you save this service entry. Scanned PDFs stay in this app and are not included in JSON backups; share/export them separately before changing phones.</p><button id="scanServicePdf" class="btn secondary" type="button">Scan multi-page service invoice</button><p id="servicePdfScanStatus" class="small muted" role="status">No multi-page PDF scanned yet.</p><p id="servicePdfPreview" class="note info" hidden></p></div><div class="button-row"><button id="serviceCameraButton" class="btn secondary" type="button">Take receipt photo</button><button id="serviceGalleryButton" class="btn secondary" type="button">Choose photo</button></div><input id="serviceCameraInput" type="file" accept="image/*" capture="environment" hidden><input id="serviceGalleryInput" type="file" accept="image/*" hidden><div id="receiptProgress" class="small muted" role="status" aria-live="polite">No receipt scanned yet.</div><div id="servicePhotoPreview" class="note info" hidden><strong>Photo ready to attach</strong><img id="servicePhotoImage" alt="Selected service receipt" style="display:block;max-width:100%;max-height:230px;object-fit:contain;margin:8px auto;border-radius:8px"><div id="servicePhotoInfo" class="small"></div></div><details id="receiptTextReview" style="display:none"><summary>View recognized text</summary><pre id="receiptOcrText" style="white-space:pre-wrap;word-wrap:break-word;max-height:180px;overflow:auto"></pre></details><label class="field" for="serviceDesc">Work performed</label><input id="serviceDesc" type="text" required maxlength="180" placeholder="Oil change, tire rotation…"><div class="grid2"><div><label class="field" for="serviceDate">Date</label><input type="date" id="serviceDate" required value="${localDate()}"></div><div><label class="field" for="serviceOdo">Odometer</label><input type="number" id="serviceOdo" inputmode="numeric" min="0" required step="1" value="${a.mileage}"></div></div><label class="field" for="serviceCost">Cost in dollars (optional)</label><input id="serviceCost" inputmode="decimal" type="text" placeholder="89.95"><div class="check"><input type="checkbox" id="oilReset"><label for="oilReset">Reset oil-change countdown</label></div><div class="check"><input type="checkbox" id="tireReset"><label for="tireReset">Reset tire-rotation countdown</label></div><div class="check"><input type="checkbox" id="cabinReplaced"><label for="cabinReplaced">Cabin air filter replaced (log replacement)</label></div><div class="check"><input type="checkbox" id="engineReplaced"><label for="engineReplaced">Engine air filter replaced (log replacement)</label></div><div class="button-row" style="margin-top:12px"><button type="submit" class="btn">Save service record</button><button id="cancelServiceEntry" type="button" class="btn secondary">Cancel</button></div></form></div><div class="card"><h3 style="margin-top:0">Service history (${num(a.service_history.length)})</h3>${recordList(a.service_history,'service')}</div>`+fluidFilterCard(a);
 wireTirePressureForm(a);wireFluidAndFilters(a);wireServiceReceiptPhoto(a);wirePhotoHistory('service');
  $('cancelServiceEntry').onclick=()=>cancelServiceEntry(a);wireServicePdfScanner(a);wireServicePdfHistory();
 $('serviceForm').onsubmit=async e=>{
