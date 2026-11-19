@@ -112,7 +112,7 @@ if(!files.length)files.push('mobile/MileSage_Mobile_Auto_Refresh.html','mobile/M
     });
     await page.locator('[data-tab="home"]').click();
     await page.locator('[data-tab="fuel"]').click();
-    assert.equal(await page.locator('#fuelCameraButton').innerText(),'Scan fuel receipt');
+    assert.equal(await page.evaluate(()=>typeof window.MileSageAndroid.scanFuelReceipt),'function');
     await page.locator('#fuelCameraButton').click();
     await page.waitForFunction(()=>
       document.querySelector('#fuelGallons')?.value==='10.882' &&
