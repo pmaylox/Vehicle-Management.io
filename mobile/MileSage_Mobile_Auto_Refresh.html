@@ -1110,11 +1110,11 @@ function wireFuelReceiptPhoto(a){
  const camera=$('fuelCameraInput'),gallery=$('fuelGalleryInput');
  const buttons=[$('fuelCameraButton'),$('fuelGalleryButton')];
  if(!camera||!gallery)return;
- const native=!!(window.MileSageAndroid&&typeof window.MileSageAndroid.scanFuelReceipt==='function');
- $('fuelCameraButton').textContent=native?'Scan fuel receipt':'Take fuel receipt photo';
+ const nativeAvailable=()=>!!(window.MileSageAndroid&&typeof window.MileSageAndroid.scanFuelReceipt==='function');
+ $('fuelCameraButton').textContent=nativeAvailable()?'Scan fuel receipt':'Take fuel receipt photo';
  $('fuelCameraButton').onclick=()=>{
   const status=$('fuelReceiptProgress');
-  if(native){
+  if(nativeAvailable()){
    fuelScanOwner=a;
    buttons.forEach(x=>x.disabled=true);
    status.textContent='Opening document scanner. Fill the frame with the receipt, crop/straighten it, then tap Done.';
