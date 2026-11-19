@@ -128,7 +128,7 @@ function message(s){let t=$('toast');t.textContent=s;t.style.display='block';cle
 function validDate(s){if(!/^\d{4}-\d{2}-\d{2}$/.test(s))return false;const d=new Date(s+'T12:00:00');return !Number.isNaN(d.getTime())&&d.toISOString().slice(0,10)===s && s<=localDate()}
 function costCents(str,optional=false){const val=String(str).trim();if(optional&&val==='')return null;if(!/^(?:0|[1-9]\d*)(?:\.\d{1,2})?$/.test(val))throw Error('Enter a valid dollar amount (up to 2 decimal places).');const n=money(val);if(!Number.isSafeInteger(n))throw Error('Amount is too large.');return n}
 function whole(str,label,minimum=0){const n=Number(String(str).trim());if(!/^\d+$/.test(String(str).trim())||!Number.isSafeInteger(n)||n<minimum)throw Error(label+' must be a whole number of '+minimum+' or more.');return n}
-function normalize(data){if(!Array.isArray(data))throw Error('Expected a JSON list of vehicle records.');for(const item of data){for(const name of ['service_history','fuel_history','tire_pressure_history','fluid_check_history','air_filter_changes','mobile_expenses','mobile_mileage_log']){if(item&&item[name]!=null&&(!Array.isArray(item[name])||item[name].some(r=>!r||typeof r!=='object'||Array.isArray(r))))throw Error('Invalid '+name+' for '+String(item.name||'vehicle')+'. Import cancelled.');}}if(!data.every(x=>x&&typeof x==='object'&&!Array.isArray(x)&&typeof x.name==='string'&&Number.isSafeInteger(Number(x.mileage))&&Number(x.mileage)>=0))throw Error('The file contains invalid vehicle records.');return data.map(x=>({
+function normalize(data){if(!Array.isArray(data))throw Error('Expected a JSON list of vehicle records.');for(const item of data){for(const name of ['service_history','fuel_history','tire_pressure_history','fluid_check_history','air_filter_changes','mobile_expenses','mobile_mileage_log','resale_history']){if(item&&item[name]!=null&&(!Array.isArray(item[name])||item[name].some(r=>!r||typeof r!=='object'||Array.isArray(r))))throw Error('Invalid '+name+' for '+String(item.name||'vehicle')+'. Import cancelled.');}}if(!data.every(x=>x&&typeof x==='object'&&!Array.isArray(x)&&typeof x.name==='string'&&Number.isSafeInteger(Number(x.mileage))&&Number(x.mileage)>=0))throw Error('The file contains invalid vehicle records.');return data.map(x=>({
   ...x,
   year:Number(x.year)||new Date().getFullYear(),
   mileage:Number(x.mileage),starting_mileage:Number(x.starting_mileage??x.mileage),
@@ -146,7 +146,8 @@ function normalize(data){if(!Array.isArray(data))throw Error('Expected a JSON li
   fluid_check_history:Array.isArray(x.fluid_check_history)?x.fluid_check_history:[],
   air_filter_changes:Array.isArray(x.air_filter_changes)?x.air_filter_changes:[],
   mobile_expenses:Array.isArray(x.mobile_expenses)?x.mobile_expenses:[],
-  mobile_mileage_log:Array.isArray(x.mobile_mileage_log)?x.mobile_mileage_log:[]
+  mobile_mileage_log:Array.isArray(x.mobile_mileage_log)?x.mobile_mileage_log:[],
+  resale_history:Array.isArray(x.resale_history)?x.resale_history:[]
 }));}
 function save(){try{localStorage.setItem(KEY,JSON.stringify({vehicles,current}));hasStorage=true;}catch(e){hasStorage=false;message('Browser storage unavailable — export your data now!')}updateBanner()}
 function load(){try{const raw=localStorage.getItem(KEY);if(raw){const o=JSON.parse(raw);vehicles=normalize(o.vehicles||[]);current=Math.max(0,Math.min(Number(o.current)||0,vehicles.length-1));}}catch(e){hasStorage=false;vehicles=[]}updateBanner()}
@@ -1565,7 +1566,7 @@ function renderAll(){renderHome();renderService();renderFuel();renderExpenses();
 function switchTab(id){tab=id;document.querySelectorAll('.section').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('.tab').forEach(x=>{x.classList.toggle('active',x.dataset.tab===id);x.setAttribute('aria-current',x.dataset.tab===id?'page':'false')});window.scrollTo({top:0,behavior:'instant'})}
 function filename(prefix){return `${prefix}-${localDate()}.json`}
 function download(name,data){const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);message('Backup prepared. Check Downloads on your phone.');}
-function pythonExport(){return vehicles.map(({mobile_expenses,mobile_mileage_log,...obj})=>({...obj,service_history:(obj.service_history||[]).map(({receipt_photo,...r})=>r),fuel_history:(obj.fuel_history||[]).map(({receipt_photo,...r})=>r)}))}
+function pythonExport(){return vehicles.map(({mobile_expenses,mobile_mileage_log,resale_history,...obj})=>({...obj,service_history:(obj.service_history||[]).map(({receipt_photo,...r})=>r),fuel_history:(obj.fuel_history||[]).map(({receipt_photo,...r})=>r)}))}
 /* RESTORE_GUARDS_BEGIN */
 function vehicleID(a){return a.vin?'vin:'+String(a.vin).toUpperCase():'name:'+String(a.year)+'|'+String(a.name).trim().toLowerCase();}
 function isBlankSeed(recs){
@@ -1589,7 +1590,7 @@ function destructiveDiffs(existing,incoming){
     problems.push(local.name+': '+key.replace('_',' ')+' pressure would be cleared');
   }
   for(const key of ['service_history','fuel_history','tire_pressure_history',
-    'fluid_check_history','air_filter_changes','mobile_expenses','mobile_mileage_log']){
+    'fluid_check_history','air_filter_changes','mobile_expenses','mobile_mileage_log','resale_history']){
    if((next[key]||[]).length<(local[key]||[]).length)
     problems.push(local.name+': '+key.replaceAll('_',' ')+' would lose entries');
   }
@@ -1615,7 +1616,7 @@ function mergeRecovery(existing,backups){
     item.starting_tire_pressures[name]=backup.starting_tire_pressures[name];
   }
   for(const key of ['service_history','fuel_history','tire_pressure_history',
-      'fluid_check_history','air_filter_changes','mobile_expenses','mobile_mileage_log']){
+      'fluid_check_history','air_filter_changes','mobile_expenses','mobile_mileage_log','resale_history']){
    if(!item[key]?.length && backup[key]?.length)
     item[key]=JSON.parse(JSON.stringify(backup[key]));
   }
