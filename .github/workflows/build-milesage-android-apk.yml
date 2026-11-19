@@ -1,7 +1,8 @@
-name: Build MileSage Alpha 1.4.5 Second Tester Feedback and Resale APK
+name: Build MileSage Alpha 1.4.6 Expense PDF Load and Reattach APK
 on:
   push:
     branches:
+      - feature/expense-load-pdf-reattach-alpha146-20261119
       - feature/beta2-feedback-resale-alpha145-20261119
       - feature/backup-library-reusable-restore-alpha144-20261119
       - fix/expense-pdf-find-and-autofill-alpha143-20261119
@@ -21,7 +22,7 @@ on:
 jobs:
   build:
     concurrency:
-      group: milesage-alpha145-${{ github.sha }}
+      group: milesage-alpha146-${{ github.sha }}
       cancel-in-progress: true
     runs-on: ubuntu-latest
     permissions:
@@ -60,7 +61,7 @@ jobs:
           mkdir -p android/app/src/main/assets release
           cp mobile/MileSage_Alpha_1_3_2_VIN_Lookup.html android/app/src/main/assets/index.html
           sed -i 's/Alpha 1.3.2/Alpha 1.4.3 Expense OCR/g' android/app/src/main/assets/index.html
-          cp android/app/src/main/assets/index.html release/MileSage_Alpha_1_4_5_Beta2_Resale_Feedback.html
+          cp android/app/src/main/assets/index.html release/MileSage_Alpha_1_4_6_Load_Expense_PDF.html
           printf '%s\n' "MileSage Alpha 1.4.4 - reusable backup browser and local snapshots, with tested Fuel, Service, Expense scanners preserved" \
             "Do NOT uninstall or clear existing MileSage apps. This separately installed test copy has independent storage." \
             "Back up your existing phone data before importing anything into the test copy." \
@@ -81,7 +82,7 @@ jobs:
           from pathlib import Path
           s=Path("android/app/src/main/assets/index.html").read_text(encoding="utf-8")
           assert s.rstrip().endswith("</body></html>"), "Unexpected trailing content after HTML document"
-          for phrase in ("mobile_photo","chooseVehiclePhoto","takeVehiclePhoto","removeVehiclePhoto","milesage-mobile-offline-v1","+ By VIN","Take receipt photo","Take fuel receipt photo","choosePhotoDir","odometer-controls","receipt_photo",'id="editVehicle"','id="removeVehicle"','id="scanServicePdf"','function parseGallonsInput(','FUEL_SCANNER_V2_BEGIN','window.milesageFuelScanComplete','window.milesageServiceReceiptComplete','EXPENSE_MULTIPAGE_PDF_BEGIN','EXPENSE_PDF_OCR_BEGIN','window.milesageExpenseOCRComplete','REUSABLE_BACKUP_LIBRARY_BEGIN','id="savedBackupLibrary"','BETA2_RESALE_FEEDBACK_BEGIN','id="viewExpensePdfDraft"','window.milesageExpenseScannerComplete'):
+          for phrase in ("mobile_photo","chooseVehiclePhoto","takeVehiclePhoto","removeVehiclePhoto","milesage-mobile-offline-v1","+ By VIN","Take receipt photo","Take fuel receipt photo","choosePhotoDir","odometer-controls","receipt_photo",'id="editVehicle"','id="removeVehicle"','id="scanServicePdf"','function parseGallonsInput(','FUEL_SCANNER_V2_BEGIN','window.milesageFuelScanComplete','window.milesageServiceReceiptComplete','EXPENSE_MULTIPAGE_PDF_BEGIN','EXPENSE_PDF_OCR_BEGIN','window.milesageExpenseOCRComplete','REUSABLE_BACKUP_LIBRARY_BEGIN','id="savedBackupLibrary"','BETA2_RESALE_FEEDBACK_BEGIN','id="loadExpensePdf"','id="viewExpensePdfDraft"','window.milesageExpenseScannerComplete'):
               assert phrase in s, phrase
           Path("/tmp/milesage-inline.js").write_text(s.split("<script>",1)[1].split("</script>",1)[0],encoding="utf-8")
           PY
@@ -89,6 +90,7 @@ jobs:
           node mobile/test_restore_safety.cjs
           node mobile/test_backup_library.cjs
           node mobile/test_beta2_resale_feedback.cjs
+          node mobile/test_expense_pdf_file_import.cjs
           node mobile/test_vin_lookup.cjs
           node mobile/test_vehicle_management.cjs
           node mobile/test_vehicle_photos.cjs
@@ -121,13 +123,13 @@ jobs:
           done
       - name: Collect build files
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk release/MileSage_Alpha_1_4_5_Beta2_Resale_Feedback.apk
-          python mobile/validate_mobile_html.py release/MileSage_Alpha_1_4_5_Beta2_Resale_Feedback.apk
-          unzip -t release/MileSage_Alpha_1_4_5_Beta2_Resale_Feedback.apk | tail -1
-          sha256sum release/MileSage_Alpha_1_4_5_Beta2_Resale_Feedback.apk > release/APK_SHA256.txt
+          cp android/app/build/outputs/apk/debug/app-debug.apk release/MileSage_Alpha_1_4_6_Load_Expense_PDF.apk
+          python mobile/validate_mobile_html.py release/MileSage_Alpha_1_4_6_Load_Expense_PDF.apk
+          unzip -t release/MileSage_Alpha_1_4_6_Load_Expense_PDF.apk | tail -1
+          sha256sum release/MileSage_Alpha_1_4_6_Load_Expense_PDF.apk > release/APK_SHA256.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: MileSage-Alpha-1.4.5-Beta2-Resale-Feedback
+          name: MileSage-Alpha-1.4.6-Load-Expense-PDF
           path: release/
           retention-days: 90
       - name: Test complete app in a phone-sized browser
