@@ -29,6 +29,7 @@ for(const html of [first,second]){
  assert.equal(read('TOTAL $2,200.00').cost,null,'Generic total alone is unsafe');
  assert.ok(html.includes('window.milesageExpenseOCRComplete=function(result)'));
  assert.ok(html.includes("baseline.cost===''"),'Do not replace manually entered expense');
+ assert.ok(html.includes('const baseline=draft.baseline||{};'),'Use the active scan baseline');
  assert.ok(html.includes("draft.epoch!==expensePhotoDraftEpoch"),'Discard stale OCR');
  assert.ok(html.includes('data-expense-pdf-save='));
  for(const q of ['id="expensePdfActions"','id="saveExpensePdfDraft"','id="viewExpensePdfDraft"',
