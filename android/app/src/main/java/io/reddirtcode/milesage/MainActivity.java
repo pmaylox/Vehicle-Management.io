@@ -49,6 +49,8 @@ public class MainActivity extends Activity {
     private static final int SERVICE_DOCUMENT_SCAN_CODE = 219;
     private static final int FUEL_DOCUMENT_SCAN_CODE = 220;
     private static final int SERVICE_RECEIPT_SCAN_CODE = 221;
+    private static final int EXPENSE_DOCUMENT_SCAN_CODE = 222;
+    private boolean expenseScanOpen = false;
     private boolean serviceReceiptScanOpen = false;
     private boolean fuelScanOpen = false;
     private boolean serviceScanOpen = false;
@@ -269,6 +271,47 @@ public class MainActivity extends Activity {
             }
             return;
         }
+        if (requestCode == EXPENSE_DOCUMENT_SCAN_CODE) {
+            expenseScanOpen = false;
+            if (resultCode != RESULT_OK) {
+                expenseScanResult(null, "Scan cancelled. No expense record changed.");
+                return;
+            }
+            try {
+                GmsDocumentScanningResult scan = GmsDocumentScanningResult.fromActivityResultIntent(data);
+                if (scan == null || scan.getPdf() == null || scan.getPdf().getPageCount() < 1) {
+                    throw new IOException("No PDF pages returned.");
+                }
+                File directory = new File(getFilesDir(), "expense_invoices");
+                if (!directory.exists() && !directory.mkdirs()) throw new IOException("Cannot create PDF folder.");
+                String id = UUID.randomUUID().toString();
+                File file = new File(directory, id + ".pdf");
+                try (InputStream in = getContentResolver().openInputStream(scan.getPdf().getUri());
+                     OutputStream out = new FileOutputStream(file)) {
+                    if (in == null) throw new IOException("Cannot open scanner PDF.");
+                    byte[] buf = new byte[32 * 1024];
+                    int n;
+                    long total = 0;
+                    while ((n = in.read(buf)) != -1) {
+                        total += n;
+                        if (total > 30_000_000) throw new IOException("PDF exceeds 30 MB.");
+                        out.write(buf, 0, n);
+                    }
+                    if (total < 100) throw new IOException("Scanned PDF is empty.");
+                } catch (Exception e) {
+                    file.delete();
+                    throw e;
+                }
+                JSONObject payload = new JSONObject();
+                payload.put("id", id);
+                payload.put("pages", scan.getPdf().getPageCount());
+                payload.put("name", "MileSage-Expense-" + id + ".pdf");
+                expenseScanResult(payload, null);
+            } catch (Exception e) {
+                expenseScanResult(null, "Could not save scanned PDF: " + e.getMessage());
+            }
+            return;
+        }
         if (requestCode == FILE_CHOOSER_CODE && pendingFileChooser != null) {
             Uri[] result = null;
             if (resultCode == RESULT_OK) {
@@ -292,6 +335,21 @@ public class MainActivity extends Activity {
             if (error != null) payload.put("error", error);
             if (web != null) {
                 String js = "if(window.milesageServiceScannerComplete)window.milesageServiceScannerComplete(" +
+                    payload.toString() + ");";
+                runOnUiThread(() -> web.evaluateJavascript(js, null));
+            }
+        } catch (Exception ignored) {
+            showToast("Unable to report document scanner result.");
+        }
+    }
+
+
+    private void expenseScanResult(JSONObject data, String error) {
+        try {
+            JSONObject payload = data == null ? new JSONObject() : data;
+            if (error != null) payload.put("error", error);
+            if (web != null) {
+                String js = "if(window.milesageExpenseScannerComplete)window.milesageExpenseScannerComplete(" +
                     payload.toString() + ");";
                 runOnUiThread(() -> web.evaluateJavascript(js, null));
             }
@@ -469,6 +527,36 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void beginExpenseDocumentScan() {
+        if (expenseScanOpen) return;
+        expenseScanOpen = true;
+        try {
+            GmsDocumentScannerOptions options = new GmsDocumentScannerOptions.Builder()
+                .setGalleryImportAllowed(true)
+                .setPageLimit(30)
+                .setResultFormats(GmsDocumentScannerOptions.RESULT_FORMAT_PDF)
+                .setScannerMode(GmsDocumentScannerOptions.SCANNER_MODE_FULL)
+                .build();
+            GmsDocumentScanning.getClient(options).getStartScanIntent(this)
+                .addOnSuccessListener(intentSender -> {
+                    try {
+                        startIntentSenderForResult(intentSender, EXPENSE_DOCUMENT_SCAN_CODE,
+                            null, 0, 0, 0);
+                    } catch (IntentSender.SendIntentException e) {
+                        expenseScanOpen = false;
+                        expenseScanResult(null, "Unable to start document scanner: " + e.getMessage());
+                    }
+                })
+                .addOnFailureListener(error -> {
+                    expenseScanOpen = false;
+                    expenseScanResult(null, "Scanner unavailable: " + error.getMessage());
+                });
+        } catch (Exception error) {
+            expenseScanOpen = false;
+            expenseScanResult(null, "Scanner unavailable: " + error.getMessage());
+        }
+    }
+
     private void openSavedServiceDocument(String id) {
         if (id == null || !id.matches("[a-f0-9-]{36}")) {
             showToast("Invalid service document reference.");
@@ -505,6 +593,46 @@ public class MainActivity extends Activity {
             startActivity(Intent.createChooser(intent,"Save or share service PDF"));
         } catch (Exception e) {
             showToast("Unable to share service document.");
+        }
+    }
+
+
+    private void openSavedExpenseDocument(String id) {
+        if (id == null || !id.matches("[a-f0-9-]{36}")) {
+            showToast("Invalid expense document reference.");
+            return;
+        }
+        File file = new File(new File(getFilesDir(), "expense_invoices"), id + ".pdf");
+        if (!file.isFile()) {
+            showToast("This expense PDF is not on this device. Keep the original PDF when moving phones.");
+            return;
+        }
+        try {
+            Uri uri = FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", file);
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setDataAndType(uri, "application/pdf");
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivity(Intent.createChooser(intent, "Open expense document"));
+        } catch (Exception e) {
+            showToast("No compatible PDF viewer installed.");
+        }
+    }
+
+    private void shareSavedExpenseDocument(String id) {
+        if (id == null || !id.matches("[a-f0-9-]{36}")) {
+            showToast("Invalid expense document reference.");return;
+        }
+        File pdf = new File(new File(getFilesDir(), "expense_invoices"), id + ".pdf");
+        if (!pdf.isFile()) {showToast("Scanned expense PDF not found on this device.");return;}
+        try {
+            Uri uri = FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", pdf);
+            Intent intent = new Intent(Intent.ACTION_SEND);
+            intent.setType("application/pdf");
+            intent.putExtra(Intent.EXTRA_STREAM,uri);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivity(Intent.createChooser(intent,"Save or share expense PDF"));
+        } catch (Exception e) {
+            showToast("Unable to share expense document.");
         }
     }
 
@@ -576,6 +704,15 @@ public class MainActivity extends Activity {
         }
         @JavascriptInterface public void scanServiceReceipt() {
             runOnUiThread(() -> beginServiceReceiptScan());
+        }
+        @JavascriptInterface public void scanExpenseDocument() {
+            runOnUiThread(() -> beginExpenseDocumentScan());
+        }
+        @JavascriptInterface public void openExpenseDocument(String id) {
+            runOnUiThread(() -> openSavedExpenseDocument(id));
+        }
+        @JavascriptInterface public void shareExpenseDocument(String id) {
+            runOnUiThread(() -> shareSavedExpenseDocument(id));
         }
         @JavascriptInterface public void scanServiceInvoice() {
             runOnUiThread(() -> beginServiceDocumentScan());
