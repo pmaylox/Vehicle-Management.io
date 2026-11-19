@@ -123,5 +123,6 @@ assert.ok(html.includes("storeReceipt(a,'fuel'"), 'fuel record and receipt are p
 assert.ok(html.includes("$('fullTank').checked=false"), 'OCR may not claim a full tank');
 assert.ok(html.includes('id="fuelPhotoPreview"'), 'fuel photo must show a temporary preview');
 assert.ok(html.includes("showReceiptPreview('fuel',file)"), 'fuel must preview the received photo before OCR starts');
-assert.ok(html.includes('Photo preview is shown, but fuel receipt scanning failed:'), 'fuel must report OCR failures without hiding the photo');
+assert.ok(html.includes('Photo attached, but autofill failed:'), 'fuel must report gallery OCR failure without hiding the photo');
+assert.ok(html.includes('Photo can still be attached; enter fuel values manually.'), 'native scanner must allow manual entry after OCR failure');
 console.log('Fuel receipt OCR parsing tests passed');
