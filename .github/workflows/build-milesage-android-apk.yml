@@ -1,7 +1,8 @@
-name: Build MileSage Alpha 1.4.3 Expense PDF OCR and Export APK
+name: Build MileSage Alpha 1.4.4 Saved Backup Browser APK
 on:
   push:
     branches:
+      - feature/backup-library-reusable-restore-alpha144-20261119
       - fix/expense-pdf-find-and-autofill-alpha143-20261119
       - feature/expense-multipage-pdf-alpha142-20261119
       - feature/service-document-ocr-alpha141-20261118
@@ -13,13 +14,13 @@ on:
       - "mobile/**"
       - ".github/workflows/build-milesage-android-apk.yml"
   pull_request:
-    branches: [main, feature/expense-multipage-pdf-alpha142-20261119]
+    branches: [main, fix/expense-pdf-find-and-autofill-alpha143-20261119]
   workflow_dispatch:
 
 jobs:
   build:
     concurrency:
-      group: milesage-alpha143-${{ github.sha }}
+      group: milesage-alpha144-${{ github.sha }}
       cancel-in-progress: true
     runs-on: ubuntu-latest
     permissions:
@@ -58,12 +59,13 @@ jobs:
           mkdir -p android/app/src/main/assets release
           cp mobile/MileSage_Alpha_1_3_2_VIN_Lookup.html android/app/src/main/assets/index.html
           sed -i 's/Alpha 1.3.2/Alpha 1.4.3 Expense OCR/g' android/app/src/main/assets/index.html
-          cp android/app/src/main/assets/index.html release/MileSage_Alpha_1_4_3_Expense_PDF_OCR.html
-          printf '%s\n' "MileSage Alpha 1.4.3 - NEW 30-page Expense PDF scanner, with tested Fuel and Service OCR preserved" \
+          cp android/app/src/main/assets/index.html release/MileSage_Alpha_1_4_4_Reusable_Backups.html
+          printf '%s\n' "MileSage Alpha 1.4.4 - reusable backup browser and local snapshots, with tested Fuel, Service, Expense scanners preserved" \
             "Do NOT uninstall or clear existing MileSage apps. This separately installed test copy has independent storage." \
             "Back up your existing phone data before importing anything into the test copy." \
             "This APK has its own application ID and cannot overwrite previous MileSage test apps. Import a Full mobile backup to copy data into it." \
             "Use Data & backup > Import JSON file with YOUR full phone backup." \
+            "Data & backup > Saved backups & snapshots lists local undo copies and offers Browse saved JSON files in Downloads/MileSage. Restoring does not delete downloaded JSON. The three most recent app-local snapshots are retained." \
             "Confirm the real Tacoma and Explorer plus their histories after import." \
             "The Fuel and Service receipt buttons each open a one-page crop-and-straighten document scanner, with native offline OCR and editable suggestions. The independent Service multi-page PDF scanner remains available." \
             "Expenses > Scan multi-page document produces a 30-page PDF and recognizes dates, invoice totals and body repair descriptions for confirmation. View the PDF before saving the expense." \
@@ -78,12 +80,13 @@ jobs:
           from pathlib import Path
           s=Path("android/app/src/main/assets/index.html").read_text(encoding="utf-8")
           assert s.rstrip().endswith("</body></html>"), "Unexpected trailing content after HTML document"
-          for phrase in ("mobile_photo","chooseVehiclePhoto","takeVehiclePhoto","removeVehiclePhoto","milesage-mobile-offline-v1","+ By VIN","Take receipt photo","Take fuel receipt photo","choosePhotoDir","odometer-controls","receipt_photo",'id="editVehicle"','id="removeVehicle"','id="scanServicePdf"','function parseGallonsInput(','FUEL_SCANNER_V2_BEGIN','window.milesageFuelScanComplete','window.milesageServiceReceiptComplete','EXPENSE_MULTIPAGE_PDF_BEGIN','EXPENSE_PDF_OCR_BEGIN','window.milesageExpenseOCRComplete','id="viewExpensePdfDraft"','window.milesageExpenseScannerComplete'):
+          for phrase in ("mobile_photo","chooseVehiclePhoto","takeVehiclePhoto","removeVehiclePhoto","milesage-mobile-offline-v1","+ By VIN","Take receipt photo","Take fuel receipt photo","choosePhotoDir","odometer-controls","receipt_photo",'id="editVehicle"','id="removeVehicle"','id="scanServicePdf"','function parseGallonsInput(','FUEL_SCANNER_V2_BEGIN','window.milesageFuelScanComplete','window.milesageServiceReceiptComplete','EXPENSE_MULTIPAGE_PDF_BEGIN','EXPENSE_PDF_OCR_BEGIN','window.milesageExpenseOCRComplete','REUSABLE_BACKUP_LIBRARY_BEGIN','id="savedBackupLibrary"','id="viewExpensePdfDraft"','window.milesageExpenseScannerComplete'):
               assert phrase in s, phrase
           Path("/tmp/milesage-inline.js").write_text(s.split("<script>",1)[1].split("</script>",1)[0],encoding="utf-8")
           PY
           node --check /tmp/milesage-inline.js
           node mobile/test_restore_safety.cjs
+          node mobile/test_backup_library.cjs
           node mobile/test_vin_lookup.cjs
           node mobile/test_vehicle_management.cjs
           node mobile/test_vehicle_photos.cjs
@@ -116,13 +119,13 @@ jobs:
           done
       - name: Collect build files
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk release/MileSage_Alpha_1_4_3_Expense_PDF_OCR.apk
-          python mobile/validate_mobile_html.py release/MileSage_Alpha_1_4_3_Expense_PDF_OCR.apk
-          unzip -t release/MileSage_Alpha_1_4_3_Expense_PDF_OCR.apk | tail -1
-          sha256sum release/MileSage_Alpha_1_4_3_Expense_PDF_OCR.apk > release/APK_SHA256.txt
+          cp android/app/build/outputs/apk/debug/app-debug.apk release/MileSage_Alpha_1_4_4_Reusable_Backups.apk
+          python mobile/validate_mobile_html.py release/MileSage_Alpha_1_4_4_Reusable_Backups.apk
+          unzip -t release/MileSage_Alpha_1_4_4_Reusable_Backups.apk | tail -1
+          sha256sum release/MileSage_Alpha_1_4_4_Reusable_Backups.apk > release/APK_SHA256.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: MileSage-Alpha-1.4.3-Expense-PDF-OCR
+          name: MileSage-Alpha-1.4.4-Reusable-Backups
           path: release/
           retention-days: 90
       - name: Test complete app in a phone-sized browser

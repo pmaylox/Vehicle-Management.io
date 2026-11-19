@@ -1,5 +1,5 @@
 'use strict';
-// Alpha 1.4.3 regression: Expenses PDF scanner never changes Service PDF or
+// Alpha 1.4.4 regression: Expenses PDF scanner never changes Service PDF or
 // receipt-photo behavior, and no expense is stored until explicit Save.
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -67,6 +67,6 @@ for(const name of ['service_invoices','expense_invoices'])
  assert.ok(provider.includes('name="'+name+'" path="'+name+'/"'),
   'FileProvider missing '+name);
 const gradle=fs.readFileSync('android/app/build.gradle','utf8');
-assert.ok(gradle.includes("applicationId 'io.reddirtcode.milesage.alpha143expenseocr'"),
- 'Alpha 1.4.3 must install separately and never overwrite existing vehicle records');
+assert.ok(gradle.includes("applicationId 'io.reddirtcode.milesage.alpha144backupbrowser'"),
+ 'Alpha 1.4.4 must install separately and never overwrite existing vehicle records');
 console.log('PASS: 30-page Expense PDF capture, persistence reference, view/share, Service isolation and build identity.');

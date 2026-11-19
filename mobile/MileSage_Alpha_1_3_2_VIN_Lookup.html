@@ -95,7 +95,7 @@ label.field{display:block;font-size:13px;font-weight:700;margin:13px 0 7px}input
 <div class="section-head"><h2>Data & backup</h2></div>
 <div class="card feature-card"><h3 style="margin-top:0">Recover or import your data safely</h3><p class="small muted">Your phone data is stored locally. GitHub is checked read-only and will <strong>never</strong> replace it automatically. GitHub vehicles.json may contain incomplete or demo records, not your live phone readings; all-zero placeholder imports are blocked. Importing a JSON file requires review and saves a local recovery snapshot first.</p>
 <div class="button-row"><button id="githubBackupRecovery" class="btn" type="button">Recover from saved GitHub backup</button><button id="fileImportButton" class="btn secondary" type="button">Import JSON file</button></div><button id="githubImport" class="btn secondary" type="button" style="margin-top:8px">Review GitHub vehicles.json</button><input id="jsonFile" type="file" accept=".json,application/json" hidden><p id="jsonImportStatus" class="small muted" role="status" aria-live="polite">No backup selected.</p><p class="note">The saved GitHub backup is older (November 2026), but has recorded odometer and tire pressure data. Recovery fills only currently missing readings and empty histories, retaining your phone settings. Check mileage against your actual odometer after recovery. This will not update the app code or install an APK.</p></div>
-<div class="card"><h3 style="margin-top:0">Phone receipt photo folder</h3><p class="small muted">Choose a location on your phone; MileSage will create <strong>MileSage/Photos</strong> inside it and copy new fuel, service and other-expense receipts. This requires browser permission and may not work when opening HTML from Downloads. If unavailable, use Download photo in history and move it with Files.</p><button class="btn secondary" type="button" id="choosePhotoDir">Choose phone photo folder</button><p class="small muted" id="photoDirStatus">Phone photo folder not selected.</p></div><div class="card"><h3 style="margin-top:0">Save a backup</h3><p class="small muted">Phone edits are saved in this browser, not uploaded to GitHub or your laptop. Export regularly before clearing browser data or changing phones.</p><div class="button-row"><button id="exportPython" class="btn" type="button">Export vehicles.json</button><button id="exportFull" class="btn secondary" type="button">Full mobile backup</button><button id="undoImport" class="btn secondary" type="button">Restore previous local snapshot</button></div><p class="small muted" style="margin-bottom:0">The Python export uses the same vehicle JSON structure as your desktop app. Mobile-only expense and mileage-log details are included in the full backup.</p></div>
+<div class="card"><h3 style="margin-top:0">Phone receipt photo folder</h3><p class="small muted">Choose a location on your phone; MileSage will create <strong>MileSage/Photos</strong> inside it and copy new fuel, service and other-expense receipts. This requires browser permission and may not work when opening HTML from Downloads. If unavailable, use Download photo in history and move it with Files.</p><button class="btn secondary" type="button" id="choosePhotoDir">Choose phone photo folder</button><p class="small muted" id="photoDirStatus">Phone photo folder not selected.</p></div><div class="card"><h3 style="margin-top:0">Save a backup</h3><p class="small muted">Phone edits are saved in this browser, not uploaded to GitHub or your laptop. Export regularly before clearing browser data or changing phones.</p><div class="button-row"><button id="exportPython" class="btn" type="button">Export vehicles.json</button><button id="exportFull" class="btn secondary" type="button">Full mobile backup</button><button id="undoImport" class="btn secondary" type="button">Saved backups &amp; snapshots</button></div><div id="savedBackupLibrary" hidden><p id="savedBackupStatus" class="small muted" role="status">Browse saved backups. Restoring a file does not remove it.</p><button id="browseSavedJson" class="btn secondary" type="button">Browse saved JSON files</button><p class="small muted">In Samsung My Files, look under <strong>Downloads / MileSage</strong>. You can import the same file more than once. Saved snapshots below belong to this installation only.</p><h4 style="margin:12px 0 8px">Reusable local recovery snapshots</h4><div id="savedLocalSnapshots" aria-live="polite"></div><p class="small muted">Only the three most recent local recovery snapshots are retained to conserve phone storage. For long-term storage use Full mobile backup; exported PDFs must be saved separately.</p></div><p class="small muted" style="margin-bottom:0">The Python export uses the same vehicle JSON structure as your desktop app. Mobile-only expense and mileage-log details are included in the full backup.</p></div>
 <div class="card"><h3 style="margin-top:0">About this version</h3><p class="small muted">MileSage Alpha 1.3.2 preview • Mobile Preview v8 • VIN-based vehicle entry using the NHTSA decoder (internet required), with review before saving • Fluid & filter buttons on the Service tab • Safe manual data restore • GitHub checks never overwrite records • Works with locally saved data offline. Added vehicle overview cards, fuel-type and octane fields, and three fuel insights charts. Full two-way cloud sync, push alerts, OBD-II and APK packaging are not implemented.</p><p class="small muted" id="storageNote"></p></div>
 </section>
 </main>
@@ -1662,6 +1662,7 @@ function commitImport(newVehicles,newCurrent,reason){
  vehicles=newVehicles;current=newCurrent;hasStorage=true;
  syncStatus='Phone records preserved locally; GitHub cannot overwrite them automatically.';
  updateBanner();renderAll();switchTab('home');
+ renderSavedBackups();
  message(reason+' Local undo snapshot saved.');
  return true;
 }
@@ -1720,24 +1721,78 @@ async function recoverFromGitHubBackup(){
  }catch(e){alert('Recovery could not complete: '+e.message)}
  finally{btn.disabled=false;btn.textContent='Recover from saved GitHub backup';}
 }
-function undoImport(){
- const history=readSnapshots();
- if(!history.length){alert('No pre-import snapshot exists in this version. Check phone Downloads for an earlier full mobile backup.');return;}
- const latest=history[0];
- if(!confirm('Restore phone data from the snapshot created '+latest.created_at+
-     '?\nThis replaces the current phone data. Export a full backup of the current version first.'))return;
- if(!preservePreImport())return;
- try{
-  const restored=normalize(latest.vehicles);
-  localStorage.setItem(KEY,JSON.stringify({vehicles:restored,current:latest.current}));
-  vehicles=restored;current=Math.max(0,Math.min(latest.current,vehicles.length-1));
-  // Remove the original snapshot once used, retaining the new undo snapshot.
-  const next=readSnapshots().filter(x=>x.created_at!==latest.created_at);
-  localStorage.setItem(RECOVERY_KEY,JSON.stringify(next.slice(0,3)));
-  syncStatus='Previous local snapshot restored. GitHub has not overwritten it.';
-  renderAll();switchTab('home');message('Previous local snapshot restored.');
- }catch(e){alert('Could not restore snapshot: '+e.message);}
+/* REUSABLE_BACKUP_LIBRARY_BEGIN */
+// Restoring a snapshot never consumes it. Android Downloads JSON backups also
+// remain on the device and can be selected again through the file picker.
+function renderSavedBackups(){
+ const root=$('savedLocalSnapshots');
+ if(!root)return;
+ const list=readSnapshots().filter(x=>x&&Array.isArray(x.vehicles));
+ if(!list.length){
+  root.innerHTML='<p class="small muted">No local recovery snapshots in this installation yet. To restore a downloaded backup, use Browse saved JSON files.</p>';
+ }else{
+  root.innerHTML=list.map((s,i)=>{
+   const date=new Date(s.created_at);
+   const when=Number.isFinite(date.getTime())
+     ?date.toLocaleString('en-US',{dateStyle:'medium',timeStyle:'short'}):'Date unknown';
+   const count=s.vehicles.length;
+   return '<div class="button-row" style="align-items:center;margin:8px 0">'+
+     '<span class="small" style="flex:2;min-width:150px"><strong>'+esc(when)+'</strong> · '+
+     count+' vehicle'+(count===1?'':'s')+'</span>'+
+     '<button type="button" class="btn secondary" data-restore-snapshot="'+i+'">Review & restore</button>'+
+     '</div>';
+  }).join('');
+  root.querySelectorAll('[data-restore-snapshot]').forEach(button=>{
+   button.onclick=()=>restoreSavedSnapshot(Number(button.dataset.restoreSnapshot));
+  });
+ }
 }
+function openBackupFilePicker(){
+ $('jsonImportStatus').textContent='Select a saved .json file in Android Files > Downloads > MileSage. The file remains available for future restorations.';
+ $('jsonFile').value='';
+ $('jsonFile').click();
+}
+function restoreSavedSnapshot(index){
+ const history=readSnapshots().filter(x=>x&&Array.isArray(x.vehicles));
+ if(!Number.isInteger(index)||index<0||index>=history.length){
+  alert('That snapshot is no longer available. Refresh the list and choose again.');return false;
+ }
+ const saved=history[index];
+ const date=String(saved.created_at||'unknown');
+ if(!confirm('RESTORE SAVED SNAPSHOT from '+date+'?\n\nThis is reusable; it will not be deleted after restoring. You will next review any missing vehicles or records.'))return false;
+ try{
+  // Keep the same two confirmation screens and pre-import undo safeguard as
+  // importing a downloaded JSON file.
+  const accepted=replace({format:'MileSage-Mobile-v1',
+   vehicles:saved.vehicles,current:saved.current});
+  if(accepted){
+   // The automatic pre-import safeguard retains only three slots. Protect
+   // the exact snapshot just restored, even if it was the oldest of three.
+   const recent=readSnapshots();
+   if(!recent.some(x=>x.created_at===saved.created_at)){
+    if(recent.length>=3)recent[recent.length-1]=saved;
+    else recent.push(saved);
+    try{localStorage.setItem(RECOVERY_KEY,JSON.stringify(recent.slice(0,3)));}
+    catch(e){alert('Restored successfully, but could not retain this local snapshot. Keep a Full mobile JSON backup in Downloads.');}
+   }
+  }
+  renderSavedBackups();
+  if(accepted)message('Saved snapshot restored. You can choose it again later.');
+  return accepted;
+ }catch(error){
+  alert('Could not restore saved snapshot: '+error.message);
+  return false;
+ }
+}
+function showSavedBackupLibrary(){
+ const section=$('savedBackupLibrary');
+ section.hidden=!section.hidden;
+ if(!section.hidden){
+  renderSavedBackups();
+  $('savedBackupStatus').textContent='Choose a local snapshot or browse downloaded files. Previous restores do not delete your saved JSON files.';
+ }
+}
+/* REUSABLE_BACKUP_LIBRARY_END */
 async function autoRefreshGitHub(){
  if(checkingGitHub||document.hidden)return;
  checkingGitHub=true;
@@ -1907,11 +1962,9 @@ function init(){
  $('vinInput').oninput=()=>{decodedVIN=null;$('vinConfirmForm').hidden=true;$('vinLookupStatus').textContent='';};
  $('githubImport').onclick=githubImport;
  $('githubBackupRecovery').onclick=recoverFromGitHubBackup;
- $('undoImport').onclick=undoImport;
- $('fileImportButton').onclick=()=>{
-  $('jsonImportStatus').textContent='Choose a JSON backup. Waiting for Android or your browser to return the file…';
-  $('jsonFile').click();
- };
+ $('undoImport').onclick=showSavedBackupLibrary;
+ $('browseSavedJson').onclick=openBackupFilePicker;
+ $('fileImportButton').onclick=openBackupFilePicker;
  $('jsonFile').onchange=async e=>{
   const status=$('jsonImportStatus');
   let timer;
