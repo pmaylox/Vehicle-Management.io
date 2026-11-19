@@ -128,5 +128,13 @@ jobs:
       - name: Test complete app in a phone-sized browser
         run: |
           npm install --no-save playwright@1.65.1
-          npx playwright install --with-deps chromium
+          if command -v google-chrome >/dev/null 2>&1; then
+            export MILESAGE_CHROME="$(command -v google-chrome)"
+            echo "Using runner-provided Chrome; no apt dependency downloads."
+          elif command -v chromium >/dev/null 2>&1; then
+            export MILESAGE_CHROME="$(command -v chromium)"
+            echo "Using runner-provided Chromium."
+          else
+            npx playwright install chromium
+          fi
           node mobile/test_browser_runtime.cjs mobile/MileSage_Mobile_Auto_Refresh.html mobile/MileSage_Alpha_1_3_2_VIN_Lookup.html android/app/src/main/assets/index.html
