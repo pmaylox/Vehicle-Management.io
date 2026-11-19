@@ -27,6 +27,28 @@ if(!files.length)files.push('mobile/MileSage_Mobile_Auto_Refresh.html','mobile/M
     await page.locator('#jsonFile').setInputFiles({name:'runtime-backup.json',mimeType:'application/json',
      buffer:Buffer.from(JSON.stringify({vehicles:[vehicle],current:0}))});
     await page.locator('[data-vehicle="0"]').waitFor();
+    // Saved backups are browseable after an import and can be chosen repeatedly.
+    await page.locator('#undoImport').click();
+    assert.equal(await page.locator('#savedBackupLibrary').isVisible(),true);
+    assert.ok((await page.locator('[data-restore-snapshot]').count())>0,
+      'Safe imports must create a visible local recovery snapshot');
+    const repeatBackup={vehicles:[vehicle],current:0};
+    for(let n=0;n<2;n++){
+      await page.locator('#browseSavedJson').click();
+      await page.locator('#jsonFile').setInputFiles({
+        name:'same-full-mobile-backup.json',mimeType:'application/json',
+        buffer:Buffer.from(JSON.stringify(repeatBackup))
+      });
+      await page.waitForFunction(()=>{
+        const status=document.querySelector('#jsonImportStatus')?.textContent||'';
+        return status.includes('Backup imported successfully') || status.includes('Import not applied');
+      });
+      assert.equal(await page.locator('#jsonImportStatus').innerText(),'Backup imported successfully.',
+        'Reimporting the same downloaded JSON should not be consumed after first use');
+    }
+    assert.ok((await page.locator('[data-restore-snapshot]').count())>0,
+      'Recovery snapshots should remain listed after restores');
+
     for(const tab of ['home','service','fuel','expenses','graphs']){
      await page.locator('[data-tab="'+tab+'"]').click();
      assert.equal(await page.locator('#'+tab).isVisible(),true,tab+' must open');
