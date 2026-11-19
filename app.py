@@ -1,3 +1,4 @@
+from car_history_ui import CarHistoryPanel
 from mobile_export import build_mobile_backup
 from vehicle_profile_ui import VehicleProfileFields
 from vin_lookup import profile_summary
@@ -272,6 +273,8 @@ def main():
     notebook.add(fuel_tab, text="Fuel History")
     graphs_tab = ttk.Frame(notebook, padding=15)
     notebook.add(graphs_tab, text="Graphs")
+    car_history_tab = ttk.Frame(notebook, padding=10)
+    notebook.add(car_history_tab, text="Car History")
         # ===== NAVIGATION BUTTONS =====
     navigation_buttons = {}
 
@@ -289,6 +292,7 @@ def main():
         ("Maintenance", service_tab),
         ("Fuel Economy", fuel_tab),
         ("Graphs", graphs_tab),
+        ("Car History", car_history_tab),
     ):
         button = tk.Button(
             navigation,
@@ -485,11 +489,16 @@ def main():
         textvariable=fuel_status
      ).pack(anchor="w", pady=(8, 0))
 
+    car_history_panel = CarHistoryPanel(
+        car_history_tab, on_save=lambda: save_vehicles(vehicles)
+    )
+
         # ===== REFRESH SELECTED VEHICLE =====
     def show_vehicle(event=None):
         selection = vehicle_list.curselection()
 
         if not selection:
+            car_history_panel.show(None)
             overview.set_photo("")
             vehicle_heading.set("No vehicle selected")
             mileage_heading.set("")
@@ -521,6 +530,7 @@ def main():
             return
 
         vehicle = visible_vehicles[selection[0]]
+        car_history_panel.show(vehicle)
         overview.set_photo(vehicle.photo_path)
         vehicle_heading.set(f"{vehicle.year} {vehicle.name}")
         mileage_heading.set(
