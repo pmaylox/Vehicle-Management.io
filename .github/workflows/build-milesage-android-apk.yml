@@ -10,7 +10,7 @@ on:
       - "mobile/**"
       - ".github/workflows/build-milesage-android-apk.yml"
   pull_request:
-    branches: [main]
+    branches: [main, fix/alpha139-fuel-ocr-arithmetic-autofill-20261117]
   workflow_dispatch:
 
 jobs:
