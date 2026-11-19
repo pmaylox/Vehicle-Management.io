@@ -1,5 +1,5 @@
 'use strict';
-// Alpha 1.4.2 regression: Expenses PDF scanner never changes Service PDF or
+// Alpha 1.4.3 regression: Expenses PDF scanner never changes Service PDF or
 // receipt-photo behavior, and no expense is stored until explicit Save.
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -13,15 +13,19 @@ for(const html of htmls){
  for (const required of [
   '/* EXPENSE_MULTIPAGE_PDF_BEGIN */',
   'id="scanExpensePdf"','id="clearExpensePdf"','id="expensePdfPreview"',
+  'id="viewExpensePdfDraft"','id="shareExpensePdfDraft"','id="saveExpensePdfDraft"',
   'window.milesageExpenseScannerComplete=function(result)',
-  "typeof window.MileSageAndroid.scanExpenseDocument!=='function'",
+  'window.milesageExpenseOCRComplete=function(result)',
+  "typeof window.MileSageAndroid?.scanExpenseDocument!=='function'",
   'expensePdfDraft={vehicle:owner,id:info.id,pages:info.pages,',
   'record.expense_document={id:pdf.id,pages:pdf.pages,name:pdf.name}',
   "wireExpensePdfScanner(a);wireExpensePdfHistory();",
   "data-expense-pdf=\"'+index+'\"",
   "data-expense-pdf-share=\"'+index+'\"",
+  "data-expense-pdf-save=\"'+index+'\"",
   'window.MileSageAndroid.openExpenseDocument(doc.id)',
   'window.MileSageAndroid.shareExpenseDocument(doc.id)',
+  'window.MileSageAndroid.saveExpenseDocument(doc.id)',
   "if(pdf){expensePdfDraft=null;renderExpenses();}",
   'Full mobile JSON backup does not include PDF files.',
   "storeReceipt(a,'expense',record,()=>a.mobile_expenses.push(record));",
@@ -43,6 +47,12 @@ for(const required of [
  'if (total > 30_000_000) throw new IOException("PDF exceeds 30 MB.")',
  'MileSage-Expense-',
  'expenseScanResult(payload, null)',
+ 'beginExpensePagesOCR(scan.getPages(), id)',
+ 'window.milesageExpenseOCRComplete',
+ 'exportExpenseDocument(String id)',
+ 'MediaStore.MediaColumns.RELATIVE_PATH',
+ 'Environment.DIRECTORY_DOWNLOADS + "/MileSage/Expenses"',
+ 'GmsDocumentScannerOptions.RESULT_FORMAT_PDF, GmsDocumentScannerOptions.RESULT_FORMAT_JPEG',
  'window.milesageExpenseScannerComplete',
  'beginExpenseDocumentScan()',
  '@JavascriptInterface public void scanExpenseDocument()',
@@ -57,6 +67,6 @@ for(const name of ['service_invoices','expense_invoices'])
  assert.ok(provider.includes('name="'+name+'" path="'+name+'/"'),
   'FileProvider missing '+name);
 const gradle=fs.readFileSync('android/app/build.gradle','utf8');
-assert.ok(gradle.includes("applicationId 'io.reddirtcode.milesage.alpha142expensepdf'"),
- 'Alpha 1.4.2 must install separately and never overwrite existing vehicle records');
+assert.ok(gradle.includes("applicationId 'io.reddirtcode.milesage.alpha143expenseocr'"),
+ 'Alpha 1.4.3 must install separately and never overwrite existing vehicle records');
 console.log('PASS: 30-page Expense PDF capture, persistence reference, view/share, Service isolation and build identity.');

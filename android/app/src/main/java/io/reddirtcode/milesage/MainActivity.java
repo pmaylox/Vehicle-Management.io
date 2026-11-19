@@ -33,6 +33,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
 import java.util.UUID;
+import java.util.List;
 
 import org.json.JSONObject;
 import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions;
@@ -306,7 +307,13 @@ public class MainActivity extends Activity {
                 payload.put("id", id);
                 payload.put("pages", scan.getPdf().getPageCount());
                 payload.put("name", "MileSage-Expense-" + id + ".pdf");
-                expenseScanResult(payload, null);
+                payload.put("ocr_pending", scan.getPages() != null && !scan.getPages().isEmpty());
+                expenseScanResult(payload, null); // Show the PDF and draft buttons immediately.
+                if (scan.getPages() != null && !scan.getPages().isEmpty()) {
+                    beginExpensePagesOCR(scan.getPages(), id);
+                } else {
+                    expenseOcrResult(id, "", 0, "Scanner returned PDF without readable page images.");
+                }
             } catch (Exception e) {
                 expenseScanResult(null, "Could not save scanned PDF: " + e.getMessage());
             }
@@ -358,6 +365,63 @@ public class MainActivity extends Activity {
         }
     }
 
+
+
+    // The document scanner returns JPEG page URIs when both formats are requested.
+    // Recognize sequentially, avoiding a full multi-page bitmap in memory.
+    // If OCR fails, the PDF remains saved and can still be viewed/exported.
+    private void expenseOcrResult(String id, String text, int pagesRead, String error) {
+        try {
+            JSONObject payload = new JSONObject();
+            payload.put("id", id);
+            payload.put("text", text);
+            payload.put("ocr_pages", pagesRead);
+            if (error != null) payload.put("error", error);
+            String js = "if(window.milesageExpenseOCRComplete)window.milesageExpenseOCRComplete(" +
+                payload.toString() + ");";
+            runOnUiThread(() -> {
+                if (web != null) web.evaluateJavascript(js, null);
+            });
+        } catch (Exception ignored) {
+            showToast("Unable to return expense OCR text.");
+        }
+    }
+
+    private void beginExpensePagesOCR(List<GmsDocumentScanningResult.Page> pages, String id) {
+        if (pages == null || pages.isEmpty()) {
+            expenseOcrResult(id, "", 0, "No scanned page images were returned.");
+            return;
+        }
+        TextRecognizer recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
+        recognizeExpensePage(pages, 0, id, new StringBuilder(), recognizer, 0);
+    }
+
+    private void recognizeExpensePage(List<GmsDocumentScanningResult.Page> pages, int index,
+            String id, StringBuilder all, TextRecognizer recognizer, int pagesRead) {
+        if (index >= pages.size()) {
+            recognizer.close();
+            expenseOcrResult(id, all.toString(), pagesRead,
+                pagesRead < pages.size() ? "Some pages could not be read; review manually." : null);
+            return;
+        }
+        try {
+            InputImage image = InputImage.fromFilePath(this, pages.get(index).getImageUri());
+            recognizer.process(image)
+                .addOnSuccessListener(result -> {
+                    if (all.length() < 48000) {
+                        String text = result.getText();
+                        all.append("\n--- PAGE ").append(index + 1).append(" ---\n");
+                        all.append(text.substring(0, Math.min(text.length(),
+                            Math.max(0, 48000 - all.length()))));
+                    }
+                    recognizeExpensePage(pages, index + 1, id, all, recognizer, pagesRead + 1);
+                })
+                .addOnFailureListener(error ->
+                    recognizeExpensePage(pages, index + 1, id, all, recognizer, pagesRead));
+        } catch (Exception error) {
+            recognizeExpensePage(pages, index + 1, id, all, recognizer, pagesRead);
+        }
+    }
 
     // Fuel uses a dedicated one-page, crop-and-enhance document scanning flow.
     // This does not change the existing Service-only multipage PDF scanner.
@@ -534,7 +598,7 @@ public class MainActivity extends Activity {
             GmsDocumentScannerOptions options = new GmsDocumentScannerOptions.Builder()
                 .setGalleryImportAllowed(true)
                 .setPageLimit(30)
-                .setResultFormats(GmsDocumentScannerOptions.RESULT_FORMAT_PDF)
+                .setResultFormats(GmsDocumentScannerOptions.RESULT_FORMAT_PDF, GmsDocumentScannerOptions.RESULT_FORMAT_JPEG)
                 .setScannerMode(GmsDocumentScannerOptions.SCANNER_MODE_FULL)
                 .build();
             GmsDocumentScanning.getClient(options).getStartScanIntent(this)
@@ -637,6 +701,54 @@ public class MainActivity extends Activity {
     }
 
 
+
+    // Explicitly export a copy to Samsung My Files > Downloads > MileSage > Expenses.
+    // The app-private original stays attached to Expense History.
+    private void exportExpenseDocument(String id) {
+        if (id == null || !id.matches("[a-f0-9-]{36}")) {
+            showToast("Invalid expense PDF reference.");
+            return;
+        }
+        File source = new File(new File(getFilesDir(), "expense_invoices"), id + ".pdf");
+        if (!source.isFile()) {
+            showToast("Expense PDF not found in this MileSage installation.");
+            return;
+        }
+        final String name = "MileSage-Expense-" + id + ".pdf";
+        Uri dest = null;
+        try {
+            if (Build.VERSION.SDK_INT >= 29) {
+                ContentValues values = new ContentValues();
+                values.put(MediaStore.MediaColumns.DISPLAY_NAME, name);
+                values.put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf");
+                values.put(MediaStore.MediaColumns.RELATIVE_PATH,
+                    Environment.DIRECTORY_DOWNLOADS + "/MileSage/Expenses");
+                values.put(MediaStore.MediaColumns.IS_PENDING, 1);
+                dest = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+                if (dest == null) throw new IOException("Cannot create Downloads PDF.");
+                try (InputStream input = new java.io.FileInputStream(source);
+                     OutputStream output = getContentResolver().openOutputStream(dest)) {
+                    if (output == null) throw new IOException("Cannot write Downloads PDF.");
+                    byte[] buffer = new byte[32768];
+                    int count;
+                    while ((count = input.read(buffer)) > 0) output.write(buffer, 0, count);
+                }
+                ContentValues done = new ContentValues();
+                done.put(MediaStore.MediaColumns.IS_PENDING, 0);
+                getContentResolver().update(dest, done, null, null);
+            } else {
+                // Older Android: use the system share/save chooser rather than
+                // requiring broad storage permissions.
+                shareSavedExpenseDocument(id);
+                return;
+            }
+            showToast("Saved: My Files > Downloads > MileSage > Expenses");
+        } catch (Exception error) {
+            if (dest != null) getContentResolver().delete(dest, null, null);
+            showToast("Could not save Expense PDF: " + error.getMessage());
+        }
+    }
+
     // The bundled Latin OCR model runs locally in this APK. JS passes only a
     // compressed receipt image; recognized text is returned to the same WebView.
     // No receipt or OCR result is uploaded to a server.
@@ -713,6 +825,9 @@ public class MainActivity extends Activity {
         }
         @JavascriptInterface public void shareExpenseDocument(String id) {
             runOnUiThread(() -> shareSavedExpenseDocument(id));
+        }
+        @JavascriptInterface public void saveExpenseDocument(String id) {
+            runOnUiThread(() -> exportExpenseDocument(id));
         }
         @JavascriptInterface public void scanServiceInvoice() {
             runOnUiThread(() -> beginServiceDocumentScan());

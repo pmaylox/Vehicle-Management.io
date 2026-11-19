@@ -7,11 +7,11 @@ android {
     compileSdk 35
 
     defaultConfig {
-        applicationId 'io.reddirtcode.milesage.alpha142expensepdf'
+        applicationId 'io.reddirtcode.milesage.alpha143expenseocr'
         minSdk 26
         targetSdk 35
-        versionCode 142
-        versionName '1.4.2-expense-multipage-pdf'
+        versionCode 143
+        versionName '1.4.3-expense-pdf-ocr-export'
     }
     buildTypes {
         release {
