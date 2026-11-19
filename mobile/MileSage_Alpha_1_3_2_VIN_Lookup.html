@@ -1468,7 +1468,89 @@ $('extraForm').onsubmit=async e=>{
 };}
 function mpgSeries(a){let start=null,gallons=0;let values=[];for(const r of a.fuel_history){if(r.mileage==null){start=null;gallons=0;continue}let current=Number(r.mileage),g=Number(r.gallons);if(!Number.isFinite(current)||!Number.isFinite(g))continue;if(start==null){if(r.full_tank){start=current;gallons=0;}continue;}gallons+=g;if(r.full_tank){let miles=current-start;if(miles>0&&gallons>0)values.push({label:r.date||'',mpg:miles/gallons});start=current;gallons=0;}}return values;}
 function mpgChart(values){if(values.length<2)return `<p class="muted small">At least 2 completed MPG calculations are needed to draw a trend. A starting full tank and a later full tank establish the first result.</p>`;const vals=values.slice(-8),min=Math.min(...vals.map(x=>x.mpg)),max=Math.max(...vals.map(x=>x.mpg));const hi=max===min?max+1:max;const lo=max===min?Math.max(0,min-1):Math.max(0,min-1);let pts=vals.map((x,i)=>`${(15+i*270/Math.max(1,vals.length-1)).toFixed(1)},${(145-120*(x.mpg-lo)/(hi-lo)).toFixed(1)}`).join(' ');return `<svg viewBox="0 0 300 170" class="linechart" role="img" aria-label="Recent fuel economy trend from ${min.toFixed(1)} to ${max.toFixed(1)} miles per gallon"><path d="M15 15V145H285" stroke="#cbd6df" stroke-width="2" fill="none"/><polyline points="${pts}" fill="none" stroke="#9e3b1b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>${vals.map((x,i)=>`<circle cx="${(15+i*270/Math.max(1,vals.length-1)).toFixed(1)}" cy="${(145-120*(x.mpg-lo)/(hi-lo)).toFixed(1)}" r="4" fill="#9e3b1b"/>`).join('')}<text x="18" y="12" font-size="11" fill="#5d6972">${max.toFixed(1)} MPG</text><text x="18" y="163" font-size="11" fill="#5d6972">${min.toFixed(1)} MPG</text></svg>`}
-function renderGraphs(){const a=v(),el=$('graphsBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}const t=expenseSummary(a),arr=[['Service',t.service],['Fuel',t.fuel],['Other',t.extra]],max=Math.max(1,...arr.map(x=>x[1])),mpgs=mpgSeries(a);const oilRem=Number(a.service_interval)-(Number(a.mileage)-Number(a.last_service_mileage));el.innerHTML=`<div class="card"><h3 style="margin-top:0">Recorded spending by category</h3><div class="chart-bars">${arr.map(([name,c])=>`<div class="chart-col"><div>${usd(c)}</div><div class="chart-bar" style="height:${Math.max(2,Math.round(c/max*130))}px"></div><div class="muted">${name}</div></div>`).join('')}</div></div><div class="card"><h3 style="margin-top:0">Fuel economy trend</h3>${mpgChart(mpgs)}${mpgs.length?`<p class="small muted">Most recent calculated MPG: <strong>${mpgs[mpgs.length-1].mpg.toFixed(2)}</strong> (${mpgs.length} valid full-tank cycle${mpgs.length===1?'':'s'} recorded)</p>`:''}</div><div class="card"><h3 style="margin-top:0">Explainable health snapshot</h3><p><strong>Oil service:</strong> ${oilRem<=0?'Due now or overdue by '+num(-oilRem)+' miles':num(oilRem)+' miles remaining until the next scheduled oil service'}.</p><p><strong>Last oil-service mileage:</strong> ${num(a.last_service_mileage)}. <strong>Interval:</strong> ${num(a.service_interval)} miles.</p><div class="note info">These are mileage-based tracking indicators, not mechanical diagnostics. Follow the vehicle manufacturer’s maintenance guidance.</div></div>`;el.innerHTML+=additionalGraphCards(a);}
+/* RESALE_TRACKER_BEGIN */
+function resaleRows(a){
+ return (a.resale_history||[]).filter(r=>r&&Number.isSafeInteger(r.mileage)&&
+  (Number.isSafeInteger(r.trade_in_cents)||Number.isSafeInteger(r.private_party_cents)))
+  .slice().sort((x,y)=>x.mileage-y.mileage||String(x.date).localeCompare(String(y.date)));
+}
+function resaleGraph(rows){
+ if(!rows.length)return '<p class="small muted">No recorded valuations yet.</p>';
+ const nums=rows.flatMap(r=>[r.trade_in_cents,r.private_party_cents]).filter(v=>Number.isSafeInteger(v));
+ const minM=rows[0].mileage,maxM=rows[rows.length-1].mileage;
+ const minV=Math.max(0,Math.min(...nums)/100-500),maxV=Math.max(minV+1000,Math.max(...nums)/100+500);
+ const x=m=>35+330*(m-minM)/(maxM-minM||1);
+ const y=c=>155-125*(c/100-minV)/(maxV-minV);
+ const plot=(key,color)=>{
+  const pts=rows.filter(r=>Number.isSafeInteger(r[key]));
+  return '<path d="'+pts.map((r,i)=>(i?'L':'M')+x(r.mileage).toFixed(1)+' '+y(r[key]).toFixed(1)).join(' ')+'" fill="none" stroke="'+color+'" stroke-width="2.5"/>'+
+   pts.map(r=>'<circle cx="'+x(r.mileage).toFixed(1)+'" cy="'+y(r[key]).toFixed(1)+'" r="3.5" fill="'+color+'"><title>'+esc(r.date)+' '+num(r.mileage)+' miles '+usd(r[key])+'</title></circle>').join('');
+ };
+ return '<svg viewBox="0 0 400 195" role="img" aria-label="Recorded vehicle resale values versus mileage" style="width:100%;height:auto"><line x1="35" y1="18" x2="35" y2="155" stroke="#999"/><line x1="35" y1="155" x2="365" y2="155" stroke="#999"/>'+
+ '<text x="35" y="14" font-size="11" fill="currentColor">'+usd(Math.round(maxV*100))+'</text>'+
+ '<text x="35" y="175" font-size="11" fill="currentColor">'+num(minM)+' mi</text>'+
+ '<text x="365" y="175" font-size="11" text-anchor="end" fill="currentColor">'+num(maxM)+' mi</text>'+
+ plot('trade_in_cents','#a44828')+plot('private_party_cents','#28778f')+
+ '</svg><p class="small muted"><span style="color:#a44828">●</span> Trade-in &nbsp; <span style="color:#28778f">●</span> Private party · X-axis = odometer</p>';
+}
+function resaleCard(a){
+ const rows=resaleRows(a),latest=rows.slice().sort((x,y)=>String(y.date).localeCompare(String(x.date)))[0];
+ return '<div class="card"><h3 style="margin-top:0">Resale value vs. odometer</h3>'+
+ '<p class="small muted">Manually entered quotes; no live KBB connection or automatic valuation. Mileage alone cannot determine resale value.</p>'+
+ '<p><strong>Current odometer:</strong> '+num(a.mileage)+' miles</p>'+
+ (latest?'<p class="small">Latest quote: '+esc(latest.date)+' at '+num(latest.mileage)+' miles.'+(latest.mileage!==a.mileage?' Current odometer differs; the value has not been recalculated.':'')+'</p>':'')+
+ resaleGraph(rows)+
+ '<button id="lookupKBB" class="btn secondary" type="button">Open Kelley Blue Book valuation</button>'+
+ '<form id="resaleForm" style="margin-top:12px"><h4>Record a valuation</h4>'+
+ '<div class="grid2"><div><label class="field" for="resaleDate">Quote date</label><input id="resaleDate" type="date" required value="'+localDate()+'"></div>'+
+ '<div><label class="field" for="resaleMileage">Mileage when quoted</label><input id="resaleMileage" type="number" min="0" max="9999999" step="1" required value="'+Number(a.mileage)+'"></div></div>'+
+ '<label class="field" for="resaleSource">Source</label><select id="resaleSource"><option>Kelley Blue Book (manual)</option><option>Dealer offer</option><option>Other valuation</option></select>'+
+ '<div class="grid2"><div><label class="field" for="resaleTrade">Trade-in ($)</label><input id="resaleTrade" inputmode="decimal" placeholder="23000.00"></div>'+
+ '<div><label class="field" for="resalePrivate">Private-party ($)</label><input id="resalePrivate" inputmode="decimal" placeholder="26000.00"></div></div>'+
+ '<label class="field" for="resaleCondition">Condition</label><select id="resaleCondition"><option>Not recorded</option><option>Excellent</option><option>Very good</option><option>Good</option><option>Fair</option><option>Poor</option></select>'+
+ '<label class="field" for="resaleNotes">Trim / notes (optional)</label><input id="resaleNotes" maxlength="150" placeholder="Trim, location, quote details">'+
+ '<button class="btn full" type="submit">Save resale snapshot</button></form>'+
+ '<h4>Valuation history ('+rows.length+')</h4>'+
+ (rows.length?rows.slice().reverse().map(r=>{
+  const index=a.resale_history.indexOf(r);
+  return '<div class="card" style="margin:6px 0;padding:10px"><strong>'+esc(r.date)+'</strong> · '+num(r.mileage)+' miles · '+esc(r.source)+
+   '<p class="small">Trade-in: '+(r.trade_in_cents==null?'Not recorded':usd(r.trade_in_cents))+
+   ' · Private party: '+(r.private_party_cents==null?'Not recorded':usd(r.private_party_cents))+'</p>'+
+   '<p class="small muted">'+esc(r.condition||'')+' '+esc(r.notes||'')+'</p>'+
+   '<button class="btn secondary" type="button" data-resale-delete="'+index+'">Delete quote</button></div>';
+ }).join(''):'<p class="small muted">None saved yet.</p>')+
+ '<p class="small muted">Quotes are stored per vehicle in Full mobile JSON backups. Market conditions, trim, condition and location affect resale estimates.</p></div>';
+}
+function wireResale(a){
+ $('lookupKBB').onclick=()=>{
+  if(window.MileSageAndroid?.openResaleValuation)window.MileSageAndroid.openResaleValuation();
+  else window.open('https://www.kbb.com/whats-my-car-worth/','_blank','noopener,noreferrer');
+ };
+ $('resaleForm').onsubmit=e=>{
+  e.preventDefault();try{
+   if(v()!==a)throw Error('Vehicle selection changed.');
+   const date=$('resaleDate').value,mileage=whole($('resaleMileage').value,'Mileage',0);
+   if(!validDate(date)||mileage>9999999)throw Error('Enter a valid quote date and mileage.');
+   const trade=costCents($('resaleTrade').value,true),privateValue=costCents($('resalePrivate').value,true);
+   if(trade===null&&privateValue===null)throw Error('At least one value is required.');
+   if([trade,privateValue].some(x=>x!==null&&(x<0||x>100000000)))throw Error('Quote cannot exceed $1 million.');
+   if(!Array.isArray(a.resale_history))a.resale_history=[];
+   a.resale_history.push({date,mileage,source:$('resaleSource').value,
+    trade_in_cents:trade,private_party_cents:privateValue,
+    condition:$('resaleCondition').value,notes:$('resaleNotes').value.trim().slice(0,150)});
+   save();renderGraphs();message('Resale quote saved to selected vehicle.');
+  }catch(err){alert(err.message);}
+ };
+ $('graphsBody').querySelectorAll('[data-resale-delete]').forEach(btn=>btn.onclick=()=>{
+  const index=Number(btn.dataset.resaleDelete),r=a.resale_history?.[index];
+  if(!r||v()!==a)return;
+  if(!confirm('Delete the '+r.date+' resale quote at '+num(r.mileage)+' miles?'))return;
+  a.resale_history.splice(index,1);save();renderGraphs();message('Quote deleted.');
+ });
+}
+/* RESALE_TRACKER_END */
+
+function renderGraphs(){const a=v(),el=$('graphsBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}const t=expenseSummary(a),arr=[['Service',t.service],['Fuel',t.fuel],['Other',t.extra]],max=Math.max(1,...arr.map(x=>x[1])),mpgs=mpgSeries(a);const oilRem=Number(a.service_interval)-(Number(a.mileage)-Number(a.last_service_mileage));el.innerHTML=`<div class="card"><h3 style="margin-top:0">Recorded spending by category</h3><div class="chart-bars">${arr.map(([name,c])=>`<div class="chart-col"><div>${usd(c)}</div><div class="chart-bar" style="height:${Math.max(2,Math.round(c/max*130))}px"></div><div class="muted">${name}</div></div>`).join('')}</div></div><div class="card"><h3 style="margin-top:0">Fuel economy trend</h3>${mpgChart(mpgs)}${mpgs.length?`<p class="small muted">Most recent calculated MPG: <strong>${mpgs[mpgs.length-1].mpg.toFixed(2)}</strong> (${mpgs.length} valid full-tank cycle${mpgs.length===1?'':'s'} recorded)</p>`:''}</div><div class="card"><h3 style="margin-top:0">Explainable health snapshot</h3><p><strong>Oil service:</strong> ${oilRem<=0?'Due now or overdue by '+num(-oilRem)+' miles':num(oilRem)+' miles remaining until the next scheduled oil service'}.</p><p><strong>Last oil-service mileage:</strong> ${num(a.last_service_mileage)}. <strong>Interval:</strong> ${num(a.service_interval)} miles.</p><div class="note info">These are mileage-based tracking indicators, not mechanical diagnostics. Follow the vehicle manufacturer’s maintenance guidance.</div></div>`;el.innerHTML+=additionalGraphCards(a);el.innerHTML+=resaleCard(a);wireResale(a);}
 
 const receiptFiles={fuel:null,service:null,expense:null};
 let photoDir=null;
