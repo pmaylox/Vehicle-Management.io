@@ -15,7 +15,7 @@ on:
       - "mobile/**"
       - ".github/workflows/build-milesage-android-apk.yml"
   pull_request:
-    branches: [main, fix/expense-pdf-find-and-autofill-alpha143-20261119]
+    branches: [main, feature/backup-library-reusable-restore-alpha144-20261119, fix/expense-pdf-find-and-autofill-alpha143-20261119]
   workflow_dispatch:
 
 jobs:
