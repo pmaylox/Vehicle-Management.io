@@ -7,11 +7,11 @@ android {
     compileSdk 35
 
     defaultConfig {
-        applicationId 'io.reddirtcode.milesage.alpha145beta2'
+        applicationId 'io.reddirtcode.milesage.alpha146pdfimport'
         minSdk 26
         targetSdk 35
-        versionCode 145
-        versionName '1.4.5-beta2-resale-feedback'
+        versionCode 146
+        versionName '1.4.6-expense-pdf-file-picker'
     }
     buildTypes {
         release {
