@@ -258,9 +258,26 @@ if(!files.length)files.push('mobile/MileSage_Mobile_Auto_Refresh.html','mobile/M
         },
         openExpenseDocument:id=>{window.__lastOpenedExpensePDF=id;},
         shareExpenseDocument:id=>{window.__lastSharedExpensePDF=id;},
-        saveExpenseDocument:id=>{window.__lastExportedExpensePDF=id;}
+        saveExpenseDocument:id=>{window.__lastExportedExpensePDF=id;},
+        chooseExpensePdfFile:forHistory=>{
+          const info={id:'891e216e-490b-4f1e-8bbd-50ca81aab112',pages:4,
+            name:'MileSage-Expense-Recovered.pdf',imported:true,ocr_pending:false};
+          if(forHistory)window.milesageExpenseHistoryImportComplete(info);
+          else window.milesageExpenseScannerComplete(info);
+        }
       };
     });
+    // A PDF already in Samsung My Files can be loaded without scanning
+    // photos again. Importing must not autofill a guessed total.
+    assert.equal(await page.locator('#loadExpensePdf').count(),1);
+    await page.locator('#loadExpensePdf').click();
+    assert.equal(await page.locator('#expensePdfPreview').isVisible(),true);
+    assert.ok((await page.locator('#expensePdfScanStatus').innerText()).includes('Loaded existing PDF'));
+    assert.equal(await page.locator('#extraCost').inputValue(),'');
+    await page.locator('#viewExpensePdfDraft').click();
+    assert.equal(await page.evaluate(()=>window.__lastOpenedExpensePDF),
+      '891e216e-490b-4f1e-8bbd-50ca81aab112');
+    await page.locator('#clearExpensePdf').click();
     await page.locator('#scanExpensePdf').click();
     assert.equal(await page.locator('#expensePdfPreview').isVisible(),true);
     assert.equal(await page.locator('#expensePdfActions').isVisible(),true);
@@ -307,12 +324,26 @@ if(!files.length)files.push('mobile/MileSage_Mobile_Auto_Refresh.html','mobile/M
       .vehicles[0].mobile_expenses[1].expense_document;
     assert.equal(expensePDF.pages,3);
     assert.ok(!('data_url' in expensePDF),'PDF bytes must not be embedded in JSON data');
+    const beforeReattach=JSON.parse(await page.evaluate(()=>localStorage.getItem('milesage-mobile-offline-v1')))
+      .vehicles[0].mobile_expenses[1];
+    await page.locator('[data-expense-pdf-attach="1"]').click();
+    const reattached=JSON.parse(await page.evaluate(()=>localStorage.getItem('milesage-mobile-offline-v1')))
+      .vehicles[0].mobile_expenses[1];
+    assert.equal(reattached.expense_document.name,'MileSage-Expense-Recovered.pdf');
+    assert.equal(reattached.expense_document.pages,4);
+    assert.equal(reattached.cost_cents,beforeReattach.cost_cents);
+    assert.equal(reattached.description,beforeReattach.description);
+    assert.equal(reattached.mileage,beforeReattach.mileage);
+    assert.equal(reattached.date,beforeReattach.date);
+    await page.locator('[data-expense-pdf="1"]').click();
+    assert.equal(await page.evaluate(()=>window.__lastOpenedExpensePDF),
+      '891e216e-490b-4f1e-8bbd-50ca81aab112');
     await page.locator('#dataButton').click();
     const expenseBackupDownload=page.waitForEvent('download');
     await page.locator('#exportFull').click();
     const expensePDFBackup=JSON.parse(fs.readFileSync(await (await expenseBackupDownload).path(),'utf8'));
     assert.equal(expensePDFBackup.vehicles[0].mobile_expenses[1].expense_document.id,
-      expensePDF.id,'PDF reference must survive backup');
+      '891e216e-490b-4f1e-8bbd-50ca81aab112','Reattached PDF reference must survive backup');
     assert.equal(expensePDFBackup.vehicles[0].mobile_expenses[0].receipt_photo.data_url,
       expenseSaved.mobile_expenses[0].receipt_photo.data_url,
       'Multi-page PDF work must preserve earlier expense photo');

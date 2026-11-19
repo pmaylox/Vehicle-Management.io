@@ -332,7 +332,8 @@ function recordList(records,kind){
   '</h4><small>'+esc(r.date||'Date unknown')+' · '+num(r.mileage)+' mi'+(kind==='fuel'?' · '+esc(r.gallons)+' gal':'')+
   '</small></div><strong>'+(r.cost_cents==null?'No cost':usd(r.cost_cents))+'</strong></div>'+photoHistory(r,kind,index)+
  (kind==='service'&&r.service_document?.id?'<div class="button-row"><button class="btn secondary" type="button" data-service-pdf="'+index+'">View scanned invoice · '+num(r.service_document.pages)+' pages</button><button class="btn secondary" type="button" data-service-pdf-share="'+index+'">Share / backup PDF</button></div>':'')+
- (kind==='expense'&&r.expense_document?.id?'<div class="button-row"><button class="btn secondary" type="button" data-expense-pdf="'+index+'">View expense document · '+num(r.expense_document.pages)+' pages</button><button class="btn secondary" type="button" data-expense-pdf-share="'+index+'">Share / backup PDF</button><button class="btn secondary" type="button" data-expense-pdf-save="'+index+'">Save PDF to My Files</button></div>':'')).join('');
+ (kind==='expense'&&r.expense_document?.id?'<div class="button-row"><button class="btn secondary" type="button" data-expense-pdf="'+index+'">View expense document · '+num(r.expense_document.pages)+' pages</button><button class="btn secondary" type="button" data-expense-pdf-share="'+index+'">Share / backup PDF</button><button class="btn secondary" type="button" data-expense-pdf-save="'+index+'">Save PDF to My Files</button></div>':'')+
+ (kind==='expense'?'<div class="button-row"><button class="btn secondary" type="button" data-expense-pdf-attach="'+index+'">'+(r.expense_document?.id?'Reattach PDF from My Files':'Attach existing PDF file')+'</button></div>':'')).join('');
 }
 function formVehicleName(a){return `<p class="small muted" style="margin:0 0 10px">Recording for <strong>${esc(a.year)} ${esc(a.name)}</strong> • ${num(a.mileage)} mi</p>`}
 const TIRES=[['driver_front','Driver front'],['passenger_front','Passenger front'],['driver_rear','Driver rear'],['passenger_rear','Passenger rear']];
@@ -1255,8 +1256,8 @@ function parseExpenseDocumentText(raw,today){
  }
  const strongest=Math.max(0,...found.map(x=>x.score));
  const amounts=[...new Set(found.filter(x=>x.score===strongest).map(x=>x.amount))];
- const cost=strongest>=5&&amounts.length===1?amounts[0]:null;
- const conflict=strongest>=5&&amounts.length>1;
+ const cost=strongest>=3&&amounts.length===1?amounts[0]:null;
+ const conflict=strongest>=3&&amounts.length>1;
  let description=null;
  if(/\b(?:collision|auto body|body shop|body repair|bodywork|paint and body|repair estimate|collision center|bumper replacement|fender repair)\b/i.test(text))
   description=/\b(?:estimate|appraisal|quotation|quote)\b/i.test(text)?'Body repair estimate':'Body repair / collision work';
@@ -1275,6 +1276,7 @@ function parseExpenseDocumentText(raw,today){
 // Expense documents are stored separately from compressed receipt photos.
 // JSON backups contain the document reference, not its PDF bytes.
 let expensePdfDraft=null,expensePdfScanOwner=null,expensePdfScanEpoch=null,expensePdfScanInputs=null;
+let pendingExpensePdfHistory=null;
 window.milesageExpenseScannerComplete=function(result){
  const info=result||{},status=$('expensePdfScanStatus'),preview=$('expensePdfPreview');
  const owner=expensePdfScanOwner,epoch=expensePdfScanEpoch,baseline=expensePdfScanInputs;
@@ -1288,9 +1290,11 @@ window.milesageExpenseScannerComplete=function(result){
  expensePdfDraft={vehicle:owner,id:info.id,pages:info.pages,epoch,baseline:baseline||{},
     name:String(info.name||'Expense invoice.pdf').slice(0,120)};
  refreshExpensePdfActions();
- status.textContent='Captured '+info.pages+' page(s). '+(info.ocr_pending?'Reading pages for date, total and description…':'No page images for OCR; enter fields manually.')+' PDF is ready to view/export; save expense to attach it.';
+ status.textContent=(info.imported?'Loaded existing PDF with ':'Captured ')+info.pages+' page(s). '+(info.ocr_pending?'Reading pages for date, total and description…':info.imported?'No readable pages available; enter or check the expense fields. ':'No page images for OCR; enter fields manually. ')+'PDF ready to view/export; save expense to attach it.';
  const review=$('expensePdfTextReview');if(review){review.hidden=true;$('expensePdfOcrText').textContent='';}
- message('Expense PDF scanned. Review and save the expense record.');
+ const summary=$('expenseOcrSummary');
+ if(summary){summary.hidden=false;summary.textContent=info.ocr_pending?'PDF loaded. Reading pages for suggestions…':'PDF loaded but no OCR pages were supplied. Fill expense fields manually.';}
+ message(info.imported?'Expense PDF loaded. Review and save the expense record.':'Expense PDF scanned. Review and save the expense record.');
 };
 
 function refreshExpensePdfActions(){
@@ -1300,7 +1304,7 @@ function refreshExpensePdfActions(){
  const ready=!!d&&d.vehicle===v();
  preview.hidden=!ready;actions.hidden=!ready;clear.hidden=!ready;
  preview.textContent=ready?
-  'PDF captured: '+d.pages+' page(s). Stored inside this MileSage app. Tap View PDF or Save PDF to My Files. Save other expense to attach it to Expense History.':'';
+  'PDF ready: '+d.pages+' page(s). Stored inside this MileSage app. Tap View PDF or Save PDF to My Files. Save other expense to attach it to Expense History.':'';
 }
 window.milesageExpenseOCRComplete=function(result){
  const info=result||{},draft=expensePdfDraft,status=$('expensePdfScanStatus');
@@ -1310,7 +1314,9 @@ window.milesageExpenseOCRComplete=function(result){
  const review=$('expensePdfTextReview');
  if(review){review.hidden=!raw.trim();$('expensePdfOcrText').textContent=raw;}
  if(!raw.trim()){
-  status.textContent='PDF captured. No readable page text: '+
+  const summary=$('expenseOcrSummary');
+  if(summary){summary.hidden=false;summary.textContent='PDF attached, but OCR could not read text. Enter the expense description and cost manually; you can still view the PDF.';}
+  status.textContent='PDF ready. No readable page text: '+
     (info.error||'Enter expense fields manually.')+
     ' You can still view and export the PDF.';
   return;
@@ -1326,6 +1332,12 @@ window.milesageExpenseOCRComplete=function(result){
  if(found.description&&baseline.description===''&&$('extraDesc').value===baseline.description){
   $('extraDesc').value=found.description;changed.push('description');
  }
+ const summary=$('expenseOcrSummary');
+ if(summary){summary.hidden=false;summary.textContent='PDF OCR read '+(info.ocr_pages||0)+' page(s). '+
+   (changed.length?'Suggested '+changed.join(', ')+'. ':'No matching date, total or description could safely be filled. ')+
+   (found.conflict?'Multiple different totals detected. ':'')+
+   (info.error?'Some pages failed OCR. ':'')+
+   'Review the fields, then tap Save other expense.';}
  status.textContent='OCR checked '+(info.ocr_pages||0)+' page(s). '+
   (changed.length?'Suggested: '+changed.join(', ')+'. ':'No safe blank fields to fill. ')+
   (found.conflict?'Conflicting totals detected; enter the amount manually. ':'')+
@@ -1360,6 +1372,20 @@ function wireExpensePdfScanner(a){
  act('viewExpensePdfDraft','openExpenseDocument');
  act('shareExpensePdfDraft','shareExpenseDocument');
  act('saveExpensePdfDraft','saveExpenseDocument');
+ const load=$('loadExpensePdf');
+ if(load)load.onclick=()=>{
+  if(typeof window.MileSageAndroid?.chooseExpensePdfFile!=='function'){
+   status.textContent='Loading existing PDF files requires the MileSage Android app.';return;
+  }
+  if(expensePdfDraft&&!confirm('Replace the unsaved expense PDF with a selected file?'))return;
+  expensePdfScanOwner=a;expensePdfScanEpoch=expensePhotoDraftEpoch;
+  expensePdfScanInputs={date:$('extraDate').value,cost:$('extraCost').value,
+   description:$('extraDesc').value};
+  status.textContent='Opening My Files. Choose a PDF to attach to this expense.';
+  try{window.MileSageAndroid.chooseExpensePdfFile(false);}
+  catch(error){expensePdfScanOwner=null;expensePdfScanEpoch=null;expensePdfScanInputs=null;
+   status.textContent='Unable to open PDF picker: '+error.message;}
+ };
  button.onclick=()=>{
   if(typeof window.MileSageAndroid?.scanExpenseDocument!=='function'){
    status.textContent='Multi-page expense scanning requires the MileSage Android app.';return;
@@ -1374,7 +1400,49 @@ function wireExpensePdfScanner(a){
    status.textContent='Could not open scanner: '+error.message;}
  };
 }
+// Reattach an exported PDF to an expense restored from another Alpha APK.
+window.milesageExpenseHistoryImportComplete=function(result){
+ const target=pendingExpensePdfHistory;pendingExpensePdfHistory=null;
+ if(!target)return;
+ const info=result||{};
+ if(info.error){message(String(info.error));return;}
+ if(!/^[a-f0-9-]{36}$/.test(String(info.id||''))||
+    !Number.isInteger(info.pages)||info.pages<1||info.pages>30){
+  alert('Selected file did not produce a valid expense PDF. No record changed.');return;
+ }
+ const vehicle=v(),record=vehicle?.mobile_expenses?.[target.index];
+ if(vehicle!==target.vehicle||record!==target.record||
+    (record.expense_document?.id||null)!==target.priorId){
+  alert('Expense or vehicle selection changed. PDF was copied but is not linked to any record. No expense records changed.');return;
+ }
+ const previous=record.expense_document;
+ record.expense_document={id:info.id,pages:info.pages,
+  name:String(info.name||'Expense invoice.pdf').slice(0,120)};
+ try{
+  localStorage.setItem(KEY,JSON.stringify({vehicles,current}));
+  hasStorage=true;
+  renderAll();
+  message('PDF attached to saved expense. View it in Expense History.');
+ }catch(err){
+  record.expense_document=previous;
+  alert('Could not save expense attachment. Your expense record was not changed: '+err.message);
+ }
+};
+
 function wireExpensePdfHistory(){
+ $('expensesBody').querySelectorAll('[data-expense-pdf-attach]').forEach(button=>button.onclick=()=>{
+  const a=v(),index=Number(button.dataset.expensePdfAttach),
+   record=a?.mobile_expenses?.[index];
+  if(!record)return;
+  if(typeof window.MileSageAndroid?.chooseExpensePdfFile!=='function'){
+   alert('Loading PDF files requires the MileSage Android app.');return;
+  }
+  if(pendingExpensePdfHistory){alert('Finish the previous PDF import first.');return;}
+  if(record.expense_document?.id&&!confirm('Attach a PDF from My Files to this existing expense? This replaces its current PDF link, but does not change the expense details or delete the old file.'))return;
+  pendingExpensePdfHistory={vehicle:a,index,record,priorId:record.expense_document?.id||null};
+  try{window.MileSageAndroid.chooseExpensePdfFile(true);}
+  catch(error){pendingExpensePdfHistory=null;alert('Could not open PDF file picker: '+error.message);}
+ });
  $('expensesBody').querySelectorAll('[data-expense-pdf]').forEach(button=>button.onclick=()=>{
   const index=Number(button.dataset.expensePdf);
   const doc=v()?.mobile_expenses?.[index]?.expense_document;
@@ -1449,7 +1517,7 @@ function wireExpenseReceiptPhoto(a){
  camera.onchange=()=>read(camera);
  gallery.onchange=()=>read(gallery);
 }
-function renderExpenses(){expensePhotoDraftEpoch++;expensePdfScanOwner=null;expensePdfScanEpoch=null;clearReceiptPreview('expense');const a=v(),el=$('expensesBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}const totals=expenseSummary(a);el.innerHTML=`<div class="card"><div class="eyebrow">Recorded spending · ${esc(a.name)}</div><h2 style="font-size:31px;margin:4px 0 13px">${usd(totals.total)}</h2><div class="grid2 triple"><div class="stat"><div class="eyebrow">Service</div><strong style="font-size:18px">${usd(totals.service)}</strong></div><div class="stat"><div class="eyebrow">Fuel</div><strong style="font-size:18px">${usd(totals.fuel)}</strong></div><div class="stat"><div class="eyebrow">Other</div><strong style="font-size:18px">${usd(totals.extra)}</strong></div></div><p class="small muted" style="margin-bottom:0">Totals cover recorded expenses only; missing service costs are excluded.</p></div><div class="card"><h3 style="margin-top:0">Add other expense</h3>${formVehicleName(a)}<form id="extraForm"><div class="note info"><strong>Expense receipt photo</strong><div class="small">Take a photo or choose an existing receipt. MileSage will suggest a date and total when text is readable; review the description, date and cost before saving. The compressed photo stays attached to this expense and is included in Full mobile backup.</div></div><div class="card" style="margin:12px 0;padding:12px;background:#f7fafc"><strong>Multi-page expense document</strong><p class="small muted">For body-shop estimates, collision repairs, parts invoices and other paperwork. Scan up to 30 pages into one PDF and attach it to this expense. PDFs stay on this phone; <strong>Full mobile JSON backup does not include PDF files.</strong> Open or export the PDF immediately after scanning, or from Expense History after saving. In My Files, look under Downloads / MileSage / Expenses.</p><button id="scanExpensePdf" class="btn secondary" type="button">Scan multi-page expense document</button><div id="expensePdfActions" class="button-row" hidden><button id="viewExpensePdfDraft" class="btn secondary" type="button">View scanned PDF</button><button id="saveExpensePdfDraft" class="btn secondary" type="button">Save PDF to My Files</button><button id="shareExpensePdfDraft" class="btn secondary" type="button">Share PDF</button></div><button id="clearExpensePdf" class="btn secondary" type="button" hidden>Remove scanned PDF</button><p id="expensePdfScanStatus" class="small muted" role="status">No multi-page expense PDF scanned yet.</p><p id="expensePdfPreview" class="note info" hidden></p><details id="expensePdfTextReview" hidden><summary>View recognized text from all pages</summary><pre id="expensePdfOcrText" style="white-space:pre-wrap;word-wrap:break-word;max-height:220px;overflow:auto"></pre></details></div><div class="button-row"><button id="expenseCameraButton" class="btn secondary" type="button">Take expense photo</button><button id="expenseGalleryButton" class="btn secondary" type="button">Choose photo</button></div><input id="expenseCameraInput" type="file" accept="image/*" capture="environment" hidden><input id="expenseGalleryInput" type="file" accept="image/*" hidden><p id="expenseReceiptProgress" class="small muted" role="status" aria-live="polite">No receipt selected.</p><div id="expensePhotoPreview" class="note info" hidden><strong>Photo ready to attach</strong><img id="expensePhotoImage" alt="Selected expense receipt" style="display:block;max-width:100%;max-height:230px;object-fit:contain;margin:8px auto;border-radius:8px"><div id="expensePhotoInfo" class="small"></div></div><details id="expenseReceiptTextReview" style="display:none"><summary>View recognized text</summary><pre id="expenseReceiptOcrText" style="white-space:pre-wrap;word-wrap:break-word;max-height:180px;overflow:auto"></pre></details><label class="field" for="extraDesc">Description</label><input id="extraDesc" required type="text" maxlength="180" placeholder="Registration, parking, detailing…"><div class="grid2"><div><label class="field" for="extraDate">Date</label><input id="extraDate" required type="date" value="${localDate()}"></div><div><label class="field" for="extraCost">Cost ($)</label><input id="extraCost" required type="text" inputmode="decimal" placeholder="25.00"></div></div><button id="saveOtherExpense" type="submit" class="btn full" style="margin-top:12px">Save other expense</button></form><p class="small muted">Other-expense entries and their photos are mobile-only until merged into the desktop app. Use <strong>Full mobile backup</strong> to preserve them.</p></div><div class="card"><h3 style="margin-top:0">Other expense history</h3>${recordList(a.mobile_expenses,'expense')}</div>`;
+function renderExpenses(){expensePhotoDraftEpoch++;expensePdfScanOwner=null;expensePdfScanEpoch=null;clearReceiptPreview('expense');const a=v(),el=$('expensesBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}const totals=expenseSummary(a);el.innerHTML=`<div class="card"><div class="eyebrow">Recorded spending · ${esc(a.name)}</div><h2 style="font-size:31px;margin:4px 0 13px">${usd(totals.total)}</h2><div class="grid2 triple"><div class="stat"><div class="eyebrow">Service</div><strong style="font-size:18px">${usd(totals.service)}</strong></div><div class="stat"><div class="eyebrow">Fuel</div><strong style="font-size:18px">${usd(totals.fuel)}</strong></div><div class="stat"><div class="eyebrow">Other</div><strong style="font-size:18px">${usd(totals.extra)}</strong></div></div><p class="small muted" style="margin-bottom:0">Totals cover recorded expenses only; missing service costs are excluded.</p></div><div class="card"><h3 style="margin-top:0">Add other expense</h3>${formVehicleName(a)}<form id="extraForm"><div class="note info"><strong>Expense receipt photo</strong><div class="small">Take a photo or choose an existing receipt. MileSage will suggest a date and total when text is readable; review the description, date and cost before saving. The compressed photo stays attached to this expense and is included in Full mobile backup.</div></div><div class="card" style="margin:12px 0;padding:12px;background:#f7fafc"><strong>Multi-page expense document</strong><p class="small muted">For body-shop estimates, collision repairs, parts invoices and other paperwork. Scan up to 30 pages into one PDF and attach it to this expense. PDFs stay on this phone; <strong>Full mobile JSON backup does not include PDF files.</strong> Open or export the PDF immediately after scanning, or from Expense History after saving. In My Files, look under Downloads / MileSage / Expenses.</p><div class="button-row"><button id="scanExpensePdf" class="btn secondary" type="button">Scan multi-page expense document</button><button id="loadExpensePdf" class="btn secondary" type="button">Load existing PDF file</button></div><p class="small muted">Use Load existing PDF to find a previously exported PDF in My Files → Downloads → MileSage → Expenses. Supports PDF files up to 30 pages and 30 MB. OCR suggests values when text is readable. Loading a PDF does not create a History record; review the fields and tap Save other expense.</p><div id="expensePdfActions" class="button-row" hidden><button id="viewExpensePdfDraft" class="btn secondary" type="button">View attached PDF</button><button id="saveExpensePdfDraft" class="btn secondary" type="button">Save PDF to My Files</button><button id="shareExpensePdfDraft" class="btn secondary" type="button">Share PDF</button></div><button id="clearExpensePdf" class="btn secondary" type="button" hidden>Remove scanned PDF</button><p id="expensePdfScanStatus" class="small muted" role="status">No multi-page expense PDF scanned yet.</p><p id="expensePdfPreview" class="note info" hidden></p><details id="expensePdfTextReview" hidden><summary>View recognized text from all pages</summary><pre id="expensePdfOcrText" style="white-space:pre-wrap;word-wrap:break-word;max-height:220px;overflow:auto"></pre></details></div><div class="button-row"><button id="expenseCameraButton" class="btn secondary" type="button">Take expense photo</button><button id="expenseGalleryButton" class="btn secondary" type="button">Choose photo</button></div><input id="expenseCameraInput" type="file" accept="image/*" capture="environment" hidden><input id="expenseGalleryInput" type="file" accept="image/*" hidden><p id="expenseReceiptProgress" class="small muted" role="status" aria-live="polite">No receipt selected.</p><div id="expensePhotoPreview" class="note info" hidden><strong>Photo ready to attach</strong><img id="expensePhotoImage" alt="Selected expense receipt" style="display:block;max-width:100%;max-height:230px;object-fit:contain;margin:8px auto;border-radius:8px"><div id="expensePhotoInfo" class="small"></div></div><details id="expenseReceiptTextReview" style="display:none"><summary>View recognized text</summary><pre id="expenseReceiptOcrText" style="white-space:pre-wrap;word-wrap:break-word;max-height:180px;overflow:auto"></pre></details><p id="expenseOcrSummary" class="note info" role="status" hidden></p><label class="field" for="extraDesc">Description</label><input id="extraDesc" required type="text" maxlength="180" placeholder="Registration, parking, detailing…"><div class="grid2"><div><label class="field" for="extraDate">Date</label><input id="extraDate" required type="date" value="${localDate()}"></div><div><label class="field" for="extraCost">Cost ($)</label><input id="extraCost" required type="text" inputmode="decimal" placeholder="25.00"></div></div><button id="saveOtherExpense" type="submit" class="btn full" style="margin-top:12px">Save other expense</button></form><p class="small muted">Other-expense entries and their photos are mobile-only until merged into the desktop app. Use <strong>Full mobile backup</strong> to preserve them.</p></div><div class="card"><h3 style="margin-top:0">Other expense history</h3>${recordList(a.mobile_expenses,'expense')}</div>`;
 wireExpenseReceiptPhoto(a);wirePhotoHistory('expense');wireExpensePdfScanner(a);wireExpensePdfHistory();
 $('extraForm').onsubmit=async e=>{
  e.preventDefault();

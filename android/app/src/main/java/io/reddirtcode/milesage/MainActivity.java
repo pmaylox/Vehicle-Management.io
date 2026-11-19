@@ -7,6 +7,11 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.pdf.PdfRenderer;
+import android.os.ParcelFileDescriptor;
+import android.database.Cursor;
+import android.provider.OpenableColumns;
+import java.io.FileInputStream;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -51,6 +56,8 @@ public class MainActivity extends Activity {
     private static final int FUEL_DOCUMENT_SCAN_CODE = 220;
     private static final int SERVICE_RECEIPT_SCAN_CODE = 221;
     private static final int EXPENSE_DOCUMENT_SCAN_CODE = 222;
+    private static final int EXPENSE_PDF_IMPORT_CODE = 223;
+    private boolean pendingExpensePdfHistoryImport = false;
     private boolean expenseScanOpen = false;
     private boolean serviceReceiptScanOpen = false;
     private boolean fuelScanOpen = false;
@@ -319,6 +326,79 @@ public class MainActivity extends Activity {
             }
             return;
         }
+        if (requestCode == EXPENSE_PDF_IMPORT_CODE) {
+            final boolean forHistory = pendingExpensePdfHistoryImport;
+            pendingExpensePdfHistoryImport = false;
+            if (resultCode != RESULT_OK || data == null || data.getData() == null) {
+                expensePdfImportResult(null, "PDF selection cancelled. No record changed.", forHistory);
+                return;
+            }
+            final Uri uri = data.getData();
+            new Thread(() -> {
+                try {
+                    // ContentResolver reads the user-selected document without
+                    // asking for broad storage access. Never trust a file path.
+                    File folder = new File(getFilesDir(), "expense_invoices");
+                    if (!folder.exists() && !folder.mkdirs())
+                        throw new IOException("Cannot create expense PDF folder.");
+                    String id = UUID.randomUUID().toString();
+                    File target = new File(folder, id + ".pdf");
+                    int pages;
+                    try {
+                        try (InputStream input = getContentResolver().openInputStream(uri);
+                             OutputStream output = new FileOutputStream(target)) {
+                            if (input == null) throw new IOException("Could not open selected PDF.");
+                            byte[] buffer = new byte[32768]; long count = 0;
+                            int n;
+                            while ((n = input.read(buffer)) != -1) {
+                                count += n;
+                                if (count > 30_000_000L) throw new IOException("PDF exceeds 30 MB.");
+                                output.write(buffer, 0, n);
+                            }
+                            if (count < 100) throw new IOException("PDF was empty.");
+                        }
+                        try (FileInputStream first = new FileInputStream(target)) {
+                            byte[] signature = new byte[5];
+                            if (first.read(signature) != 5 ||
+                                !"%PDF-".equals(new String(signature, java.nio.charset.StandardCharsets.US_ASCII)))
+                                throw new IOException("Selected file is not a valid PDF.");
+                        }
+                        try (ParcelFileDescriptor descriptor = ParcelFileDescriptor.open(target, ParcelFileDescriptor.MODE_READ_ONLY);
+                             PdfRenderer renderer = new PdfRenderer(descriptor)) {
+                            pages = renderer.getPageCount();
+                            if (pages < 1 || pages > 30)
+                                throw new IOException("Choose a PDF containing 1 to 30 pages.");
+                        }
+                    } catch (Exception error) {
+                        target.delete();throw error;
+                    }
+                    String name = "MileSage-Expense-" + id + ".pdf";
+                    try (Cursor cursor = getContentResolver().query(uri,
+                            new String[]{OpenableColumns.DISPLAY_NAME}, null, null, null)) {
+                        if (cursor != null && cursor.moveToFirst()) {
+                            String supplied = cursor.getString(0);
+                            if (supplied != null && supplied.toLowerCase(java.util.Locale.US).endsWith(".pdf")) {
+                                supplied = supplied.replaceAll("[^A-Za-z0-9._ -]", "_").trim();
+                                if (!supplied.isEmpty()) name = supplied.substring(0,Math.min(supplied.length(),120));
+                            }
+                        }
+                    } catch (Exception ignored) { /* Keep safe generated name. */ }
+                    JSONObject payload = new JSONObject();
+                    payload.put("id",id);
+                    payload.put("pages",pages);
+                    payload.put("name",name);
+                    payload.put("imported",true);
+                    // Imported PDFs should use the same editable OCR suggestions as fresh scans.
+                    // Reattached history documents do not mutate already-saved records.
+                    payload.put("ocr_pending",!forHistory);
+                    expensePdfImportResult(payload,null,forHistory);
+                    if (!forHistory) readImportedExpensePdf(target,id);
+                } catch (Exception error) {
+                    expensePdfImportResult(null,"Unable to load PDF: "+error.getMessage(),forHistory);
+                }
+            },"MileSageExpensePDFImport").start();
+            return;
+        }
         if (requestCode == FILE_CHOOSER_CODE && pendingFileChooser != null) {
             Uri[] result = null;
             if (resultCode == RESULT_OK) {
@@ -385,6 +465,62 @@ public class MainActivity extends Activity {
         } catch (Exception ignored) {
             showToast("Unable to return expense OCR text.");
         }
+    }
+
+    // ACTION_OPEN_DOCUMENT returns a PDF, not scanner JPEG pages. Rasterize each
+    // validated page at a bounded resolution and use bundled offline ML Kit OCR.
+    // The PDF remains attached even if OCR finds nothing; never store OCR text in JSON.
+    // Called from the existing import worker (not the Android UI thread).
+    private void readImportedExpensePdf(File pdf, String id) {
+        StringBuilder all = new StringBuilder();
+        int pagesRead = 0, failures = 0;
+        String error = null;
+        TextRecognizer recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
+        try (ParcelFileDescriptor fd = ParcelFileDescriptor.open(pdf, ParcelFileDescriptor.MODE_READ_ONLY);
+             PdfRenderer renderer = new PdfRenderer(fd)) {
+            for (int i = 0; i < renderer.getPageCount(); i++) {
+                Bitmap bitmap = null;
+                try (PdfRenderer.Page page = renderer.openPage(i)) {
+                    float scale = Math.min(2.5f, Math.min(
+                        2000f / Math.max(1, page.getWidth()),
+                        2000f / Math.max(1, page.getHeight())));
+                    int width = Math.max(1, Math.round(page.getWidth() * scale));
+                    int height = Math.max(1, Math.round(page.getHeight() * scale));
+                    bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                    bitmap.eraseColor(android.graphics.Color.WHITE);
+                    page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
+                } catch (Exception renderError) {
+                    failures++;
+                    if (bitmap != null) bitmap.recycle();
+                    continue;
+                }
+                try {
+                    com.google.mlkit.vision.text.Text recognized =
+                        com.google.android.gms.tasks.Tasks.await(
+                            recognizer.process(InputImage.fromBitmap(bitmap, 0)));
+                    pagesRead++;
+                    String pageText = recognized.getText();
+                    if (pageText != null && !pageText.trim().isEmpty() && all.length() < 48000) {
+                        all.append("\n--- PAGE ").append(i + 1).append(" ---\n");
+                        int room = Math.max(0, 48000 - all.length());
+                        all.append(pageText, 0, Math.min(pageText.length(), room));
+                    }
+                } catch (Exception ocrError) {
+                    failures++;
+                } finally {
+                    bitmap.recycle();
+                }
+            }
+        } catch (Exception readError) {
+            error = "Unable to read imported PDF: " + readError.getMessage();
+        } finally {
+            recognizer.close();
+        }
+        if (error == null && failures > 0)
+            error = "Some PDF pages could not be recognized; verify the fields manually.";
+        if (error == null && all.toString().trim().isEmpty())
+            error = "No readable text found in this PDF; enter the expense fields manually.";
+        expenseOcrResult(id, all.toString(), pagesRead, error);
     }
 
     private void beginExpensePagesOCR(List<GmsDocumentScanningResult.Page> pages, String id) {
@@ -588,6 +724,35 @@ public class MainActivity extends Activity {
         } catch (Exception error) {
             serviceScanOpen = false;
             serviceScanResult(null, "Scanner unavailable: " + error.getMessage());
+        }
+    }
+
+
+    // Open Android's Files picker, including PDFs exported by earlier MileSage
+    // installations. The selected PDF is copied into THIS app's private store.
+    private void beginExpensePdfImport(boolean forHistory) {
+        try {
+            Intent picker = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            picker.setType("application/pdf");
+            picker.addCategory(Intent.CATEGORY_OPENABLE);
+            picker.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            pendingExpensePdfHistoryImport = forHistory;
+            startActivityForResult(picker, EXPENSE_PDF_IMPORT_CODE);
+        } catch (Exception error) {
+            pendingExpensePdfHistoryImport = false;
+            expensePdfImportResult(null,"Cannot open PDF file picker: "+error.getMessage(),forHistory);
+        }
+    }
+    private void expensePdfImportResult(JSONObject payload, String error, boolean forHistory) {
+        if (!forHistory) {expenseScanResult(payload,error);return;}
+        try {
+            JSONObject result = payload == null ? new JSONObject() : payload;
+            if (error != null) result.put("error",error);
+            String js = "if(window.milesageExpenseHistoryImportComplete)window.milesageExpenseHistoryImportComplete("+
+                result.toString()+");";
+            runOnUiThread(() -> {if(web != null)web.evaluateJavascript(js,null);});
+        } catch (Exception ignored) {
+            showToast("Unable to report imported expense PDF.");
         }
     }
 
@@ -816,6 +981,9 @@ public class MainActivity extends Activity {
         }
         @JavascriptInterface public void scanServiceReceipt() {
             runOnUiThread(() -> beginServiceReceiptScan());
+        }
+        @JavascriptInterface public void chooseExpensePdfFile(boolean forHistory) {
+            runOnUiThread(() -> beginExpensePdfImport(forHistory));
         }
         @JavascriptInterface public void scanExpenseDocument() {
             runOnUiThread(() -> beginExpenseDocumentScan());
