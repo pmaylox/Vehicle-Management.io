@@ -99,10 +99,10 @@ label.field{display:block;font-size:13px;font-weight:700;margin:13px 0 7px}input
 <form id="feedbackForm">
 <div class="grid2"><div><label class="field" for="feedbackType">Feedback type</label><select id="feedbackType"><option>Bug report</option><option>Feature request</option><option>UI / usability</option><option>Other</option></select></div>
 <div><label class="field" for="feedbackSeverity">Impact</label><select id="feedbackSeverity"><option>Minor</option><option>Major</option><option>Blocking</option><option>Suggestion</option></select></div></div>
-<label class="field" for="feedbackTitle">Short title</label><input id="feedbackTitle" required maxlength="120" placeholder="Expense amount isn't filled">
+<label class="field" for="feedbackTitle">Short title</label><input id="feedbackTitle" type="text" required maxlength="120" placeholder="Expense amount isn't filled">
 <label class="field" for="feedbackDetails">What happened, or what should change?</label><textarea id="feedbackDetails" rows="4" required maxlength="2500" placeholder="Describe the problem or idea in detail"></textarea>
 <label class="field" for="feedbackSteps">Steps to reproduce (optional)</label><textarea id="feedbackSteps" rows="3" maxlength="1500" placeholder="1. Open Fuel; 2. Scan receipt; 3. ..."></textarea>
-<label class="field" for="feedbackContact">Reply contact (optional)</label><input id="feedbackContact" maxlength="120" placeholder="Email or preferred contact method">
+<label class="field" for="feedbackContact">Reply contact (optional)</label><input id="feedbackContact" type="text" maxlength="120" placeholder="Email or preferred contact method">
 <button type="submit" class="btn full">Save &amp; share feedback</button>
 <button id="saveFeedbackOnly" type="button" class="btn secondary" style="margin-top:8px">Save feedback on this phone only</button></form>
 <p class="small muted">You will choose the recipient in Android's Share menu. MileSage cannot confirm whether a message was delivered. No central feedback inbox is connected yet.</p></div>
@@ -1526,10 +1526,10 @@ function resaleCard(a){
  '<div class="grid2"><div><label class="field" for="resaleDate">Quote date</label><input id="resaleDate" type="date" required value="'+localDate()+'"></div>'+
  '<div><label class="field" for="resaleMileage">Mileage when quoted</label><input id="resaleMileage" type="number" min="0" max="9999999" step="1" required value="'+Number(a.mileage)+'"></div></div>'+
  '<label class="field" for="resaleSource">Source</label><select id="resaleSource"><option>Kelley Blue Book (manual)</option><option>Dealer offer</option><option>Other valuation</option></select>'+
- '<div class="grid2"><div><label class="field" for="resaleTrade">Trade-in ($)</label><input id="resaleTrade" inputmode="decimal" placeholder="23000.00"></div>'+
- '<div><label class="field" for="resalePrivate">Private-party ($)</label><input id="resalePrivate" inputmode="decimal" placeholder="26000.00"></div></div>'+
+ '<div class="grid2"><div><label class="field" for="resaleTrade">Trade-in ($)</label><input id="resaleTrade" type="text" inputmode="decimal" placeholder="23000.00"></div>'+
+ '<div><label class="field" for="resalePrivate">Private-party ($)</label><input id="resalePrivate" type="text" inputmode="decimal" placeholder="26000.00"></div></div>'+
  '<label class="field" for="resaleCondition">Condition</label><select id="resaleCondition"><option>Not recorded</option><option>Excellent</option><option>Very good</option><option>Good</option><option>Fair</option><option>Poor</option></select>'+
- '<label class="field" for="resaleNotes">Trim / notes (optional)</label><input id="resaleNotes" maxlength="150" placeholder="Trim, location, quote details">'+
+ '<label class="field" for="resaleNotes">Trim / notes (optional)</label><input id="resaleNotes" type="text" maxlength="150" placeholder="Trim, location, quote details">'+
  '<button class="btn full" type="submit">Save resale snapshot</button></form>'+
  '<h4>Valuation history ('+rows.length+')</h4>'+
  (rows.length?rows.slice().reverse().map(r=>{
