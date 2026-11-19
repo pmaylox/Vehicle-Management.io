@@ -26,8 +26,13 @@ for(const html of [first,second]){
  assert.equal(conflict.cost,null,'Conflicting totals must remain blank');
  assert.equal(conflict.conflict,true);
  assert.equal(read('PARTS TOTAL $950.00\nLABOR TOTAL $700.00').cost,null);
- assert.equal(read('TOTAL $2,200.00').cost,null,'Generic total alone is unsafe');
+ assert.equal(read('TOTAL $2,200.00').cost,'2200.00','Unambiguous ordinary TOTAL can autofill after review');
+ assert.equal(read('TOTAL $2,200.00\nTOTAL $2,250.00').cost,null,'Conflicting ordinary totals stay blank');
+ assert.equal(read('SUBTOTAL $1,000.00\nSales Tax $75.00').cost,null,'Never mistake subtotal or tax for final cost');
  assert.ok(html.includes('window.milesageExpenseOCRComplete=function(result)'));
+ assert.ok(html.includes('id="expenseOcrSummary"'),'PDF OCR summary must be next to expense fields');
+ assert.ok(html.includes('PDF OCR read '),'Display explicit recognition outcome');
+ assert.ok(html.includes('Loading a PDF does not create a History record'),'Clearly explain Save required');
  assert.ok(html.includes("baseline.cost===''"),'Do not replace manually entered expense');
  assert.ok(html.includes('const baseline=draft.baseline||{};'),'Use the active scan baseline');
  assert.ok(html.includes("draft.epoch!==expensePhotoDraftEpoch"),'Discard stale OCR');
