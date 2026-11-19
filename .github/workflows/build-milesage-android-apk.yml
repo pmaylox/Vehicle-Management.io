@@ -53,15 +53,16 @@ jobs:
           cp mobile/MileSage_Alpha_1_3_2_VIN_Lookup.html android/app/src/main/assets/index.html
           sed -i 's/Alpha 1.3.2/Alpha 1.4.2 Expense PDF/g' android/app/src/main/assets/index.html
           cp android/app/src/main/assets/index.html release/MileSage_Alpha_1_4_2_Expense_PDF.html
-          printf '%s\n' "MileSage Alpha 1.4.2 - NEW fuel and service document scanners with crop/straighten, bundled OCR, verified fuel autofill and full backup" \
+          printf '%s\n' "MileSage Alpha 1.4.2 - NEW 30-page Expense PDF scanner, with tested Fuel and Service OCR preserved" \
             "Do NOT uninstall or clear existing MileSage apps. This separately installed test copy has independent storage." \
             "Back up your existing phone data before importing anything into the test copy." \
             "This APK has its own application ID and cannot overwrite previous MileSage test apps. Import a Full mobile backup to copy data into it." \
             "Use Data & backup > Import JSON file with YOUR full phone backup." \
             "Confirm the real Tacoma and Explorer plus their histories after import." \
             "The Fuel and Service receipt buttons each open a one-page crop-and-straighten document scanner, with native offline OCR and editable suggestions. The independent Service multi-page PDF scanner remains available." \
-            "Scan up to 30 service invoice pages; the scanner makes one PDF." \
-            "Tap Share / backup PDF in Service history; JSON backups do not include PDF bytes." \
+            "Use Add other expense > Scan multi-page expense document for body repair, parts or insurance paperwork; up to 30 pages become one PDF." \
+            "The separate Service scanner still supports up to 30 invoice pages." \
+            "Use Share / backup PDF in Expense or Service history to export each PDF separately; Full mobile JSON backups include document references, NOT PDF bytes." \
             "Test with disposable Expense, Service and Fuel records first; preserve original MileSage." \
             "This APK is DEBUG-SIGNED for testing and not for production distribution." \
             "OCR, PDF opening/sharing and attachments require Samsung phone testing." > release/READ_ME_FIRST.txt
