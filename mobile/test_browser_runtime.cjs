@@ -332,7 +332,54 @@ if(!files.length)files.push('mobile/MileSage_Mobile_Auto_Refresh.html','mobile/M
     await page.waitForTimeout(100);
     assert.equal(await page.evaluate(()=>localStorage.getItem('milesage-mobile-offline-v1')),snapshot,'Invalid history changed saved records');
     assert.ok((await page.locator('#jsonImportStatus').innerText()).includes('Import failed'));
+    // Graphs: manually entered KBB quote tracks mileage but never fabricates new prices.
+    await page.locator('[data-tab="graphs"]').click();
+    assert.ok(await page.locator('#resaleForm').isVisible());
+    await page.locator('#resaleTrade').fill('32000.00');
+    await page.locator('#resalePrivate').fill('35000.00');
+    await page.locator('#resaleNotes').fill('Sample quote, not a live KBB estimate');
+    await page.locator('#resaleForm button[type="submit"]').click();
+    const saleSaved=JSON.parse(await page.evaluate(()=>localStorage.getItem('milesage-mobile-offline-v1')));
+    assert.equal(saleSaved.vehicles[0].resale_history.length,1);
+    assert.equal(saleSaved.vehicles[0].resale_history[0].trade_in_cents,3200000);
+    assert.equal(saleSaved.vehicles[0].resale_history[0].private_party_cents,3500000);
+    assert.ok((await page.locator('#graphsBody').innerText()).includes('Valuation history (1)'));
+    await page.evaluate(()=>{
+      window.MileSageAndroid={...window.MileSageAndroid,
+        openResaleValuation:()=>{window.__kbbOpened=true;},
+        shareTesterFeedback:text=>{window.__feedbackShared=text;}
+      };
+    });
+    await page.locator('#lookupKBB').click();
+    assert.equal(await page.evaluate(()=>window.__kbbOpened),true);
+
+    // Tester #2 feedback: saved locally and shared only after a tester clicks.
+    await page.locator('#feedbackShortcut').click();
+    assert.ok(await page.locator('#feedbackForm').isVisible());
+    await page.locator('#feedbackTitle').fill('Odometer button test');
+    await page.locator('#feedbackDetails').fill('The odometer entry could be clearer.');
+    await page.locator('#feedbackSteps').fill('Home > odometer > change number.');
+    await page.locator('#saveFeedbackOnly').click();
+    assert.equal(await page.locator('[data-feedback-share]').count(),1);
+    assert.equal(await page.evaluate(()=>window.__feedbackShared||null),null,
+      'Feedback must not be sent automatically');
+    const storedReports=JSON.parse(await page.evaluate(()=>
+      localStorage.getItem('milesage-alpha145-tester-feedback-v1')));
+    assert.equal(storedReports.length,1);
+    await page.locator('[data-feedback-share]').click();
+    const sharedReport=await page.evaluate(()=>window.__feedbackShared);
+    assert.ok(sharedReport.includes('Odometer button test'));
+    assert.ok(sharedReport.includes('MileSage Alpha'));
+    assert.ok(!sharedReport.includes('1HGCM82633A004352'),'Must not attach VIN automatically');
     await page.reload();
+    await page.locator('.vehicle-photo').waitFor();
+    await page.locator('[data-tab="graphs"]').click();
+    assert.equal(await page.locator('[data-resale-delete]').count(),1,
+      'Valuation must persist after restart');
+    await page.locator('#feedbackShortcut').click();
+    assert.equal(await page.locator('[data-feedback-share]').count(),1,
+      'Feedback history must persist after restart');
+
     await page.locator('.vehicle-photo').waitFor();
     assert.deepEqual(errors,[],'Uncaught browser errors');
     console.log('PASS: browser startup, full expense-photo backup/restore, all tabs, vehicle photo and invalid-import preservation:',filename);
