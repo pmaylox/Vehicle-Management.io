@@ -4,9 +4,11 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const text = fs.readFileSync('mobile/MileSage_Mobile_Auto_Refresh.html', 'utf8');
 const code = text.split('/* RESTORE_GUARDS_BEGIN */')[1]?.split('/* RESTORE_GUARDS_END */')[0];
+const historyHelpers = text.split('/* CAR_HISTORY_BEGIN */')[1]?.split('/* CAR_HISTORY_END */')[0];
+assert.ok(historyHelpers, 'Car History normalizer must be available to restore tests');
 assert.ok(code, 'guard code must be present');
 const context = {JSON, Number, String, Object, Array};
-vm.runInNewContext(code, context);
+vm.runInNewContext(historyHelpers + '\n' + code, context);
 
 const empty = [{name:'Toyota Tacoma', year:2026, mileage:0,
   tire_pressures:{driver_front:null, driver_rear:null},
