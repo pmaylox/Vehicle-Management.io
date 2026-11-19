@@ -1928,33 +1928,42 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)autoRefres
 };
 
 function wireExpensePdfScanner(a){
- const button=$('scanExpensePdf'),status=$('expensePdfScanStatus'),
-       preview=$('expensePdfPreview'),clear=$('clearExpensePdf');
- if(!button||!status||!preview||!clear)return;
+ const button=$('scanExpensePdf'),status=$('expensePdfScanStatus'),clear=$('clearExpensePdf');
+ if(!button||!status||!clear)return;
  if(expensePdfDraft&&expensePdfDraft.vehicle!==a)expensePdfDraft=null;
- if(expensePdfDraft){
-  preview.hidden=false;
-  preview.textContent='Scanned expense document: '+expensePdfDraft.pages+' page(s)';
-  status.textContent='Finish and save the expense entry to attach this PDF.';
-  clear.hidden=false;
- }else{
-  preview.hidden=true;clear.hidden=true;
- }
+ refreshExpensePdfActions();
+ if(expensePdfDraft?.vehicle===a)status.textContent='PDF ready: '+expensePdfDraft.pages+' page(s). View/export or Save expense.';
+ const current=()=>expensePdfDraft?.vehicle===a?expensePdfDraft:null;
  clear.onclick=()=>{
-  expensePdfDraft=null;expensePdfScanOwner=null;expensePdfScanEpoch=null;
-  preview.hidden=true;preview.textContent='';clear.hidden=true;
-  status.textContent='Expense document removed from this unsaved entry. No expense record changed.';
+  expensePdfDraft=null;expensePdfScanOwner=null;expensePdfScanEpoch=null;expensePdfScanInputs=null;
+  refreshExpensePdfActions();
+  $('expensePdfTextReview').hidden=true;$('expensePdfOcrText').textContent='';
+  status.textContent='Unsaved document removed from expense form. No record changed.';
  };
+ const act=(buttonId,nativeMethod)=>{
+  $(buttonId).onclick=()=>{
+   const d=current();
+   if(d&&typeof window.MileSageAndroid?.[nativeMethod]==='function')
+    window.MileSageAndroid[nativeMethod](d.id);
+   else alert('PDF action requires the MileSage Android app.');
+   if(d&&nativeMethod==='saveExpenseDocument')
+    status.textContent='Copy requested: My Files > Downloads > MileSage > Expenses. Check Android confirmation.';
+  };
+ };
+ act('viewExpensePdfDraft','openExpenseDocument');
+ act('shareExpensePdfDraft','shareExpenseDocument');
+ act('saveExpensePdfDraft','saveExpenseDocument');
  button.onclick=()=>{
-  if(!window.MileSageAndroid||
-     typeof window.MileSageAndroid.scanExpenseDocument!=='function'){
-    status.textContent='Multi-page expense scanning requires the MileSage Android app.';
-    return;
+  if(typeof window.MileSageAndroid?.scanExpenseDocument!=='function'){
+   status.textContent='Multi-page expense scanning requires the MileSage Android app.';return;
   }
   if(expensePdfDraft&&!confirm('Replace the unsaved expense PDF with another scan?'))return;
   expensePdfScanOwner=a;expensePdfScanEpoch=expensePhotoDraftEpoch;
-  status.textContent='Opening expense document scanner. Capture up to 30 pages and check the page order before tapping Done.';
-  window.MileSageAndroid.scanExpenseDocument();
+  expensePdfScanInputs={date:$('extraDate').value,cost:$('extraCost').value,description:$('extraDesc').value};
+  status.textContent='Opening scanner. Capture up to 30 pages and check their order; then OCR reads each page.';
+  try{window.MileSageAndroid.scanExpenseDocument();}
+  catch(error){expensePdfScanOwner=null;expensePdfScanEpoch=null;expensePdfScanInputs=null;
+   status.textContent='Could not open scanner: '+error.message;}
  };
 }
 function wireExpensePdfHistory(){
@@ -1973,6 +1982,14 @@ function wireExpensePdfHistory(){
   if(window.MileSageAndroid?.shareExpenseDocument)
    window.MileSageAndroid.shareExpenseDocument(doc.id);
   else alert('PDF sharing requires the MileSage Android app.');
+ });
+ $('expensesBody').querySelectorAll('[data-expense-pdf-save]').forEach(button=>button.onclick=()=>{
+  const index=Number(button.dataset.expensePdfSave),doc=v()?.mobile_expenses?.[index]?.expense_document;
+  if(!doc?.id)return;
+  if(window.MileSageAndroid?.saveExpenseDocument){
+   window.MileSageAndroid.saveExpenseDocument(doc.id);
+   message('Copy requested: My Files > Downloads > MileSage > Expenses.');
+  }else alert('Save PDF to My Files requires MileSage Android app.');
  });
 }
 /* EXPENSE_MULTIPAGE_PDF_END */
