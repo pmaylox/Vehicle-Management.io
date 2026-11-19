@@ -501,7 +501,7 @@ public class MainActivity extends Activity {
                     pagesRead++;
                     String pageText = recognized.getText();
                     if (pageText != null && !pageText.trim().isEmpty() && all.length() < 48000) {
-                        all.append("\\n--- PAGE ").append(i + 1).append(" ---\\n");
+                        all.append("\n--- PAGE ").append(i + 1).append(" ---\n");
                         int room = Math.max(0, 48000 - all.length());
                         all.append(pageText, 0, Math.min(pageText.length(), room));
                     }
