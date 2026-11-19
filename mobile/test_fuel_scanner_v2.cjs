@@ -28,6 +28,9 @@ for(const file of ['mobile/MileSage_Mobile_Auto_Refresh.html',
  assert.equal(found.verified,true);
  found=scan("GALLONS 10.882\nPRICE / GAL $3.599\nFUEL SALE $49.16");
  assert.equal(found.verified,false,'mismatched arithmetic is never called verified');
+ assert.equal(found.conflict,true,'mismatched total must raise conflict');
+ assert.equal(found.gallons,null,'mismatched total cannot autofill gallons');
+ assert.equal(found.total,null,'mismatched total cannot autofill payment');
  found=scan("PRICE / GAL $3.599\nACCOUNT 123456789\nVISA ******** 9943");
  assert.equal(found.gallons,null,'price is not gallons');
  assert.equal(found.total,null,'card number is not total');
