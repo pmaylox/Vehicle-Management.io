@@ -1,3 +1,4 @@
+from vehicle_card import VehicleCard
 from mobile_export import build_mobile_backup
 from vehicle_profile_ui import VehicleProfileFields
 from vin_lookup import profile_summary
