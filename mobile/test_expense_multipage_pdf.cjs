@@ -67,6 +67,6 @@ for(const name of ['service_invoices','expense_invoices'])
  assert.ok(provider.includes('name="'+name+'" path="'+name+'/"'),
   'FileProvider missing '+name);
 const gradle=fs.readFileSync('android/app/build.gradle','utf8');
-assert.ok(gradle.includes("applicationId 'io.reddirtcode.milesage.alpha146pdfimport'"),
+assert.ok(gradle.includes("applicationId 'io.reddirtcode.milesage.alpha149brandedtest'"),
  'Alpha 1.4.6 must install separately and never overwrite existing vehicle records');
 console.log('PASS: 30-page Expense PDF capture, persistence reference, view/share, Service isolation and build identity.');
