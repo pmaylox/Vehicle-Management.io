@@ -10,8 +10,8 @@ android {
         applicationId 'io.reddirtcode.milesage.alpha146pdfimport'
         minSdk 26
         targetSdk 35
-        versionCode 148
-        versionName '1.4.8-expense-pdf-ocr-diagnostics'
+        versionCode 149
+        versionName '1.4.9-ms-branded-launcher'
     }
     buildTypes {
         release {
