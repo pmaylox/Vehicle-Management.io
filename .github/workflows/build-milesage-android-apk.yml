@@ -130,9 +130,9 @@ jobs:
       - name: Collect build files
         run: |
           cp android/app/build/outputs/apk/debug/app-debug.apk release/MileSage_Alpha_1_4_9_MS_Branded_Side_By_Side.apk
-          python mobile/validate_mobile_html.py release/MileSage_Alpha_1_4_8_Expense_PDF_Autofill.apk
-          unzip -t release/MileSage_Alpha_1_4_8_Expense_PDF_Autofill.apk | tail -1
-          sha256sum release/MileSage_Alpha_1_4_8_Expense_PDF_Autofill.apk > release/APK_SHA256.txt
+          python mobile/validate_mobile_html.py release/MileSage_Alpha_1_4_9_MS_Branded_Side_By_Side.apk
+          unzip -t release/MileSage_Alpha_1_4_9_MS_Branded_Side_By_Side.apk | tail -1
+          sha256sum release/MileSage_Alpha_1_4_9_MS_Branded_Side_By_Side.apk > release/APK_SHA256.txt
       - name: Check APK signature and distinct test package ID
         run: |
           APK=release/MileSage_Alpha_1_4_9_MS_Branded_Side_By_Side.apk
