@@ -7,11 +7,11 @@ android {
     compileSdk 35
 
     defaultConfig {
-        applicationId 'io.reddirtcode.milesage.alpha146pdfimport'
+        applicationId 'io.reddirtcode.milesage.alpha149brandedtest'
         minSdk 26
         targetSdk 35
         versionCode 149
-        versionName '1.4.9-ms-branded-launcher'
+        versionName '1.4.9-ms-branded-side-by-side'
     }
     buildTypes {
         release {
