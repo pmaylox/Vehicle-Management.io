@@ -13,7 +13,7 @@ for(const text of [
  '@JavascriptInterface public void scanServiceInvoice()'
 ])assert.ok(java.includes(text),'Missing native Service scan feature: '+text);
 const build=fs.readFileSync('android/app/build.gradle','utf8');
-assert.match(build,/applicationId 'io\.reddirtcode\.milesage\.alpha146pdfimport'/);
+assert.match(build,/applicationId 'io\.reddirtcode\.milesage\.alpha149brandedtest'/);
 for (const path of htmlFiles){
  const html=fs.readFileSync(path,'utf8');
  assert.ok(html.includes('SERVICE_RECEIPT_V2_BEGIN'),path);
