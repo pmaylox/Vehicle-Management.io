@@ -527,6 +527,12 @@ function parseFuelReceiptText(raw,today){
    }
   }
  }
+ // A standalone currency-qualified payment is reliable when unique.
+ if(result.total===null){
+  const payments=lines.map(line=>line.match(/^(?:USD\s*\$\s*|(?:credit|debit|card|visa|mastercard)\s*\$?\s*)(\d+(?:,\d{3})*\.\d{2})$/i)).filter(Boolean).map(m=>Number(m[1].replace(/,/g,''))).filter(n=>Number.isFinite(n)&&n>=0&&n<=100000);
+  const unique=[...new Set(payments)];
+  if(unique.length===1)result.total=unique[0].toFixed(2);
+ }
  return result;
 }
 /* FUEL_RECEIPT_PARSER_END */
