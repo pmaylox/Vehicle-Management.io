@@ -17,7 +17,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           # Immutable interface source; branch context retains the established signing cache.
-          ref: 0b6f000
+          ref: 0b6f000245a44575b9c005434f787cd78423616e
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -123,7 +123,8 @@ jobs:
       - name: Check APK signature and distinct test package ID
         run: |
           APK=release/MileSage_Alpha_1_4_10_Interface_Test.apk
-          "${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools/35.0.0/apksigner" verify --verbose "$APK"
+          "${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools/35.0.0/apksigner" verify --verbose --print-certs "$APK" | tee release/SIGNING_CERTIFICATE.txt
+          grep -F "certificate SHA-256 digest: d6ae82179d2b2e382686f1f73380e49add074b8c1ce06ecf5ec410f6c92c4932" release/SIGNING_CERTIFICATE.txt
           PACKAGE="$("${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools/35.0.0/aapt" dump badging "$APK" | grep '^package:')"
           echo "$PACKAGE"
           echo "$PACKAGE" | grep -F "name='io.reddirtcode.milesage.alpha1410fueltest'"
