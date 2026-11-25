@@ -27,3 +27,13 @@ Local validation on November 25: 46 Python tests passed before the additional 80
 The original phone build never cached its debug key: its Actions log reports a cache-path validation error because the configured path did not exist. The prior signing key cannot be recovered from an APK. The first interface-branch APKs with the old package ID therefore failed the upgrade-certificate comparison and must not be installed over the old app. The attempted original-branch rebuild also correctly blocked publication on a certificate mismatch.
 
 The final candidate uses a new, clearly labeled package. CI now creates ~/.android/debug.keystore explicitly, caches that exact file under milesage-alpha1410-interface-signing-v1, and configures Gradle to use it. The artifact signature is checked against this key before publishing. Continue future interface-test builds on this branch/signing-cache context; changing signing context without migrating the key would again prevent in-place updates. This is a debug test key, not production distribution signing.
+
+## Verified candidate
+
+- Successful build: https://github.com/pmaylox/Vehicle-Management.io/actions/runs/45720465926
+- Application source commit: 6795a936de26024dbd034a99da420ebf074a51b8.
+- APK SHA-256: f98a9da39fce14cbd946f9caddb1e1370c74ef626c446b9811b89375e3548c71.
+- New certificate SHA-256: cedeef1c78e2727ee7a578d0728bce0cb35e6c07ad2d671c01c6bce5b349aa67.
+- The final Actions log confirms the key was saved under milesage-alpha1410-interface-signing-v1. APK signature matches the explicitly configured key; downloaded APK checksum and embedded HTML were verified locally. No vehicle JSON is bundled.
+- Local installer is outside this repository, under ../interface-builds/MileSage-1.4.10-interface-test/MileSage_Alpha_1_4_10_Interface_Test.apk. Do not use earlier interface-branch artifacts that retained the old package ID.
+- This is a debug test key retained in the branch CI cache. Cache retention is not production key management; production signing needs a securely backed-up keystore or managed signing service.
