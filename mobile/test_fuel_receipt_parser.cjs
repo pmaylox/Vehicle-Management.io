@@ -56,3 +56,10 @@ assert.ok(html.includes('id="fuelPhotoPreview"'), 'fuel photo must show a tempor
 assert.ok(html.includes("showReceiptPreview('fuel',file)"), 'fuel must preview the received photo before OCR starts');
 assert.ok(html.includes('Photo preview is shown, but fuel receipt scanning failed:'), 'fuel must report OCR failures without hiding the photo');
 console.log('Fuel receipt OCR parsing tests passed');
+
+
+const allsups=parse('ALLSUPS #t 102483\nWELCOME TO\nRU CR #06\nDescription\nUSD$53.34\nSELF @ 3.319/ G');
+assert.equal(allsups.total,'53.34');
+assert.equal(parse('TOTAL $39.00\nUSD$40.00').total,'39.00');
+assert.equal(parse('USD$53.34\nUSD$10.00').total,null);
+assert.equal(parse('CREDIT $53.34').total,'53.34');
