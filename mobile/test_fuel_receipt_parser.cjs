@@ -42,9 +42,27 @@ assert.equal(third.gallons,null,'price per gallon should not become volume');
 assert.equal(third.total,null,'subtotal should not become final total');
 
 const fourth=parse('Fuel Volume: 9.45 US GAL\nGrand Total: $28.35\nDate 2026-11-13');
-assert.equal(fourth.gallons,'9.45');
+assert.equal(fourth.gallons,'9.450');
 assert.equal(fourth.total,'28.35');
 assert.equal(fourth.date,'2026-11-13');
+
+
+const allsups=sandbox.parseFuelReceiptText([
+ 'ALLSUPS 102483',
+ 'DATE 11/15/26 4:47',
+ 'PRODUCT: UNL 10.882',
+ 'GALLONS: $3.599',
+ 'PRICE/G: $3.16',
+ 'FUEL SALE $39.16'
+].join('\n'),'2026-11-17');
+assert.equal(allsups.date,'2026-11-15');
+assert.equal(allsups.gallons,'10.882');
+assert.equal(allsups.total,'39.16');
+assert.equal(allsups.mileage,null);
+
+const splitOcr=sandbox.parseFuelReceiptText('DATE 11/15/26\nGALL0NS\n10.882\nFUEL SALE\n$39.16','2026-11-17');
+assert.equal(splitOcr.gallons,'10.882');
+assert.equal(splitOcr.total,'39.16');
 
 assert.ok(html.includes('capture="environment"'));
 assert.ok(html.includes('wireFuelReceiptPhoto(a)'));
