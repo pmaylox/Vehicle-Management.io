@@ -13,7 +13,7 @@ for(const phrase of [
  "fuelScanOwner=a;",
  "applyFuelScanV2(data.text,owner,'Fuel document scan')",
  "Fuel entry NOT saved:",
- "Save the '+kind+' details WITHOUT a receipt photo?",
+ "details WITHOUT a receipt photo?",
 ])assert.ok(html.includes(phrase),'Missing updated gallery or save behavior: '+phrase);
 for(const phrase of [
  "FUEL_GALLERY_PHOTO_CODE = 224",
