@@ -9,8 +9,8 @@ for(const phrase of [
  'function writePhonePhoto(p)', 'createWritable()', 'function downloadPhonePhoto(p)',
  "storeReceipt(a,'expense'", "storeReceipt(a,'fuel'", "storeReceipt(a,'service'",
  "wirePhotoHistory('expense')", "wirePhotoHistory('fuel')", "wirePhotoHistory('service')",
- "receipt_photo={data_url:await photoData(file)",
- 'Entry NOT saved: phone storage failed.',
+ "data_url:await photoData(file)",
+ 'Entry NOT saved. Phone storage failed:',
  'data-photo-save', 'data-photo-download',
  "id=\"choosePhotoDir\"",
  "const KEY='milesage-mobile-offline-v1'"
