@@ -1181,7 +1181,22 @@ function wireFuelReceiptPhoto(a){
    camera.click();
   }
  };
- $('fuelGalleryButton').onclick=()=>gallery.click();
+ $('fuelGalleryButton').onclick=()=>{
+  const status=$('fuelReceiptProgress');
+  // The native picker hands a content URI directly to bundled ML Kit OCR.
+  // This avoids large base64 transfers through the WebView JavaScript bridge.
+  if(window.MileSageAndroid&&typeof window.MileSageAndroid.chooseFuelReceiptPhoto==='function'){
+   fuelScanOwner=a;
+   buttons.forEach(x=>x.disabled=true);
+   status.textContent='Choose a saved receipt photo. Reading and autofill will begin after selection…';
+   try{window.MileSageAndroid.chooseFuelReceiptPhoto();}
+   catch(error){
+    fuelScanOwner=null;
+    buttons.forEach(x=>x.disabled=false);
+    status.textContent='Could not open saved photo: '+error.message;
+   }
+  }else gallery.click();
+ };
  const read=async input=>{
   const file=input.files?.[0];
   if(!file)return;
@@ -1228,7 +1243,11 @@ $('fuelForm').onsubmit=async e=>{
    a.fuel_history.sort((x,y)=>String(x.date).localeCompare(String(y.date))||Number(x.mileage)-Number(y.mileage));
    if(od>a.mileage){a.mobile_mileage_log.push({date:dt,from:a.mileage,to:od});a.mileage=od;}
   });
- }catch(err){alert(err.message);}
+ }catch(err){
+  const status=$('fuelReceiptProgress');
+  if(status)status.textContent='Fuel entry NOT saved: '+err.message;
+  alert(err.message);
+ }
 };
 }
 function expenseSummary(a){let service=a.service_history.reduce((s,r)=>s+(Number(r.cost_cents)||0),0);let fuel=a.fuel_history.reduce((s,r)=>s+(Number(r.cost_cents)||0),0);let extra=a.mobile_expenses.reduce((s,r)=>s+(Number(r.cost_cents)||0),0);return {service,fuel,extra,total:service+fuel+extra}}
@@ -1694,22 +1713,69 @@ function wirePhotoHistory(kind){
 }
 async function storeReceipt(vehicle,kind,record,mutate){
  const file=receiptFiles[kind];
- if(file)record.receipt_photo={data_url:await photoData(file),name:'MileSage-'+record.date+'-'+String(vehicle.year+'-'+vehicle.name).replace(/[^a-z0-9-]+/gi,'-').slice(0,45)+'-'+kind+'-'+Date.now()+'-'+Math.floor(Math.random()*1000000)+'.jpg',folder_saved:false};
+ let photoOmitted=false;
+ if(file){
+  try{
+   record.receipt_photo={
+    data_url:await photoData(file),
+    name:'MileSage-'+record.date+'-'+String(vehicle.year+'-'+vehicle.name).replace(/[^a-z0-9-]+/gi,'-').slice(0,45)+'-'+kind+'-'+Date.now()+'-'+Math.floor(Math.random()*1000000)+'.jpg',
+    folder_saved:false
+   };
+  }catch(error){
+   if(!confirm('The receipt photo could not be prepared: '+error.message+'\nSave the '+kind+' entry WITHOUT the photo? The original is still in your phone gallery.'))
+    throw Error('Entry NOT saved: selected photo could not be prepared.');
+   photoOmitted=true;
+  }
+ }
  if(v()!==vehicle)throw Error('Vehicle selection changed. Review the entry.');
- const original=JSON.stringify({vehicles,current});
- try{mutate();localStorage.setItem(KEY,JSON.stringify({vehicles,current}));hasStorage=true;updateBanner();}
- catch(e){const restore=JSON.parse(original);vehicles=normalize(restore.vehicles);current=restore.current;throw Error('Entry NOT saved: phone storage failed. '+e.message);}
- let note='';
+ // Preserve the same vehicle object on failure so the open form can be retried.
+ const before=JSON.parse(JSON.stringify(vehicle));
+ let savedWithoutPhoto=false;
+ try{
+  mutate();
+  try{
+   localStorage.setItem(KEY,JSON.stringify({vehicles,current}));
+  }catch(error){
+   if(!record.receipt_photo||!confirm(
+    'Phone storage could not save this '+kind+' entry WITH its photo.\nSave the '+kind+
+    ' details WITHOUT a receipt photo? The original remains in your gallery.'))
+    throw error;
+   const selectedPhoto=record.receipt_photo;
+   delete record.receipt_photo;
+   try{
+    localStorage.setItem(KEY,JSON.stringify({vehicles,current}));
+    savedWithoutPhoto=true;
+   }catch(retryError){
+    record.receipt_photo=selectedPhoto;
+    throw retryError;
+   }
+  }
+  hasStorage=true;updateBanner();
+ }catch(error){
+  for(const key of Object.keys(vehicle))
+   if(!Object.prototype.hasOwnProperty.call(before,key))delete vehicle[key];
+  Object.assign(vehicle,before);
+  throw Error('Entry NOT saved. Phone storage failed: '+error.message);
+ }
+ let note=photoOmitted||savedWithoutPhoto?
+  'Entry saved WITHOUT a receipt photo. Your original receipt remains in the phone gallery.':'';
  if(record.receipt_photo){
   if(photoDir){
-   try{await writePhonePhoto(record.receipt_photo);record.receipt_photo.folder_saved=true;localStorage.setItem(KEY,JSON.stringify({vehicles,current}));note='Photo copied to MileSage/Photos.';}
-   catch(e){note='Photo attached in MileSage, but folder copy failed: '+e.message+'. Use Save to MileSage/Photos in history.';}
-  }else note='Photo attached to the record and Full mobile backup. To copy it into a phone folder, select the folder in Data & backup, then tap Save to MileSage/Photos in history.';
+   try{
+    await writePhonePhoto(record.receipt_photo);
+    record.receipt_photo.folder_saved=true;
+    localStorage.setItem(KEY,JSON.stringify({vehicles,current}));
+    note='Photo copied to MileSage/Photos.';
+   }catch(error){
+    note='Entry saved and receipt attached, but photo folder copy failed: '+error.message+
+     '. Use Save to MileSage/Photos from history.';
+   }
+  }else note='Photo attached to the entry and Full mobile backup. To copy it into a phone folder, select the folder in Data & backup, then tap Save to MileSage/Photos in history.';
  }
- renderAll();message(kind==='fuel'?'Fuel entry saved.':kind==='expense'?'Other expense saved.':'Service entry saved.');
+ renderAll();
+ message(kind==='fuel'?'Fuel entry saved.':kind==='expense'?'Other expense saved.':'Service entry saved.');
  if(note)alert(note);
 }
-
 function renderAll(){renderHome();renderService();renderFuel();renderExpenses();renderGraphs();updateBanner();}
 function switchTab(id){tab=id;document.querySelectorAll('.section').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('.tab').forEach(x=>{x.classList.toggle('active',x.dataset.tab===id);x.setAttribute('aria-current',x.dataset.tab===id?'page':'false')});window.scrollTo({top:0,behavior:'instant'})}
 function filename(prefix){return `${prefix}-${localDate()}.json`}

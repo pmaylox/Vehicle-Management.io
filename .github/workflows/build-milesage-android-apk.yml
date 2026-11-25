@@ -1,8 +1,9 @@
-name: Build MileSage Alpha 1.4.9 MS Branded Side-by-Side APK
+name: Build MileSage Alpha 1.4.10 Fuel Gallery OCR APK
 on:
   push:
     branches:
       - fix/alpha149-side-by-side-install-20261121
+      - fix/fuel-gallery-native-ocr-save-alpha1410-20261124
       - fix/expense-pdf-autofill-diagnostics-alpha148-20261119
       - feature/milesage-ms-brand-launcher-20261121
       - fix/expense-import-pdf-ocr-alpha147-20261119
@@ -26,7 +27,7 @@ on:
 jobs:
   build:
     concurrency:
-      group: milesage-alpha149-${{ github.sha }}
+      group: milesage-alpha1410-${{ github.sha }}
       cancel-in-progress: true
     runs-on: ubuntu-latest
     permissions:
@@ -64,12 +65,12 @@ jobs:
         run: |
           mkdir -p android/app/src/main/assets release
           cp mobile/MileSage_Alpha_1_3_2_VIN_Lookup.html android/app/src/main/assets/index.html
-          sed -i 's/Alpha 1.3.2/Alpha 1.4.9 MS Branded Launcher/g' android/app/src/main/assets/index.html
-          cp android/app/src/main/assets/index.html release/MileSage_Alpha_1_4_9_MS_Branded_Launcher.html
-          printf '%s\n' "MileSage Alpha 1.4.9 - approved Red Dirt Code MS + braces launcher icon; preserves Alpha 1.4.8 PDF autofill diagnostics and unambiguous TOTAL labels, reusable backup browser and Fuel/Service/Expense scanners" \
+          sed -i 's/Alpha 1.3.2/Alpha 1.4.10 Fuel Gallery OCR/g' android/app/src/main/assets/index.html
+          cp android/app/src/main/assets/index.html release/MileSage_Alpha_1_4_10_Fuel_Gallery_OCR.html
+          printf '%s\n' "MileSage Alpha 1.4.10 - fuel photo OCR repair, manual save fallback, approved Red Dirt Code MS + braces launcher icon; preserves Alpha 1.4.8 PDF autofill diagnostics and unambiguous TOTAL labels, reusable backup browser and Fuel/Service/Expense scanners" \
             "Do NOT uninstall or clear existing MileSage apps. This separately installed test copy has independent storage." \
             "Back up your existing phone data before importing anything into the test copy." \
-            "This APK has a NEW, distinct application ID (alpha149brandedtest) to bypass older debug-signing conflicts and cannot overwrite previous MileSage test apps. Import a Full mobile backup to copy data into it." \
+            "This APK has a NEW, distinct application ID (alpha1410fueltest) to bypass older debug-signing conflicts and cannot overwrite previous MileSage test apps. Import a Full mobile backup to copy data into it." \
             "Use Data & backup > Import JSON file with YOUR full phone backup." \
             "Data & backup > Saved backups & snapshots lists local undo copies and offers Browse saved JSON files in Downloads/MileSage. Restoring does not delete downloaded JSON. The three most recent app-local snapshots are retained." \
             "Confirm the real Tacoma and Explorer plus their histories after import." \
@@ -106,6 +107,7 @@ jobs:
           node mobile/test_receipt_parser.cjs
           node mobile/test_fuel_receipt_parser.cjs
           node mobile/test_fuel_scanner_v2.cjs
+          node mobile/test_fuel_gallery_save.cjs
           node mobile/test_service_receipt_scanner_v2.cjs
           node mobile/test_expense_multipage_pdf.cjs
           node mobile/test_expense_pdf_ocr.cjs
@@ -129,20 +131,20 @@ jobs:
           done
       - name: Collect build files
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk release/MileSage_Alpha_1_4_9_MS_Branded_Side_By_Side.apk
-          python mobile/validate_mobile_html.py release/MileSage_Alpha_1_4_9_MS_Branded_Side_By_Side.apk
-          unzip -t release/MileSage_Alpha_1_4_9_MS_Branded_Side_By_Side.apk | tail -1
-          sha256sum release/MileSage_Alpha_1_4_9_MS_Branded_Side_By_Side.apk > release/APK_SHA256.txt
+          cp android/app/build/outputs/apk/debug/app-debug.apk release/MileSage_Alpha_1_4_10_Fuel_Gallery_OCR.apk
+          python mobile/validate_mobile_html.py release/MileSage_Alpha_1_4_10_Fuel_Gallery_OCR.apk
+          unzip -t release/MileSage_Alpha_1_4_10_Fuel_Gallery_OCR.apk | tail -1
+          sha256sum release/MileSage_Alpha_1_4_10_Fuel_Gallery_OCR.apk > release/APK_SHA256.txt
       - name: Check APK signature and distinct test package ID
         run: |
-          APK=release/MileSage_Alpha_1_4_9_MS_Branded_Side_By_Side.apk
+          APK=release/MileSage_Alpha_1_4_10_Fuel_Gallery_OCR.apk
           "${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools/35.0.0/apksigner" verify --verbose "$APK"
           PACKAGE="$("${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools/35.0.0/aapt" dump badging "$APK" | grep '^package:')"
           echo "$PACKAGE"
-          echo "$PACKAGE" | grep -F "name='io.reddirtcode.milesage.alpha149brandedtest'"
+          echo "$PACKAGE" | grep -F "name='io.reddirtcode.milesage.alpha1410fueltest'"
       - uses: actions/upload-artifact@v4
         with:
-          name: MileSage-Alpha-1.4.9-MS-Branded-Side-by-Side
+          name: MileSage-Alpha-1.4.10-Fuel-Gallery-OCR
           path: release/
           retention-days: 90
       - name: Test complete app in a phone-sized browser

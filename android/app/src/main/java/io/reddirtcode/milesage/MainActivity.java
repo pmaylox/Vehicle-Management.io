@@ -57,6 +57,8 @@ public class MainActivity extends Activity {
     private static final int SERVICE_RECEIPT_SCAN_CODE = 221;
     private static final int EXPENSE_DOCUMENT_SCAN_CODE = 222;
     private static final int EXPENSE_PDF_IMPORT_CODE = 223;
+    private static final int FUEL_GALLERY_PHOTO_CODE = 224;
+    private boolean fuelGalleryPhotoOpen = false;
     private boolean pendingExpensePdfHistoryImport = false;
     private boolean expenseScanOpen = false;
     private boolean serviceReceiptScanOpen = false;
@@ -159,6 +161,44 @@ public class MainActivity extends Activity {
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        if (requestCode == FUEL_GALLERY_PHOTO_CODE) {
+            fuelGalleryPhotoOpen = false;
+            if (resultCode != RESULT_OK) {
+                fuelScanResult(null, null, "Saved photo selection cancelled. No fuel entry changed.");
+                return;
+            }
+            Uri selected = data == null ? null : data.getData();
+            if (selected == null) {
+                fuelScanResult(null, null, "No saved photo was returned. Try another image.");
+                return;
+            }
+            try {
+                InputImage image = InputImage.fromFilePath(this, selected);
+                TextRecognizer recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
+                recognizer.process(image)
+                    .addOnSuccessListener(found -> {
+                        try {
+                            fuelScanResult(found.getText(), fuelScanPreview(selected), null);
+                        } catch (Exception error) {
+                            fuelScanResult(found.getText(), null,
+                                "Receipt text was read, but its photo could not be attached: " + error.getMessage());
+                        }
+                    })
+                    .addOnFailureListener(error -> {
+                        try {
+                            fuelScanResult("", fuelScanPreview(selected),
+                                "Saved photo OCR failed: " + error.getMessage() + ". Enter fuel details manually.");
+                        } catch (Exception imageError) {
+                            fuelScanResult(null, null,
+                                "Saved receipt photo could not be opened: " + imageError.getMessage());
+                        }
+                    })
+                    .addOnCompleteListener(task -> recognizer.close());
+            } catch (Exception error) {
+                fuelScanResult(null, null, "Unable to read selected photo: " + error.getMessage());
+            }
+            return;
+        }
         if (requestCode == FUEL_DOCUMENT_SCAN_CODE) {
             fuelScanOpen = false;
             if (resultCode != RESULT_OK) {
@@ -619,6 +659,21 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void beginFuelGalleryPhotoPicker() {
+        if (fuelGalleryPhotoOpen || fuelScanOpen) return;
+        fuelGalleryPhotoOpen = true;
+        try {
+            Intent picker = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            picker.addCategory(Intent.CATEGORY_OPENABLE);
+            picker.setType("image/*");
+            picker.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivityForResult(picker, FUEL_GALLERY_PHOTO_CODE);
+        } catch (Exception error) {
+            fuelGalleryPhotoOpen = false;
+            fuelScanResult(null, null, "Unable to open saved photo picker: " + error.getMessage());
+        }
+    }
+
     private void beginFuelDocumentScan() {
         if (fuelScanOpen) return;
         fuelScanOpen = true;
@@ -975,6 +1030,9 @@ public class MainActivity extends Activity {
     private class DownloadBridge {
         @JavascriptInterface public void recognizeReceipt(String requestId, String base64) {
             recognizeReceiptOnDevice(requestId, base64);
+        }
+        @JavascriptInterface public void chooseFuelReceiptPhoto() {
+            runOnUiThread(() -> beginFuelGalleryPhotoPicker());
         }
         @JavascriptInterface public void scanFuelReceipt() {
             runOnUiThread(() -> beginFuelDocumentScan());
