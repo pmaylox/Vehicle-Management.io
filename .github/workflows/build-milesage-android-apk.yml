@@ -107,6 +107,7 @@ jobs:
           node mobile/test_receipt_parser.cjs
           node mobile/test_fuel_receipt_parser.cjs
           node mobile/test_fuel_scanner_v2.cjs
+          node mobile/test_fuel_gallery_save.cjs
           node mobile/test_service_receipt_scanner_v2.cjs
           node mobile/test_expense_multipage_pdf.cjs
           node mobile/test_expense_pdf_ocr.cjs
@@ -130,20 +131,20 @@ jobs:
           done
       - name: Collect build files
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk release/MileSage_Alpha_1_4_9_MS_Branded_Side_By_Side.apk
-          python mobile/validate_mobile_html.py release/MileSage_Alpha_1_4_9_MS_Branded_Side_By_Side.apk
-          unzip -t release/MileSage_Alpha_1_4_9_MS_Branded_Side_By_Side.apk | tail -1
-          sha256sum release/MileSage_Alpha_1_4_9_MS_Branded_Side_By_Side.apk > release/APK_SHA256.txt
+          cp android/app/build/outputs/apk/debug/app-debug.apk release/MileSage_Alpha_1_4_10_Fuel_Gallery_OCR.apk
+          python mobile/validate_mobile_html.py release/MileSage_Alpha_1_4_10_Fuel_Gallery_OCR.apk
+          unzip -t release/MileSage_Alpha_1_4_10_Fuel_Gallery_OCR.apk | tail -1
+          sha256sum release/MileSage_Alpha_1_4_10_Fuel_Gallery_OCR.apk > release/APK_SHA256.txt
       - name: Check APK signature and distinct test package ID
         run: |
-          APK=release/MileSage_Alpha_1_4_9_MS_Branded_Side_By_Side.apk
+          APK=release/MileSage_Alpha_1_4_10_Fuel_Gallery_OCR.apk
           "${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools/35.0.0/apksigner" verify --verbose "$APK"
           PACKAGE="$("${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools/35.0.0/aapt" dump badging "$APK" | grep '^package:')"
           echo "$PACKAGE"
           echo "$PACKAGE" | grep -F "name='io.reddirtcode.milesage.alpha1410fueltest'"
       - uses: actions/upload-artifact@v4
         with:
-          name: MileSage-Alpha-1.4.9-MS-Branded-Side-by-Side
+          name: MileSage-Alpha-1.4.10-Fuel-Gallery-OCR
           path: release/
           retention-days: 90
       - name: Test complete app in a phone-sized browser
