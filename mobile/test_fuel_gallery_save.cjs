@@ -24,7 +24,7 @@ for(const phrase of [
  "@JavascriptInterface public void chooseFuelReceiptPhoto()",
 ])assert.ok(java.includes(phrase),'Missing Android gallery OCR: '+phrase);
 assert.match(gradle,/versionCode 151/);
-assert.match(gradle,/applicationId 'io\.reddirtcode\.milesage\.alpha1410fueltest'/);
+assert.match(gradle,/applicationId 'io\.reddirtcode\.milesage\.alpha1410interface'/);
 const start=html.indexOf('async function storeReceipt(vehicle,kind,record,mutate){');
 const end=html.indexOf('\nfunction renderAll(){',start);
 assert.ok(start>=0&&end>start,'Cannot isolate the record-save function');

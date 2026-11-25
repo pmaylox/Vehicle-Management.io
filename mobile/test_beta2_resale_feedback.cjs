@@ -17,6 +17,6 @@ for(const html of pages){
  new vm.Script(html.split('<script>')[1].split('</script>')[0]);
 }
 const g=fs.readFileSync('android/app/build.gradle','utf8');
-assert.match(g,/applicationId 'io\.reddirtcode\.milesage\.alpha1410fueltest'/);
+assert.match(g,/applicationId 'io\.reddirtcode\.milesage\.alpha1410interface'/);
 assert.match(g,/versionCode 151/);
 console.log('PASS: beta feedback, consent-based sharing, vehicle resale snapshots, and distinct test APK.');

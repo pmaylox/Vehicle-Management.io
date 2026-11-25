@@ -8,7 +8,7 @@ The phone uses the same approved colors, vehicle photo cards and six bottom dest
 
 ## Tester installation
 
-This is a test candidate, not a confirmed physical-device release. Android versionCode 151, versionName 1.4.10-interface-test. The package ID remains io.reddirtcode.milesage.alpha1410fueltest and uses the existing CI signing-key cache. An installed copy updates only if the signing certificate matches. Older package IDs remain separate installations. Do not uninstall or clear existing data to work around a signature mismatch.
+This is a test candidate, not a confirmed physical-device release. Android versionCode 151, versionName 1.4.10-interface-test. This installs separately as MileSage Interface Test, package ID io.reddirtcode.milesage.alpha1410interface. It cannot update previous MileSage packages. Keep the original installation and import its Full mobile backup into this candidate. PDFs must be transferred separately.
 
 Before changing an existing installation, export Full mobile backup and save actual PDFs separately. The JSON contains PDF references, not PDF bytes. A new tester can start an empty garage with their own vehicles; this APK does not bundle the developer's vehicle JSON. No tester has been invited or messaged automatically.
 
@@ -24,4 +24,6 @@ Local validation on November 25: 46 Python tests passed before the additional 80
 
 ## Signing continuity
 
-The first interface-branch build exposed a debug-certificate mismatch despite using the same cache key. Those branch artifacts must not be used as an in-place 1.4.10 update. GitHub cache scope matters: the established fuel/gallery branch owns the prior signing cache. A dedicated build-interface-with-stable-key.yml workflow was added on that branch; it builds immutable interface commit 0b6f000 without replacing phone source code. Use only the separately verified signed-candidate build linked in the checkpoint. Automatic APK builds from the interface branch are disabled, and the standard APK workflow now checks the expected prior 1.4.10 certificate before publishing an artifact. Its SHA-256 is d6ae82179d2b2e382686f1f73380e49add074b8c1ce06ecf5ec410f6c92c4932.
+The original phone build never cached its debug key: its Actions log reports a cache-path validation error because the configured path did not exist. The prior signing key cannot be recovered from an APK. The first interface-branch APKs with the old package ID therefore failed the upgrade-certificate comparison and must not be installed over the old app. The attempted original-branch rebuild also correctly blocked publication on a certificate mismatch.
+
+The final candidate uses a new, clearly labeled package. CI now creates ~/.android/debug.keystore explicitly, caches that exact file under milesage-alpha1410-interface-signing-v1, and configures Gradle to use it. The artifact signature is checked against this key before publishing. Continue future interface-test builds on this branch/signing-cache context; changing signing context without migrating the key would again prevent in-place updates. This is a debug test key, not production distribution signing.

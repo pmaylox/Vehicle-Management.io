@@ -16,6 +16,7 @@ on:
       - feature/fuel-scanner-rebuild-alpha140-20261118
       - feature/milesage-all-updates-apk-20261117
       - codex/mobile-repair-audit
+      - codex/interface-refresh
     paths:
       - "android/**"
       - "mobile/**"
@@ -41,11 +42,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Restore stable repair-test signing key
+      - name: Restore persistent interface-test signing key
         uses: actions/cache@v4
         with:
           path: ~/.android/debug.keystore
-          key: milesage-alpha142-debug-signing-v1
+          key: milesage-alpha1410-interface-signing-v1
+      - name: Create the explicitly configured debug signing key if needed
+        run: |
+          mkdir -p "$HOME/.android"
+          if [ ! -f "$HOME/.android/debug.keystore" ]; then
+            keytool -genkeypair -keystore "$HOME/.android/debug.keystore" -storepass android -keypass android -alias androiddebugkey -dname "CN=MileSage Interface Test, O=Red Dirt Coding, C=US" -keyalg RSA -keysize 2048 -validity 10000
+          fi
+          test -s "$HOME/.android/debug.keystore"
       - name: Prepare SDK
         run: |
           export ANDROID_HOME="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
@@ -70,7 +78,7 @@ jobs:
           printf '%s\n' "MileSage Alpha 1.4.10 - fuel photo OCR repair, manual save fallback, approved Red Dirt Code MS + braces launcher icon; preserves Alpha 1.4.8 PDF autofill diagnostics and unambiguous TOTAL labels, reusable backup browser and Fuel/Service/Expense scanners" \
             "Do NOT uninstall or clear existing MileSage apps. Back up every current installation before updating." \
             "Back up your existing phone data before importing anything into the test copy." \
-            "This candidate retains the alpha1410fueltest package ID with version code 151. It can update that package only when the signing certificate matches. Older package IDs remain separate. Do not uninstall to bypass a signing mismatch." \
+            "This candidate installs separately as MileSage Interface Test (alpha1410interface, version code 151). It cannot update earlier MileSage packages. Their original debug signing key was never cached. Keep the original app and import its Full mobile backup into this test copy; PDFs must be transferred separately." \
             "Use Data & backup > Import JSON file with YOUR full phone backup." \
             "Data & backup > Saved backups & snapshots lists local undo copies and offers Browse saved JSON files in Downloads/MileSage. Restoring does not delete downloaded JSON. The three most recent app-local snapshots are retained." \
             "Confirm the real Tacoma and Explorer plus their histories after import." \
@@ -140,10 +148,11 @@ jobs:
         run: |
           APK=release/MileSage_Alpha_1_4_10_Interface_Test.apk
           "${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools/35.0.0/apksigner" verify --verbose --print-certs "$APK" | tee release/SIGNING_CERTIFICATE.txt
-          grep -F "certificate SHA-256 digest: d6ae82179d2b2e382686f1f73380e49add074b8c1ce06ecf5ec410f6c92c4932" release/SIGNING_CERTIFICATE.txt
+          EXPECTED_CERT="$(keytool -exportcert -keystore "$HOME/.android/debug.keystore" -storepass android -alias androiddebugkey | sha256sum | cut -d' ' -f1)"
+          grep -F "certificate SHA-256 digest: $EXPECTED_CERT" release/SIGNING_CERTIFICATE.txt
           PACKAGE="$("${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools/35.0.0/aapt" dump badging "$APK" | grep '^package:')"
           echo "$PACKAGE"
-          echo "$PACKAGE" | grep -F "name='io.reddirtcode.milesage.alpha1410fueltest'"
+          echo "$PACKAGE" | grep -F "name='io.reddirtcode.milesage.alpha1410interface'"
       - name: Test complete app in a phone-sized browser
         run: |
           npm install --no-save playwright@1.65.1
@@ -163,3 +172,4 @@ jobs:
           name: MileSage-Alpha-1.4.10-Interface-Test
           path: release/
           retention-days: 90
+          overwrite: true

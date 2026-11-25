@@ -7,11 +7,20 @@ android {
     compileSdk 35
 
     defaultConfig {
-        applicationId 'io.reddirtcode.milesage.alpha1410fueltest'
+        applicationId 'io.reddirtcode.milesage.alpha1410interface'
         minSdk 26
         targetSdk 35
         versionCode 151
         versionName '1.4.10-interface-test'
+    }
+    signingConfigs {
+        debug {
+            // CI creates and caches this exact path before Gradle runs.
+            storeFile file(System.getProperty('user.home') + '/.android/debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
     }
     buildTypes {
         release {
