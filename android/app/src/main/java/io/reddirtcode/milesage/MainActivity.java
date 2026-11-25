@@ -70,7 +70,7 @@ public class MainActivity extends Activity {
 
     @Override public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getWindow().setStatusBarColor(android.graphics.Color.rgb(20,42,64));
+        getWindow().setStatusBarColor(android.graphics.Color.rgb(41,39,36));
         web = new WebView(this);
         setContentView(web);
         WebSettings settings = web.getSettings();
