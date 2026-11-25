@@ -1,0 +1,366 @@
+{
+  "title": "MileSage Phone and Desktop User Guide",
+  "version": "Alpha 1.4.10 Interface Test",
+  "date": "November 25 2026",
+  "pages": [
+    {
+      "title": "Get started on Android",
+      "intro": "This guide explains the Android test app and the companion Windows desktop app from Red Dirt Coding. Start with your own vehicle, confirm every saved reading, and keep an exported backup. The phone dashboard is called Home.",
+      "sections": [
+        {
+          "heading": "Install this test build",
+          "steps": [
+            "Open the build download link in your invitation email. Sign in with the Google account that received the invitation if Drive asks. Download the ZIP; do not try to run the HTML preview inside Drive.",
+            "In Android My Files or Files, open Downloads, select the ZIP and choose Extract. Open MileSage_Alpha_1_4_10_Interface_Test.apk. If Android requests permission to install from this source, grant it only to the app opening this trusted installer. You can turn that permission off afterward.",
+            "Open the launcher named MileSage Interface Test. The header should show 1.4.10 and Interface test. This is an Android installer, not a Windows installer or an iPhone app."
+          ]
+        },
+        {
+          "heading": "Choose the right starting point",
+          "bullets": [
+            "New tester: Home > + Manual adds your own vehicle. Use + By VIN if you want to check the VIN online. You do not need the developer's vehicles or GitHub recovery data.",
+            "Existing MileSage user: keep the old app installed. Export Full mobile backup from it, then use Data & backup > Import JSON file in the new test app. Save and copy any PDFs separately. The two installations keep separate data."
+          ]
+        },
+        {
+          "heading": "Find your way around",
+          "table": [
+            [
+              "Phone destination",
+              "What it contains"
+            ],
+            [
+              "Home",
+              "Vehicle cards, photos, overview and odometer controls"
+            ],
+            [
+              "Service",
+              "Service receipts, maintenance, tires, fluids and filters"
+            ],
+            [
+              "Fuel",
+              "Fill-ups, fuel type, octane and receipt photos"
+            ],
+            [
+              "Expenses",
+              "Other costs, receipt photos and multi-page PDFs"
+            ],
+            [
+              "History",
+              "Separate reported Car History and annual reviews"
+            ],
+            [
+              "Graphs",
+              "Spending, fuel trends, resale snapshots and feedback"
+            ],
+            [
+              "Data & backup",
+              "Header button for imports, exports and recovery snapshots"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Use the phone dashboard",
+      "intro": "Home shows your garage. Tap a vehicle card before adding a record or changing mileage. Check the selected vehicle name above each form; records belong to that vehicle.",
+      "sections": [
+        {
+          "heading": "Add or edit a vehicle",
+          "steps": [
+            "For a simple start, tap + Manual and enter the vehicle name, model year and actual odometer. A useful test name is My Car TEST so it is easy to distinguish from a real garage.",
+            "To use + By VIN, enter the 17-character VIN and tap Look up VIN while connected to the internet. The VIN is sent to NHTSA for decoding. Review the proposed year and name, enter your actual odometer, then tap Save new vehicle. A VIN lookup is not a vehicle-history or ownership check.",
+            "Select the vehicle, then use Edit vehicle to change its name, year or optional VIN. Save vehicle changes commits the form; Cancel leaves it unchanged. Use the separate odometer controls for mileage corrections."
+          ]
+        },
+        {
+          "heading": "Add the vehicle photo",
+          "steps": [
+            "Below the selected vehicle cards, tap Choose vehicle photo or Take vehicle photo. Use a clear JPG, PNG or WebP image. A transparent PNG is optional.",
+            "Wait for the photo to appear on the card. Switch to another vehicle and back to confirm the correct attachment. Remove photo removes only the selected vehicle's picture. Photos are local and travel with Full mobile backup; a desktop file path alone cannot display on a phone."
+          ]
+        },
+        {
+          "heading": "Correct or advance the odometer",
+          "bullets": [
+            "+ Add increases the current reading by the amount entered. Example: 10,000 plus 25 becomes 10,025 miles.",
+            "Subtract decreases the current reading by the amount entered. Use it for an entry mistake, not to rewrite real driving history.",
+            "= Set exact replaces the current reading with the actual odometer. Example: enter 10,025 to make that the new reading.",
+            "Check the New reading preview, tap Apply odometer change and confirm. Mileage must be a nonnegative whole number. These controls do not erase or revise old fuel or service records. A correction below a historic reading can leave intervals that need review."
+          ]
+        },
+        {
+          "heading": "Read the overview",
+          "text": "Oil reminders use recorded mileage and the configured interval. The battery, tire, service and fuel cards summarize recorded information; missing information stays unknown. These displays are tracking aids, not live sensors or a mechanical inspection."
+        }
+      ]
+    },
+    {
+      "title": "Record fuel and understand MPG",
+      "intro": "Enter every fill-up consistently. Fuel totals are in dollars, quantity is in US gallons, and odometers are in miles. Review OCR suggestions against the receipt before saving.",
+      "sections": [
+        {
+          "heading": "Save a fill-up",
+          "steps": [
+            "Choose the vehicle on Home, then open Fuel. Confirm the name shown above the form.",
+            "Enter the fill-up date and odometer. The date cannot be in the future. A receipt often has no odometer, so read the vehicle's actual reading yourself.",
+            "Enter US gallons and Total paid ($). Gallons may have three decimal places. Total paid is the entire purchase amount, not the price per gallon.",
+            "Choose Fuel type / blend when known: gasoline with unknown blend, E0 Non-ethanol, E10, E15, E85, diesel or the listed biodiesel blends. Octane is a rating such as 87, 89 or 93, not an ethanol percentage. Leave unknown values blank; diesel does not use the gasoline octane field.",
+            "Leave Filled the tank completely checked only when the tank was actually filled. Clear it for a partial fill. Tap Save fuel & mileage once, wait for confirmation, and check Fuel history. A newer fill-up odometer can advance the current vehicle mileage."
+          ]
+        },
+        {
+          "heading": "Use a fuel receipt photo",
+          "text": "Take fuel receipt photo opens the Android document scanner when available. Capture the whole receipt, crop or straighten it and accept the scan. Choose photo uses an existing image. Wait for the recognition status and review date, gallons and total; add any missing odometer, blend and full-tank choice manually. A preview or recognized text is only a draft. The entry is not complete until you save it and see it in history."
+        },
+        {
+          "heading": "How full tanks affect MPG",
+          "text": "The first full tank establishes a starting odometer. The next full tank closes the interval. MPG uses miles driven divided by all gallons added after the starting full tank, including partial fills. Example: start full at 1,000 miles, add 5 gallons at a partial stop, then reach 1,300 miles and add 7 gallons to full. The interval is 300 / (5 + 7) = 25 MPG. The gallons in the starting baseline fill are not counted again."
+        },
+        {
+          "heading": "When a graph is empty or unexpected",
+          "bullets": [
+            "One full fill-up is not enough for an MPG interval. Partial fills may show that the app is waiting for the next full tank.",
+            "Duplicate records, missing stops, incorrect full-tank choices or an out-of-order odometer can distort results. Correct draft fields before saving. This phone build does not provide general edit/delete controls for fuel history; keep a backup and report a saved-record mistake instead of adding a duplicate correction."
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Log service tires fluids and filters",
+      "intro": "Service keeps maintenance records and manual checks for the selected vehicle. A photo or scan helps capture information, but you decide what work was done and which reminders should reset.",
+      "sections": [
+        {
+          "heading": "Save a service record",
+          "steps": [
+            "Select the vehicle on Home, open Service and scroll to Log maintenance. Enter Work performed, service date and odometer. Enter the cost when known; a blank cost is unknown, not proof of free service.",
+            "Optionally use Take receipt photo or Choose photo. For a longer dealership or repair invoice, use Scan multi-page service invoice and review the page order. The multi-page scanner supports up to 30 pages.",
+            "Check Reset oil-change countdown or Reset tire-rotation countdown only if that work was actually completed at the entered mileage. Check the cabin or engine air-filter replacement option only for a completed replacement. Do not reset reminders just to dismiss a warning.",
+            "Review the fields, then tap Save service record. Verify the entry in Service history. Cancel abandons the draft. A scanned PDF is attached when the service record is saved; use View scanned invoice and Share / backup PDF to inspect and preserve the document."
+          ]
+        },
+        {
+          "heading": "Record tire pressures",
+          "steps": [
+            "At the top of Service, start with the tire named in the prompt. Enter Measured PSI from a gauge. Air added PSI is an optional increase added to that measured or previously saved reading.",
+            "Tap Next tire and continue through all four tires. Previous tire lets you review a draft. Leaving both fields blank retains that tire's saved value.",
+            "Tap Save tire readings on the final tire and check the diagram. Do not enter a final gauge reading as Measured PSI and then add the same increase again; that would double count it. These are manually recorded values, not a live TPMS connection. Use the vehicle placard or owner's guidance for the recommended cold pressure."
+          ]
+        },
+        {
+          "heading": "Fluids filters and battery information",
+          "text": "Scroll to the fluid and filter controls. Reset to Full for washer fluid or coolant records a manual confirmation for that fluid and restarts its tracking countdown; it is not a level sensor. Record cabin/interior and engine/intake air-filter replacements with their date and mileage. Home can show battery replacement information already present in service records; the desktop provides fuller battery-entry fields. Maintenance intervals are configured tracking settings, not a manufacturer-approved service schedule."
+        }
+      ]
+    },
+    {
+      "title": "Save expenses receipts and PDF documents",
+      "intro": "Use Expenses for ownership costs outside the fuel and service logs, such as registration, parking or a repair estimate you want to track separately. Avoid logging the same cost under both Service and Other expenses unless you intentionally want it counted twice.",
+      "sections": [
+        {
+          "heading": "Save another expense",
+          "steps": [
+            "Choose the vehicle, open Expenses and find Add other expense. Enter a description, date and cost.",
+            "Optionally take an expense photo or choose a saved image. Wait for OCR suggestions, inspect the preview and check the proposed date and amount. Correct the draft fields yourself when recognition is incomplete.",
+            "For multi-page paperwork, use Scan multi-page expense document. For a PDF already on the phone, use Load existing PDF file. Imported PDFs support up to 30 pages and 30 MB.",
+            "Use View attached PDF to inspect the pages. Review recognized text when available. Loading or scanning a PDF does not create an expense by itself. Tap Save other expense and check Other expense history."
+          ]
+        },
+        {
+          "heading": "Keep the actual PDFs",
+          "text": "Full mobile backup includes expense information, receipt photos and document references, but it does not include the PDF file bytes. Use Save PDF to My Files or Share PDF for a draft, and Save PDF to My Files or Share / backup PDF for a saved history entry. On supported Android storage flows, expense PDFs are saved under Downloads / MileSage / Expenses. Confirm the file exists and opens in My Files before changing installations, clearing app storage or moving phones."
+        },
+        {
+          "heading": "Reattach a PDF after restoring a backup",
+          "steps": [
+            "First transfer the exported PDF files to the new phone or installation. Restore the full JSON backup to recover the expense records and their metadata.",
+            "Open Expenses and locate the existing history entry. Use Reattach PDF from My Files, or Attach existing PDF file when no document is attached, and choose the matching PDF.",
+            "Open the reattached document and confirm it is the right invoice. Reattaching should preserve that expense's existing description, date, cost and mileage. Do not create a duplicate expense merely to reconnect its PDF."
+          ]
+        },
+        {
+          "heading": "If OCR or a save fails",
+          "text": "Keep the original receipt or PDF. Read the status message, inspect recognized text if available, and enter confirmed values manually. If saving reports an error, check history before trying again; do not repeatedly tap Save. This alpha's physical-phone scanning and OCR behavior is still being tested. A successful manual record is useful even when autofill fails."
+        }
+      ]
+    },
+    {
+      "title": "Use graphs Car History and tester feedback",
+      "intro": "Graphs and History explain the data you have entered. They do not obtain live sensor readings, automatically purchase a vehicle-history report or fetch a guaranteed resale price.",
+      "sections": [
+        {
+          "heading": "Read the graphs",
+          "text": "Open Graphs for recorded spending by Service, Fuel and Other, a fuel economy trend, an explainable oil-service snapshot, and fuel insights such as price per US gallon, miles between recorded fill-ups and fuel cost per mile over full-tank intervals. Scroll within the phone page to see more cards. Missing costs are excluded from spending. Empty charts generally mean there are not enough valid recorded intervals yet; they do not imply that records were deleted."
+        },
+        {
+          "heading": "Record a resale snapshot",
+          "steps": [
+            "In Graphs, scroll to Resale value & odometer. The Kelley Blue Book link opens an external website; complete any valuation there yourself.",
+            "Enter the valuation date, odometer at that valuation, estimated value, source and value type, such as Trade-in or Private-party. Tap Record valuation snapshot and review the confirmation.",
+            "Past snapshots stay tied to their recorded date and mileage. Updating today's odometer does not revise yesterday's estimated value. The desktop preserves these phone fields during a save, but its resale editor is not included in this desktop interface update."
+          ]
+        },
+        {
+          "heading": "Keep reported Car History separate",
+          "text": "Tap History in the bottom bar. The Car History screen lets you open CARFAX Car Care externally, record the date and source of an annual review, and save notes. Mark history reviewed only after you have reviewed the information. You can separately add a reported event with its date, category, source, details and optional reported mileage. Reported mileage does not change the live odometer or create fuel or service entries. The annual review reminder is calculated from your last confirmed review. MileSage has no automatic CARFAX feed."
+        },
+        {
+          "heading": "Send useful feedback",
+          "steps": [
+            "In Graphs, scroll to Beta tester feedback. Choose the feedback type, app area and impact. Describe the steps you took, what you expected, and what actually happened.",
+            "Include your phone model, Android version and the exact app header version: 1.4.10 Interface test. Include an error message or a screenshot when useful. Some internal alpha labels are older, so quote the visible header version in your report.",
+            "Tap Save feedback report, then Share saved feedback to send it using a messaging or email app. Export feedback JSON is another option. Saving a report alone does not send it to Philip. Vehicle records, VINs, receipts and PDFs are not attached automatically; share only examples you intend to disclose."
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Back up restore and move phone data",
+      "intro": "The app stores records locally. Installing new code, importing data and synchronizing devices are separate tasks. This build has no automatic two-way PC and phone sync, automatic cloud backup or push reminders.",
+      "sections": [
+        {
+          "heading": "Make a complete backup set",
+          "steps": [
+            "Open Data & backup in the header and choose Full mobile backup. Keep the downloaded JSON somewhere you can find outside the app. Use a filename or folder that identifies the date and device.",
+            "Export or share every service and expense PDF you want to retain. Check that those files open independently in My Files. The JSON carries references to PDFs, not their contents.",
+            "Keep an extra copy of the JSON and PDFs on your PC or your own chosen storage. Do this before switching installations, uninstalling, clearing storage, changing phones or importing another garage. Saved records alone are not a substitute for exported backups."
+          ]
+        },
+        {
+          "heading": "Restore your own backup",
+          "steps": [
+            "In the target app, save a backup of any records already there. Then choose Data & backup > Import JSON file and select your own downloaded JSON.",
+            "Read the replacement preview and any downgrade or missing-record warnings. Import replaces the phone garage; it does not merge newer records from two devices. Cancel if the selected file is not the intended backup.",
+            "After importing, check the vehicle count, names, odometers, photos and recent service, fuel, expense and Car History records. Copy and reattach PDFs separately as needed."
+          ]
+        },
+        {
+          "heading": "Saved snapshots and exported files",
+          "text": "Saved backups & snapshots lists this installation's recent recovery snapshots and offers Browse saved JSON files. The app retains only three local recovery snapshots; they are short-term recovery aids. An exported JSON can be imported more than once and is not consumed by importing. Files and local snapshots are different: a snapshot may disappear if that installation's storage is removed, while a separately saved download remains where you stored it."
+        },
+        {
+          "heading": "Choose the export for the job",
+          "text": "Full mobile backup is the safest phone-to-phone or archival choice and preserves embedded receipt photos. Export vehicles.json produces the desktop vehicle-list format and retains other expenses, mileage logs, Car History and vehicle photos, but strips service and fuel receipt-photo payloads. Use both when moving data to PC, and keep the full backup as your archive."
+        },
+        {
+          "heading": "New testers and GitHub recovery",
+          "text": "The GitHub review and recovery buttons refer to development data in the project repository, not a personal cloud account for each tester. New testers should add their own vehicles or import their own backup. Do not import the developer's recovery garage as your own. GitHub checks do not automatically change phone records, and importing JSON never updates the installed APK."
+        }
+      ]
+    },
+    {
+      "title": "Use the desktop app",
+      "intro": "The desktop companion runs from the complete Python project on Windows. It is not the Android APK and is not a packaged Windows installer in this release. Use the interface-refresh project version when comparing it with this guide.",
+      "sections": [
+        {
+          "heading": "Start the desktop companion",
+          "text": "For an existing configured PC, open the Vehicle-Management-clean folder and run app.py in VS Code, or run python app.py from a terminal in that folder. Keep its supporting Python files with it. If Python or dependencies are not set up, ask Philip for the prepared desktop test copy; a new tester should not treat the repository's development vehicle files as their personal garage. Use a separate empty test-data copy before entering real records."
+        },
+        {
+          "heading": "Use the pictured dashboard",
+          "steps": [
+            "Dashboard in the charcoal sidebar opens the garage. Wide windows show two vehicle cards per row; smaller windows stack them. Scroll the garage when needed.",
+            "Select a card to open the vehicle's detailed overview. The selected vehicle's name and mileage identify the target for actions. Dashboard quick actions include Update Mileage, Log Service, Record Fuel and View details.",
+            "Use Manage vehicles to show or hide the search, sort and vehicle-management panel. Search filters the displayed list. Use Add Vehicle, Edit Vehicle or Remove Vehicle for the selected record. Removing a vehicle removes its garage entry and histories, so keep a backup first.",
+            "Use Edit Vehicle to choose the vehicle photo and review VIN/specification details. A VIN lookup sends the VIN to NHTSA; review results before saving. Missing details such as color can require manual entry. A local photo path works on that PC; Export for Mobile embeds a usable image for a phone."
+          ]
+        },
+        {
+          "heading": "Navigate the desktop screens",
+          "table": [
+            [
+              "Sidebar destination",
+              "Desktop task"
+            ],
+            [
+              "Maintenance",
+              "Service records, maintenance information and manual checks"
+            ],
+            [
+              "Fuel Economy",
+              "Record, review, edit or delete fuel entries"
+            ],
+            [
+              "Expenses",
+              "Review phone other expenses, add/delete entries and attach local PDFs"
+            ],
+            [
+              "Car History",
+              "Manual reported events and annual review information"
+            ],
+            [
+              "Graphs",
+              "Recorded spending and fuel trends in a scrolling container"
+            ],
+            [
+              "Data & backup",
+              "Excel export, Export for Mobile and vehicle-management access"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Transfer between PC and phone and test safely",
+      "intro": "Pick the device with the newest complete records before transferring data. Avoid editing the same garage independently on two devices until you have a deliberate transfer plan. This release does not reconcile conflicting changes.",
+      "sections": [
+        {
+          "heading": "From desktop to phone",
+          "steps": [
+            "On the phone, export its current Full mobile backup and save its PDFs separately. On the PC, keep a copy of the desktop data before making changes.",
+            "In desktop Data & backup, choose Export for Mobile and save to a new filename. It embeds vehicle photos; do not overwrite the desktop vehicles.json or vehicles_backup.json with this full-backup wrapper.",
+            "Transfer the exported JSON to the phone, use Import JSON file and review the replacement. Check photos, odometers and recent records afterward. Transfer PDF files separately."
+          ]
+        },
+        {
+          "heading": "From phone to desktop",
+          "steps": [
+            "On the phone, save Full mobile backup as your archive, then choose Export vehicles.json for the desktop vehicle-list file. Save the actual PDFs separately.",
+            "Close the desktop app. Back up its existing vehicles.json, vehicles_backup.json and relevant document/photo files. Confirm the phone export is the newest complete garage before replacing anything.",
+            "With Philip's help if needed, put the phone's exported vehicle-list file in the desktop project as vehicles.json. The desktop loader expects a JSON list, not the Full mobile backup wrapper. The desktop currently has no general Import JSON button. Reopen app.py and verify the records. Do not overwrite a newer PC garage with an older phone export."
+          ]
+        },
+        {
+          "heading": "Know what is shared",
+          "text": "The desktop model preserves newer phone expense data, resale snapshots, mileage logs, embedded vehicle photos and future vehicle metadata during saves. Preserving a field does not mean every phone feature has its own desktop editor. A phone PDF reference does not give the PC access to the PDF file; copy it separately and use Attach local PDF for the matching expense."
+        },
+        {
+          "heading": "Keep app updates separate from data transfers",
+          "text": "Installing an APK changes phone code, while importing JSON changes the saved garage. Updating app.py changes desktop code, while replacing vehicles.json changes desktop records. Neither action should be mistaken for automatic synchronization. Keep the original installation and an exported backup until you have checked the new copy. A single newest complete garage is easier to move safely than two independently edited copies."
+        }
+      ]
+    },
+    {
+      "title": "Troubleshooting and a first test session",
+      "intro": "If something looks wrong, keep the original records, receipts and PDFs. Note the exact screen and error before changing data. Report what you observed; a screenshot and a repeatable example are more useful than guessing the cause.",
+      "sections": [
+        {
+          "heading": "Quick troubleshooting",
+          "bullets": [
+            "No dashboard: open Home on the phone or Dashboard on PC. On Android, confirm the launcher is MileSage Interface Test and the header says 1.4.10 Interface test.",
+            "No vehicles or photos: the new installation may be empty. Add your own vehicle or import your own full backup; a PC photo file path alone cannot load on a phone.",
+            "PDF will not open after a restore: transfer the actual PDF, then reattach it to the existing record. A JSON reference cannot recreate the document.",
+            "OCR is incomplete or graphs are empty: review and enter confirmed values manually; full-tank graphs need valid intervals. Keep the source receipt and report the exact symptom.",
+            "An install reports a signature conflict: keep the existing app and report which APK and launcher you used. Do not uninstall a working copy merely to force an installation."
+          ]
+        },
+        {
+          "heading": "A useful first test session",
+          "text": "Add a clearly named test vehicle; select its photo; try an odometer correction; save one service record, two full-tank fuel readings with a partial fill between them, and one other expense with a sample receipt. Review the graphs and History screen. Export a full backup, preserve any PDF separately, and verify a restore in a separate test copy. Send feedback with the exact steps and header version. Use disposable examples first and keep real records backed up."
+        },
+        {
+          "heading": "Correct saved-record mistakes carefully",
+          "text": "The phone odometer controls correct the current reading without rewriting historical records. General phone edit/delete controls for fuel, service and other-expense histories are not included in this build. Avoid saving duplicate corrective transactions because they can distort spending and MPG. The desktop provides fuel and service edit/delete controls, and the Expenses screen can delete an other-expense entry. Back up first and ask Philip for help with the intended correction; moving data between devices still requires a reviewed manual transfer."
+        },
+        {
+          "heading": "Report a document or scanning problem",
+          "text": "Say whether you used a camera scan, Choose photo or Load existing PDF file. Include the page count, whether the preview opened, whether autofill suggested values, and whether the saved history entry appeared. Report the visible error message and whether a manual entry worked. Do not send a private invoice, VIN or full backup unless you intend to share those details."
+        },
+        {
+          "heading": "Tutorial planned for later builds",
+          "text": "A guided phone and desktop tutorial has been recorded for future builds, including a first-run walkthrough and a way to replay it from Help. It is planned work, not a feature of this installer. Use this written guide while testing the current version."
+        }
+      ]
+    }
+  ]
+}

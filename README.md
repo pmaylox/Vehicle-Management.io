@@ -1,6 +1,20 @@
-# Vehick-Management.io
+# MileSage
 
-## Current project version
+## Current interface test build
+
+MileSage **Alpha 1.4.10 Interface Test** provides the pictured desktop garage, matching phone colors/navigation, separate Car History, desktop Expenses and the current Android receipt/PDF workflows. The Android test app installs separately as **MileSage Interface Test**. Keep earlier installations and back up their data before transfer. PC and phone data do not automatically synchronize.
+
+- [Phone and desktop user guide PDF](docs/MileSage_1_4_10_Phone_and_Desktop_User_Guide.pdf) - detailed installation, daily workflows, backups, transfer and troubleshooting.
+- [Phone and desktop guide HTML](docs/MileSage_1_4_10_Phone_and_Desktop_User_Guide.html) - the same guide in a scrolling format.
+- [Verified Android build](https://github.com/pmaylox/Vehicle-Management.io/actions/runs/45720465926) - source 6795a93, with saved interface-test signing key.
+- [Interface build notes](INTERFACE_REFRESH_1_4_10.md) - validation and current limitations.
+- [Roadmap](ROADMAP.md) - planned tutorial for future Android and desktop builds.
+
+New testers should add their own vehicles or import their own backup. Development GitHub vehicle/recovery files are not a personal cloud account for each tester. Full mobile JSON backup does not contain actual PDF files; export PDFs separately.
+
+The sections below are historical implementation notes. Earlier statements that no APK exists describe those older versions, not the current test build.
+
+## Historical alpha version notes
 
 **MileSage Alpha 1.3.2** — mobile HTML preview adds VIN lookup through NHTSA vPIC with an explicit review-before-save screen. Prior vehicle overview, fuel analytics, receipt-photo features and safe restores remain. Desktop and Android manual testing remain pending. No APK has been built or deployed.
 
