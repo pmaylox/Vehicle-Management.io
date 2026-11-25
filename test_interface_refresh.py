@@ -71,3 +71,18 @@ class InterfaceRefreshTests(unittest.TestCase):
             self.assertEqual(vehicle.mileage, 5000)
         finally:
             root.destroy()
+
+    def test_manage_actions_fit_small_desktop(self):
+        def scenario(root, vehicles, save):
+            root.deiconify()
+            root.geometry("800x500")
+            root.update()
+            button(root, "Manage vehicles").invoke()
+            root.update()
+            for label in ("Add Vehicle", "Edit Vehicle", "Remove Vehicle"):
+                action = button(root, label)
+                self.assertTrue(action.winfo_ismapped(), label)
+                self.assertGreaterEqual(action.winfo_rooty(), root.winfo_rooty(), label)
+                self.assertLessEqual(action.winfo_rooty() + action.winfo_height(), root.winfo_rooty() + root.winfo_height(), label)
+            save.assert_not_called()
+        VehicleSearchTests.run_app(self, scenario)

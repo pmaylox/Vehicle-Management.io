@@ -19,3 +19,5 @@ Desktop Data & backup > Export for Mobile embeds vehicle photos. Transfer the ex
 ## Validation
 
 Isolated desktop tests cover responsive cards, selection, quick-action visibility, embedded phone photos, mobile-field round trips and expense save rollback. Browser checks exercise 360px/390px phones and 1024px tablet layouts, all destinations, Car History persistence, unchanged odometer and desktop export fields. Existing receipt, native-bridge, parser, backup, photo and VIN regression suites remain required. Actual camera/scanner/OCR behavior still requires phone testing; browser tests simulate native callbacks.
+
+Local validation on November 25: 46 Python tests passed before the additional 800x500 Manage Vehicles check; that added check also passed. Twenty existing mobile Node regression suites passed. Real Chrome checks passed for both standalone entrypoints and the new 360px/390px/1024px interface scenarios. GitHub Actions additionally builds and validates the actual packaged Android HTML.
