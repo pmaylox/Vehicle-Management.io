@@ -126,3 +126,7 @@ assert.ok(html.includes("showReceiptPreview('fuel',file)"), 'fuel must preview t
 assert.ok(html.includes('Photo attached, but autofill failed:'), 'fuel must report gallery OCR failure without hiding the photo');
 assert.ok(html.includes('Photo can still be attached; enter fuel values manually.'), 'native scanner must allow manual entry after OCR failure');
 console.log('Fuel receipt OCR parsing tests passed');
+
+
+assert.equal(sandbox.parseFuelReceiptText('ALLSUPS #t 102483\nWELCOME TO\nRU CR #06\nDescription\nUSD$53.34\nSELF @ 3.319/ G','2026-11-24').total,'53.34');
+assert.equal(sandbox.parseFuelReceiptText('USD$53.34\nUSD$10.00','2026-11-24').total,null);
