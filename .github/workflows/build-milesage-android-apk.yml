@@ -16,7 +16,6 @@ on:
       - feature/fuel-scanner-rebuild-alpha140-20261118
       - feature/milesage-all-updates-apk-20261117
       - codex/mobile-repair-audit
-      - codex/interface-refresh
     paths:
       - "android/**"
       - "mobile/**"
@@ -140,7 +139,8 @@ jobs:
       - name: Check APK signature and distinct test package ID
         run: |
           APK=release/MileSage_Alpha_1_4_10_Interface_Test.apk
-          "${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools/35.0.0/apksigner" verify --verbose "$APK"
+          "${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools/35.0.0/apksigner" verify --verbose --print-certs "$APK" | tee release/SIGNING_CERTIFICATE.txt
+          grep -F "certificate SHA-256 digest: d6ae82179d2b2e382686f1f73380e49add074b8c1ce06ecf5ec410f6c92c4932" release/SIGNING_CERTIFICATE.txt
           PACKAGE="$("${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools/35.0.0/aapt" dump badging "$APK" | grep '^package:')"
           echo "$PACKAGE"
           echo "$PACKAGE" | grep -F "name='io.reddirtcode.milesage.alpha1410fueltest'"
