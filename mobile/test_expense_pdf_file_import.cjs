@@ -45,5 +45,5 @@ assert.ok(java.includes('2000f / Math.max(1, page.getWidth())'),'Limit bitmap me
 assert.ok(java.includes('bitmap.recycle()'),'Do not accumulate full-page images');
 
 const gradle=fs.readFileSync('android/app/build.gradle','utf8');
-assert.ok(gradle.includes("applicationId 'io.reddirtcode.milesage.alpha149brandedtest'"),'Independent test install');
+assert.ok(gradle.includes("applicationId 'io.reddirtcode.milesage.alpha1410fueltest'"),'Independent test install');
 console.log('PASS: separate PDF file picker, verified safe file copy, reattachment and restored history safeguards.');
