@@ -654,6 +654,9 @@ function parseFuelReceiptTextCore(raw,today){
    if(amount!==null){result.total=amount;return result;}
   }
  }
+ // Standalone USD payment line, when unambiguous.
+ const usd=[...new Set(lines.map(line=>line.match(/^USD\s*\$\s*(\d+(?:,\d{3})*\.\d{2})$/i)).filter(Boolean).map(m=>Number(m[1].replace(/,/g,''))).filter(n=>n>0&&n<=100000))];
+ if(usd.length===1)result.total=usd[0].toFixed(2);
  return result;
 }
 
