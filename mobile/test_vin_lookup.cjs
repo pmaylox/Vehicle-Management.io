@@ -37,6 +37,7 @@ for(const html of contents){
  assert.throws(()=>context.parseVINDecode({Results:[{ErrorCode:'0',ModelYear:'',Make:'TOYOTA',Model:'Tacoma'}]}),/complete/);
  assert.throws(()=>context.parseVINDecode({Results:[]}),/no vehicle/);
  const normalizeFn=script.slice(script.indexOf('function normalize(data)'),script.indexOf('function save()'));
+ vm.runInContext(fs.readFileSync('mobile/car_history_feature.js','utf8'),context);
  vm.runInContext(normalizeFn,context);
  const old={name:'Toyota Tacoma — Tester',year:2026,mileage:5000,service_history:[{date:'2026-11-14',mileage:5000,description:'Test'}]};
  const actual={name:'Toyota Tacoma',vin:'1HGCM82633A004352',year:2026,mileage:6000};

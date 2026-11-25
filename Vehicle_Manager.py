@@ -1,4 +1,6 @@
 from vin_lookup import clean_profile
+from copy import deepcopy
+from car_history import empty_car_history, clean_car_history
 from battery import battery_details, battery_summary, service_suggestions, battery_years_to_months
 from cmath import cos
 from datetime import date, datetime
@@ -22,6 +24,12 @@ class Vehicle:
         self.starting_tire_pressures = self.tire_pressures.copy()
         self.tire_pressure_history = []
         self.profile = {}
+        self.car_history = empty_car_history()
+        self.mobile_expenses = []
+        self.resale_history = []
+        self.mobile_mileage_log = []
+        self.mobile_photo = ""
+        self._extra_fields = {}
         self.photo_path =  ""
         self.name = name
         self.vin = None  # Optional VIN from NHTSA mobile lookup; older records need no VIN.
@@ -811,10 +819,16 @@ class Vehicle:
             
     def to_dict(self):
         return {
+            **deepcopy(self._extra_fields),
             "name": self.name,
+            "car_history": deepcopy(self.car_history),
+            "mobile_expenses": deepcopy(self.mobile_expenses),
+            "resale_history": deepcopy(self.resale_history),
+            "mobile_mileage_log": deepcopy(self.mobile_mileage_log),
+            "mobile_photo": self.mobile_photo,
             "profile": self.profile.copy(),
             "photo_path": self.photo_path,
-            "vin": self.vin,
+            "vin": self.vin or self.profile.get("vin"),
             "year": self.year,
             "mileage": self.mileage,
             "starting_mileage": self.starting_mileage,
@@ -842,6 +856,17 @@ class Vehicle:
         )
 
         vehicle.profile = clean_profile(data.get("profile", {}))
+        vehicle.car_history = clean_car_history(data.get("car_history"))
+        for name in ("mobile_expenses", "resale_history", "mobile_mileage_log"):
+            value = data.get(name, [])
+            if not isinstance(value, list) or any(not isinstance(item, dict) for item in value):
+                raise ValueError(f"Invalid {name} for {vehicle.name}")
+            setattr(vehicle, name, deepcopy(value))
+        vehicle.mobile_photo = data.get("mobile_photo", "")
+        if not isinstance(vehicle.mobile_photo, str):
+            raise ValueError(f"Invalid vehicle photo for {vehicle.name}")
+        known = vehicle.to_dict()
+        vehicle._extra_fields = {key: deepcopy(value) for key, value in data.items() if key not in known}
         vehicle.photo_path =  data.get("photo_path", "")
         vehicle.vin = data.get("vin") or None
         vehicle.mileage = data["mileage"]

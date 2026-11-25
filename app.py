@@ -1,4 +1,6 @@
-from vehicle_card import VehicleCard
+from dashboard_panel import DashboardPanel
+from car_history_ui import CarHistoryPanel
+from expenses_panel import ExpensesPanel
 from mobile_export import build_mobile_backup
 from vehicle_profile_ui import VehicleProfileFields
 from vin_lookup import profile_summary
@@ -47,7 +49,7 @@ def main():
         font=("Segoe UI", 10),
         padding=(10, 7),
         background="#F1DDD2",
-        forground="#292724",
+        foreground="#292724",
         borderwidth=0
     )
     style.map(
@@ -145,6 +147,8 @@ def main():
     container = ttk.Frame(window, padding=12)
     container.pack(side="left", fill="both", expand=True)
 
+    management_visible = False
+
     # Reserve space for the vehicle controls even when charts request more width.
     sidebar_width = preferences.get("sidebar_width", 300)
     if type(sidebar_width) is not int:
@@ -178,6 +182,8 @@ def main():
     search_entry = ttk.Entry(search_row, textvariable=search_var)
     search_entry.pack(side="left", fill="x", expand=True)
     def focus_search(event=None):
+        if not management_visible:
+            toggle_management()
         search_entry.focus_set()
         search_entry.selection_range(0, tk.END)
         return "break"
@@ -261,7 +267,9 @@ def main():
         show_vehicle()
 
     # ===== TABS =====
-    notebook = ttk.Notebook(details_panel)
+    notebook = ttk.Notebook(details_panel, style="MileSage.TNotebook")
+    style.configure("MileSage.TNotebook", background=colors["background"], borderwidth=0)
+    style.layout("MileSage.TNotebook.Tab", [])
     notebook.pack(fill="both", expand=True)
 
     dashboard_tab = ttk.Frame(notebook,padding=15)
@@ -275,11 +283,32 @@ def main():
     notebook.add(fuel_tab, text="Fuel History")
     graphs_tab = ttk.Frame(notebook, padding=15)
     notebook.add(graphs_tab, text="Graphs")
+    expenses_tab = ttk.Frame(notebook, padding=12)
+    history_tab = ttk.Frame(notebook, padding=12)
+    backup_tab = ttk.Frame(notebook, padding=12)
+    notebook.add(expenses_tab, text="Expenses")
+    notebook.add(history_tab, text="Car History")
+    notebook.add(backup_tab, text="Data & backup")
+
+    def toggle_management():
+        nonlocal management_visible
+        management_visible = not management_visible
+        if management_visible:
+            panels.paneconfigure(details_panel, minsize=200)
+            panels.add(list_panel, before=details_panel, minsize=280, width=sidebar_width, stretch="never")
+            search_entry.focus_set()
+        else:
+            panels.forget(list_panel)
+            panels.paneconfigure(details_panel, minsize=400)
+
+    panels.forget(list_panel)
         # ===== NAVIGATION BUTTONS =====
     navigation_buttons = {}
 
     def update_navigation(event=None):
         selected_tab = notebook.select()
+        if selected_tab == str(overview_tab):
+            selected_tab = str(dashboard_tab)
 
         for tab, button in navigation_buttons.items():
             active = str(tab) == selected_tab
@@ -291,7 +320,10 @@ def main():
         ("Dashboard", dashboard_tab),
         ("Maintenance", service_tab),
         ("Fuel Economy", fuel_tab),
+        ("Expenses", expenses_tab),
+        ("Car History", history_tab),
         ("Graphs", graphs_tab),
+        ("Data & backup", backup_tab),
     ):
         button = tk.Button(
             navigation,
@@ -396,18 +428,51 @@ def main():
 
     cost_chart = DashboardChart(
         graphs_content,
-        "Fuel cost per mile ($) — full-tank intervals",
+        "Fuel cost per mile ($) â€” full-tank intervals",
         kind="line",
         decimals=3
     )
     cost_chart.pack(fill="x", pady=(12, 0))
 
+    overview_actions = ttk.Frame(overview_tab)
+    overview_actions.pack(side="bottom", fill="x", pady=(8, 0))
+    overview_actions.columnconfigure((0, 1), weight=1)
     overview = OverviewPanel(overview_tab, colors)
     overview.pack(fill="both", expand=True)
 
     vehicle_heading = overview.heading
     mileage_heading = overview.mileage
     details_text = overview.details
+
+    # ===== PICTURED VEHICLE DASHBOARD =====
+    def select_dashboard_vehicle(vehicle):
+        refresh_vehicle_list(preferred=vehicle)
+        notebook.select(overview_tab)
+
+    dashboard = DashboardPanel(
+        dashboard_tab,
+        on_select=select_dashboard_vehicle,
+        on_manage=toggle_management,
+        actions=[
+            ("Update Mileage", lambda: update_mileage()),
+            ("Log Service", lambda: record_service()),
+            ("Record Fuel", lambda: record_fuel()),
+            ("View details", lambda: notebook.select(overview_tab)),
+        ]
+    )
+    dashboard.pack(fill="both", expand=True)
+
+    def refresh_dashboard():
+        selection = vehicle_list.curselection()
+        selected = visible_vehicles[selection[0]] if selection else None
+        dashboard.set_vehicles(visible_vehicles, selected)
+
+    def save_history():
+        save_vehicles(vehicles)
+        show_vehicle()
+
+    history_panel = CarHistoryPanel(history_tab, save_history)
+    expenses_panel = ExpensesPanel(expenses_tab, save_history)
 
     # ===== SHARED TABLE BUILDER =====
     def make_table(parent, columns):
@@ -491,14 +556,17 @@ def main():
         # ===== REFRESH SELECTED VEHICLE =====
     def show_vehicle(event=None):
         selection = vehicle_list.curselection()
+        refresh_dashboard()
 
         if not selection:
+            history_panel.show(None)
+            expenses_panel.show(None)
             overview.set_photo("")
             vehicle_heading.set("No vehicle selected")
             mileage_heading.set("")
             overview.specifications.set("No vehicle selected")
-            overview.oil.set("Oil change: —")
-            overview.tires.set("Tire rotation: —")
+            overview.oil.set("Oil change: â€”")
+            overview.tires.set("Tire rotation: â€”")
             overview.battery.set("No vehicle selected")
             overview.pressures.set("No vehicle selected")
             overview.service.set("No vehicle selected")
@@ -524,10 +592,12 @@ def main():
             return
 
         vehicle = visible_vehicles[selection[0]]
-        overview.set_photo(vehicle.photo_path)
+        history_panel.show(vehicle)
+        expenses_panel.show(vehicle)
+        overview.set_photo(vehicle.photo_path, vehicle.mobile_photo)
         vehicle_heading.set(f"{vehicle.year} {vehicle.name}")
         mileage_heading.set(
-            f"Odometer · {format_mileage(vehicle.mileage)}"
+            f"Odometer Â· {format_mileage(vehicle.mileage)}"
         )
         overview.specifications.set(profile_summary(vehicle))
         # ===== SPENDING DATA =====
@@ -561,9 +631,9 @@ def main():
         spending_chart.set_data(spending_points)
         cost_chart.set_data(cost_per_mile_points(vehicle.fuel_history)[-6:])
         graph_status.set(
-            f"{vehicle.year} {vehicle.name} • "
-            f"{spending_kind.get()} spending • "
-            f"Latest 6 recorded months • "
+            f"{vehicle.year} {vehicle.name} â€¢ "
+            f"{spending_kind.get()} spending â€¢ "
+            f"Latest 6 recorded months â€¢ "
             f"{missing_costs} records with unknown cost excluded"
         )
 
@@ -820,10 +890,10 @@ def main():
         )
 
     ttk.Button(
-        overview_tab,
+        overview_actions,
         text="Update Mileage",
         command=update_mileage
-    ).pack(anchor="w", pady=(12, 0))
+    ).grid(row=0, column=0, sticky="ew", padx=4, pady=4)
 
 
     def update_tire_pressure():
@@ -833,7 +903,7 @@ def main():
             return
         vehicle = visible_vehicles[selection[0]]
         dialog = tk.Toplevel(window)
-        dialog.title("Tire Pressure — Starting PSI and Air Added")
+        dialog.title("Tire Pressure â€” Starting PSI and Air Added")
         dialog.resizable(False, False)
         dialog.transient(window)
         form = ttk.Frame(dialog, padding=20)
@@ -916,10 +986,10 @@ def main():
         ttk.Button(buttons, text="Save Pressures", command=save_pressures).pack(side="left")
 
     ttk.Button(
-        overview_tab,
+        overview_actions,
         text="Update Tire Pressure",
         command=update_tire_pressure
-    ).pack(anchor="w", pady=(8, 0))
+    ).grid(row=0, column=1, sticky="ew", padx=4, pady=4)
 
     # ===== ADD VEHICLE =====
        
@@ -1543,7 +1613,7 @@ def main():
                 f"Mileage: {service_mileage:,}\n"
                 f"Service: {description}\n"
                 f"Cost ($): {cost_text}\n"
-                + (f"Battery installed: {battery['installed']} — {battery_term_text(battery['months'])} ({battery['term']})\n" if battery else "")
+                + (f"Battery installed: {battery['installed']} â€” {battery_term_text(battery['months'])} ({battery['term']})\n" if battery else "")
                 + f"\nReset oil: {'Yes' if oil_var.get() else 'No'}\n"
                 f"Reset tires: {'Yes' if tire_var.get() else 'No'}\n\n"
                 "Save this service?",
@@ -1770,7 +1840,7 @@ def main():
                 "Confirm service changes",
                 f"Service: {description}\n"
                 f"Cost ($): {cost_text}\n"
-                + (f"Battery installed: {battery['installed']} — {battery_term_text(battery['months'])} ({battery['term']})\n" if battery else "")
+                + (f"Battery installed: {battery['installed']} â€” {battery_term_text(battery['months'])} ({battery['term']})\n" if battery else "")
                 + "\nSave these changes?",
                 parent=dialog
             )
@@ -2527,8 +2597,12 @@ def main():
             parent=window
         )
 
+    ttk.Label(backup_tab, text="Data & backup", font=("Segoe UI", 22, "bold")).pack(anchor="w", pady=12)
+    ttk.Label(backup_tab, text="Export for Mobile includes your vehicle photos. Back up the phone before importing; imports do not merge newer phone entries. PDF attachments must be copied separately.", wraplength=480).pack(anchor="w", pady=10)
+    ttk.Button(backup_tab, text="Manage vehicles", command=toggle_management).pack(anchor="w", pady=8)
+
     ttk.Button(
-        overview_tab,
+        backup_tab,
         text="Export to Excel",
         command=export_selected_vehicle
     ).pack(anchor="w", pady=(8, 0))
@@ -2592,10 +2666,11 @@ def main():
         )
 
     ttk.Button(
-        overview_tab,
+        backup_tab,
         text="Export for Mobile",
         command=export_for_mobile
     ).pack(anchor="w", pady=(8, 0))
+
 
     # ===== STARTUP SELECTION =====
     vehicle_list.bind("<<ListboxSelect>>", show_vehicle)
@@ -2608,7 +2683,7 @@ def main():
 
     ttk.Label(
         container,
-        text="Vehicle Manager — mileage updates save automatically",
+        text="Vehicle Manager â€” mileage updates save automatically",
         foreground="#666666"
     ).pack(anchor="w", pady=(12, 0))
 
@@ -2618,7 +2693,7 @@ def main():
             "reverse": reverse_var.get(),
             "width": window.winfo_width(),
             "height": window.winfo_height(),
-            "sidebar_width": list_panel.winfo_width()
+            "sidebar_width": list_panel.winfo_width() if management_visible else sidebar_width
         }
         try:
             preferences_file.write_text(

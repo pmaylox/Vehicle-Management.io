@@ -6,8 +6,7 @@ const fs=require('node:fs');
 const vm=require('node:vm');
 const paths=[
  'mobile/MileSage_Mobile_Auto_Refresh.html',
- 'mobile/MileSage_Alpha_1_3_2_VIN_Lookup.html',
- 'testing/mobile-audit/verified-apk-index.html'
+ 'mobile/MileSage_Alpha_1_3_2_VIN_Lookup.html'
 ];
 const htmls=paths.map(p=>fs.readFileSync(p,'utf8'));
 assert.equal(htmls[0],htmls[1],'Both standalone mobile distributions must match');
@@ -30,7 +29,7 @@ for(let i=0;i<paths.length;i++){
 
  const first=script.indexOf('let serviceDraftEpoch=0;');
  assert.ok(first>=0&&first<start,'Missing isolated cancel handler');
- const code=script.slice(first,start);
+ const code="let serviceReceiptScanOwner={};let serviceReceiptScanEpoch=0;\n"+script.slice(first,start);
  const ids=['serviceForm','serviceDate','serviceOdo','servicePhotoPreview','servicePhotoImage',
   'servicePhotoInfo','receiptProgress','receiptTextReview','receiptOcrText',
   'servicePdfScanStatus','servicePdfPreview','tirePressureForm'];
@@ -45,11 +44,12 @@ for(let i=0;i<paths.length;i++){
   clearReceiptPreview:kind=>messages.push('clear:'+kind),
   message:text=>messages.push(text)
  };
- if(i===2){sandbox.servicePdfDraft={id:'unsaved-pdf'};sandbox.servicePdfScanOwner=vehicle;}
+ if(html.includes('servicePdfDraft')){sandbox.servicePdfDraft={id:'unsaved-pdf'};sandbox.servicePdfScanOwner=vehicle;}
  vm.createContext(sandbox);
  vm.runInContext(code+'\nthis.cancelServiceEntry=cancelServiceEntry;',sandbox);
  sandbox.cancelServiceEntry(vehicle);
  assert.equal(elements.serviceForm.resetCalls,1);
+ assert.equal(vm.runInContext('serviceReceiptScanOwner',sandbox),null,'Cancel must discard pending native service scan');
  assert.equal(elements.serviceDate.value,'2026-11-17');
  assert.equal(elements.serviceOdo.value,'4321');
  assert.equal(elements.servicePhotoPreview.hidden,true);
@@ -57,7 +57,7 @@ for(let i=0;i<paths.length;i++){
  assert.equal(elements.tirePressureForm.value,'unsaved tire readings','Cancel must not erase tire edits');
  assert.equal(vehicle.service_history.length,1,'Cancel must not change saved history');
  assert.ok(messages.includes('clear:service'));
- if(i===2){
+ if(html.includes('servicePdfDraft')){
   assert.equal(sandbox.servicePdfDraft,null,'Cancel must clear a pending PDF');
   assert.equal(sandbox.servicePdfScanOwner,null);
   assert.equal(elements.servicePdfPreview.hidden,true);

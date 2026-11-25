@@ -42,9 +42,78 @@ assert.equal(third.gallons,null,'price per gallon should not become volume');
 assert.equal(third.total,null,'subtotal should not become final total');
 
 const fourth=parse('Fuel Volume: 9.45 US GAL\nGrand Total: $28.35\nDate 2026-11-13');
-assert.equal(fourth.gallons,'9.45');
+assert.equal(fourth.gallons,'9.450');
 assert.equal(fourth.total,'28.35');
 assert.equal(fourth.date,'2026-11-13');
+
+
+const actualPump=sandbox.parseFuelReceiptText([
+ 'ALLSUPS #20483',
+ 'DATE 11/16/26 4:47',
+ 'PUMP 02',
+ 'PRODUCT RU',
+ 'GALLONS 10.882',
+ 'PRICE/G 3.599',
+ 'FUEL SALE $39.16',
+ 'CREDIT $39.16',
+].join('\n'),'2026-11-16');
+assert.equal(actualPump.gallons,'10.882','Allsup fuel receipt quantity must autofill');
+assert.equal(actualPump.total,'39.16','Fuel sale, not pump price, must become total');
+assert.equal(actualPump.date,'2026-11-16');
+
+const wrapped=sandbox.parseFuelReceiptText([
+ 'GALLONS','10.882','PRICE/GALLON','3.599','FUEL SALE','$39.16'
+].join('\n'),'2026-11-16');
+assert.equal(wrapped.gallons,'10.882','OCR line-wrapped gallons must autofill');
+assert.equal(wrapped.total,'39.16','OCR line-wrapped fuel sale must autofill');
+
+const damaged=sandbox.parseFuelReceiptText([
+ 'GALL0NS: 10,882', 'FUEL 5ALE 39.16'
+].join('\n'),'2026-11-16');
+assert.equal(damaged.gallons,'10.882','Common OCR zero/comma substitutions must be recognized');
+assert.equal(damaged.total,'39.16','Common OCR 5/sale substitution must be recognized');
+
+const unitPriceOnly=sandbox.parseFuelReceiptText('PRICE/GALLON 3.599\nSUBTOTAL 39.16\nTAX 0.00','2026-11-16');
+assert.equal(unitPriceOnly.gallons,null,'Never infer volume from price-per-gallon');
+assert.equal(unitPriceOnly.total,null,'Never infer total from subtotal or tax');
+
+
+const unlabeledNumericOCR=sandbox.parseFuelReceiptText([
+ 'USD$39.16',
+ '************3178',
+ 'Entry: contactless 1',
+ '10.882',
+ '$3.599',
+ '$39.16',
+ '$39.16',
+ '***'
+].join('\n'),'2026-11-16');
+assert.equal(unlabeledNumericOCR.gallons,'10.882','Unlabeled OCR quantity must autofill when pump math agrees');
+assert.equal(unlabeledNumericOCR.total,'39.16','Unlabeled OCR total must autofill when pump math agrees');
+assert.equal(unlabeledNumericOCR.mileage,null,'OCR must not invent a vehicle odometer');
+
+const rowShiftOCR=sandbox.parseFuelReceiptText(
+ 'PRODUCT: UNL 10.882\nGALLONS: $3.599\nFUEL SALE $39.16','2026-11-16');
+assert.equal(rowShiftOCR.gallons,'10.882','Unit price misread on gallons row must not replace volume');
+assert.equal(rowShiftOCR.total,'39.16');
+
+const badMathOCR=sandbox.parseFuelReceiptText('10.882\n$3.599\n$40.16','2026-11-16');
+assert.equal(badMathOCR.gallons,null,'Unverifiable pump math requires manual review');
+assert.equal(badMathOCR.total,null,'Unverifiable amount requires manual review');
+
+const ambiguousOCR=sandbox.parseFuelReceiptText(
+ '10.882\n$3.599\n$39.16\n12.345\n$3.159\n$39.00','2026-11-16');
+assert.equal(ambiguousOCR.gallons,null,'Multiple candidate pump sales require manual review');
+assert.equal(ambiguousOCR.total,null,'Multiple candidate totals require manual review');
+
+assert.equal(sandbox.parseGallonsInput('12.5'),'12.500');
+assert.equal(sandbox.parseGallonsInput('10.882'),'10.882');
+assert.equal(sandbox.parseGallonsInput('9'),'9.000');
+assert.throws(()=>sandbox.parseGallonsInput('10.8825'),/3 decimal places/);
+assert.throws(()=>sandbox.parseGallonsInput('0'),/valid US gallon amount/);
+assert.ok(html.includes('step="0.001" placeholder="12.500"'));
+assert.ok(html.includes("const gal=parseGallonsInput($('fuelGallons').value)"));
+assert.ok(html.includes("mileage:od,gallons:gal,cost_cents:cost"));
 
 assert.ok(html.includes('capture="environment"'));
 assert.ok(html.includes('wireFuelReceiptPhoto(a)'));
@@ -54,12 +123,10 @@ assert.ok(html.includes("storeReceipt(a,'fuel'"), 'fuel record and receipt are p
 assert.ok(html.includes("$('fullTank').checked=false"), 'OCR may not claim a full tank');
 assert.ok(html.includes('id="fuelPhotoPreview"'), 'fuel photo must show a temporary preview');
 assert.ok(html.includes("showReceiptPreview('fuel',file)"), 'fuel must preview the received photo before OCR starts');
-assert.ok(html.includes('Photo preview is shown, but fuel receipt scanning failed:'), 'fuel must report OCR failures without hiding the photo');
+assert.ok(html.includes('Photo attached, but autofill failed:'), 'fuel must report gallery OCR failure without hiding the photo');
+assert.ok(html.includes('Photo can still be attached; enter fuel values manually.'), 'native scanner must allow manual entry after OCR failure');
 console.log('Fuel receipt OCR parsing tests passed');
 
 
-const allsups=parse('ALLSUPS #t 102483\nWELCOME TO\nRU CR #06\nDescription\nUSD$53.34\nSELF @ 3.319/ G');
-assert.equal(allsups.total,'53.34');
-assert.equal(parse('TOTAL $39.00\nUSD$40.00').total,'39.00');
-assert.equal(parse('USD$53.34\nUSD$10.00').total,null);
-assert.equal(parse('CREDIT $53.34').total,'53.34');
+assert.equal(sandbox.parseFuelReceiptText('ALLSUPS #t 102483\nWELCOME TO\nRU CR #06\nDescription\nUSD$53.34\nSELF @ 3.319/ G','2026-11-24').total,'53.34');
+assert.equal(sandbox.parseFuelReceiptText('USD$53.34\nUSD$10.00','2026-11-24').total,null);

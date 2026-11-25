@@ -6,6 +6,7 @@ const text = fs.readFileSync('mobile/MileSage_Mobile_Auto_Refresh.html', 'utf8')
 const code = text.split('/* RESTORE_GUARDS_BEGIN */')[1]?.split('/* RESTORE_GUARDS_END */')[0];
 assert.ok(code, 'guard code must be present');
 const context = {JSON, Number, String, Object, Array};
+vm.runInNewContext(fs.readFileSync('mobile/car_history_feature.js','utf8'), context);
 vm.runInNewContext(code, context);
 
 const empty = [{name:'Toyota Tacoma', year:2026, mileage:0,

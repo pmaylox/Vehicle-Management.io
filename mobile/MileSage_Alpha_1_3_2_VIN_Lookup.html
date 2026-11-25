@@ -3,18 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#142a40">
+<meta name="theme-color" content="#292724">
 <title>MileSage • Mobile Vehicle Manager · GitHub Auto Refresh</title>
 <style>
-:root{color-scheme:light;--navy:#142a40;--navy2:#233d56;--clay:#9e3b1b;--cream:#f5f6f7;--ink:#202a33;--muted:#5d6972;--line:#dbe1e5;--good:#237c58;--bad:#b13b35;--warn:#a56415;--white:#fff;--radius:16px}
+:root{color-scheme:light;--navy:#292724;--navy2:#393530;--clay:#9F4529;--cream:#F5F1EB;--ink:#292724;--muted:#6B655E;--line:#DDD5CD;--good:#237c58;--bad:#b13b35;--warn:#a56415;--white:#fff;--radius:16px}
 *{box-sizing:border-box}html{background:var(--cream);scroll-behavior:smooth}body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--ink);padding-bottom:calc(89px + env(safe-area-inset-bottom));line-height:1.42}
 button,input,select,textarea{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #f4ad62;outline-offset:2px}
-.top{background:linear-gradient(125deg,#12293e,#24425e);color:white;padding:19px max(18px,env(safe-area-inset-left));padding-bottom:17px;box-shadow:0 3px 12px #1a34451a}
+.top{background:#292724;color:white;padding:19px max(18px,env(safe-area-inset-left));padding-bottom:17px;box-shadow:0 3px 12px #1a34451a}
 .topline{max-width:800px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:12px}.brand{display:flex;gap:11px;align-items:center}.logo{width:47px;height:47px;border:1px solid #ffffff55;border-radius:13px;background:#ffffff13;display:grid;place-items:center;flex:none}.brand h1{margin:0;line-height:1;font-size:24px;letter-spacing:-.7px}.brand small{display:block;font-size:11px;margin-top:5px;color:#e6dbcf;letter-spacing:.8px;text-transform:uppercase}.top-action{background:#ffffff1e;color:white;border:1px solid #ffffff55;border-radius:11px;padding:9px 11px;font-size:13px;font-weight:700}
 main{max-width:800px;margin:0 auto;padding:20px 15px 12px}.section{display:none}.section.active{display:block}.section-head{display:flex;align-items:center;justify-content:space-between;gap:9px;margin-bottom:13px}.section-head h2{font-size:22px;margin:0;letter-spacing:-.4px}.section-title{margin:19px 0 9px;font-size:16px}.muted{color:var(--muted)}.small{font-size:13px}.eyebrow{font-size:11px;font-weight:750;letter-spacing:.9px;text-transform:uppercase;color:var(--muted)}
 .card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 3px 11px #1430470d;margin-bottom:13px;padding:17px}.feature-card{border-left:4px solid var(--clay)}.vehicle-card{width:100%;text-align:left;display:block;background:white;border:2px solid var(--line);border-radius:16px;padding:17px;margin-bottom:12px;color:var(--ink)}.vehicle-card.selected{border-color:var(--clay);box-shadow:0 4px 15px #9e3b1b18}.vehicle-title{font-size:18px;font-weight:750;margin:0}.vehicle-year{color:var(--muted);font-weight:500}.vehicle-mileage{font-size:27px;font-weight:790;letter-spacing:-.7px;margin-top:9px;font-variant-numeric:tabular-nums}.vehicle-mileage small{font-size:13px;font-weight:500;color:var(--muted);letter-spacing:0}.pill{display:inline-block;border-radius:40px;padding:5px 9px;font-size:11px;font-weight:700;background:#e6f4ec;color:var(--good)}.pill.warn{background:#fff1d9;color:#9d671b}.pill.due{background:#fae8e7;color:var(--bad)}
 .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.stat{padding:15px;background:#f6f8f9;border-radius:12px}.stat strong{font-size:20px;display:block;font-variant-numeric:tabular-nums;margin:5px 0 2px}.stat .small{font-size:12px}.progress{height:9px;border-radius:9px;background:#e7e8e9;overflow:hidden;margin:11px 0 5px}.progress>span{display:block;background:var(--good);height:100%;border-radius:9px}.progress>span.warn{background:var(--warn)}.progress>span.due{background:var(--bad)}
-.btn{background:var(--clay);border:0;color:white;border-radius:11px;min-height:46px;padding:11px 16px;font-weight:730;display:inline-flex;align-items:center;justify-content:center;gap:8px}.btn.secondary{background:#edf1f5;color:var(--navy);border:1px solid #cdd9e1}.btn.outline{background:#fff;color:var(--clay);border:1px solid #c38470}.btn:disabled{opacity:.55;cursor:default}.btn.full{width:100%}.button-row{display:flex;flex-wrap:wrap;gap:9px}.button-row>.btn{flex:1;min-width:130px}.odometer-controls>.btn{flex:1;min-width:0;padding:10px 4px;font-size:13px}.odometer-op[aria-pressed="true"]{background:var(--navy);color:white;border-color:var(--navy)}
+.btn{background:var(--clay);border:0;color:white;border-radius:11px;min-height:46px;padding:11px 16px;font-weight:730;display:inline-flex;align-items:center;justify-content:center;gap:8px}.btn.secondary{background:#edf1f5;color:var(--navy);border:1px solid #cdd9e1}.btn.outline{background:#fff;color:var(--clay);border:1px solid #c38470}.btn:disabled{opacity:.55;cursor:default}.btn.full{width:100%}.button-row{display:flex;flex-wrap:wrap;gap:9px}.button-row[hidden],#expensePdfTextReview[hidden]{display:none!important}.button-row>.btn{flex:1;min-width:130px}.odometer-controls>.btn{flex:1;min-width:0;padding:10px 4px;font-size:13px}.odometer-op[aria-pressed="true"]{background:var(--navy);color:white;border-color:var(--navy)}
 label.field{display:block;font-size:13px;font-weight:700;margin:13px 0 7px}input[type=text],input[type=number],input[type=date],select,textarea{display:block;background:#fff;width:100%;padding:12px 13px;border-radius:10px;border:1px solid #bfcbd4;color:var(--ink);min-height:46px;font-size:16px}textarea{min-height:88px;resize:vertical}.pressure-row{display:grid;grid-template-columns:minmax(0,1fr) 85px 85px;gap:9px;align-items:end;padding:10px 0;border-top:1px solid var(--line)}.pressure-row:first-child{border-top:0}.pressure-row .tire-name{font-size:13px;font-weight:650;line-height:1.35}.pressure-row small{display:block;color:var(--muted);font-size:11px;font-weight:400}.pressure-row input{padding:10px 6px;text-align:center}.pressure-head{display:grid;grid-template-columns:minmax(0,1fr) 85px 85px;gap:9px;color:var(--muted);font-size:11px;font-weight:700;margin-top:14px}.tire-values{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:10px 0 14px}.tire-values .stat strong{font-size:23px}.tire-values .stat{padding:12px}input[type=checkbox]{width:20px;height:20px;accent-color:var(--clay)}.check{display:flex;align-items:center;gap:10px;margin:13px 0}.check label{font-size:14px;font-weight:550}.note{padding:12px 13px;background:#fff5e7;border:1px solid #ecd3aa;border-radius:11px;color:#725024;font-size:13px;margin:12px 0}.note.info{background:#edf4f9;border-color:#c6d8e4;color:#2b526b}.notice{margin-bottom:14px}.record{padding:13px 0;border-top:1px solid var(--line);display:flex;align-items:start;justify-content:space-between;gap:8px}.record:first-of-type{border:0}.record h4{margin:0 0 3px;font-size:14px}.record small{color:var(--muted)}.record strong{font-size:14px;white-space:nowrap}.empty{padding:25px 15px;text-align:center;color:var(--muted);border:1px dashed #bbc9d2;border-radius:13px;background:#fff}
 .bottom{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid #dae0e4;display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom);z-index:20;box-shadow:0 -2px 15px #142a4010}.tabs{display:flex;max-width:800px;width:100%;justify-content:space-around}.tab{border:0;background:transparent;color:#697786;flex:1;min-width:0;padding:9px 1px 11px;display:flex;align-items:center;flex-direction:column;gap:3px;font-size:10px;font-weight:750}.tab svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.tab.active{color:var(--clay)}.tab.active:before{content:"";position:absolute;top:0;width:42px;height:3px;background:var(--clay);border-radius:0 0 3px 3px}
 .chart-bars{display:flex;align-items:end;gap:16px;height:186px;padding:18px 4px 0}.chart-col{flex:1;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:end;height:100%;gap:7px;font-size:12px;font-weight:700}.chart-bar{background:#315979;border-radius:7px 7px 2px 2px;width:min(100%,74px);min-height:3px}.chart-col:nth-child(2) .chart-bar{background:#bb6b4a}.chart-col:nth-child(3) .chart-bar{background:#838e9d}.chart-col .muted{font-weight:500;font-size:11px}.linechart{width:100%;height:auto;max-height:210px;display:block}.lock{background:#fcf8f6;border-radius:12px;border:1px solid #ead9d3;padding:12px;font-size:13px;color:#684737}
@@ -23,10 +23,26 @@ label.field{display:block;font-size:13px;font-weight:700;margin:13px 0 7px}input
 .vehicle-photo[hidden],.vehicle-photo-placeholder[hidden]{display:none}
 .vehicle-photo{display:block;width:100%;height:150px;object-fit:contain;margin-bottom:12px}
 .vehicle-photo-placeholder{display:grid;place-items:center;height:150px;margin-bottom:12px;border-radius:12px;background:#F5F1EB;color:#6B655E;font-size:14px}
+
+/* Compact sequential tire entry and top-down drivetrain overview */
+.tire-map{background:#f7f9fb;border:1px solid var(--line);border-radius:13px;padding:9px 5px 6px;margin:8px 0 11px}
+#tirePressureForm .button-row{margin-top:12px}
+#tirePressureForm .button-row>.btn{min-width:0}
+#tirePressureForm .btn[hidden]{display:none!important}
+
+
+/* Approved Red Dirt Coding palette; preserve native scanner controls. */
+.btn.secondary{background:#F1DDD2;color:#74351F;border-color:#DDD5CD}
+.note.info{background:#F1DDD2;border-color:#DDD5CD;color:#593C30}
+#toast{background:#292724}.tab{position:relative;min-height:60px}
+.vehicle-grid{display:grid;grid-template-columns:1fr;gap:12px}
+.brand{min-width:0}.brand small{text-transform:none;letter-spacing:0}
+.topline{flex-wrap:wrap}.brand h1{font-size:26px}
+@media(min-width:680px){main{max-width:1100px}.vehicle-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
 <body>
-<header class="top"><div class="topline"><div class="brand"><div class="logo" aria-hidden="true"><svg width="37" height="37" viewBox="0 0 40 40" fill="none"><path d="M8 31 L12 9 L20 20 L28 9 L32 31" stroke="#f4cfb2" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 4 V10 M20 14 V18 M20 25 V29 M20 33 V37" stroke="#fff" stroke-width="2" stroke-dasharray="3 4"/></svg></div><div><h1>MileSage</h1><small>Vehicle intelligence · Alpha 1.3.2 VIN lookup</small></div></div><button class="top-action" id="dataButton" type="button">Data & backup</button></div></header>
+<header class="top"><div class="topline"><div class="brand"><div class="logo" aria-hidden="true"><svg width="37" height="37" viewBox="0 0 40 40" fill="none"><path d="M8 31 L12 9 L20 20 L28 9 L32 31" stroke="#f4cfb2" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 4 V10 M20 14 V18 M20 25 V29 M20 33 V37" stroke="#fff" stroke-width="2" stroke-dasharray="3 4"/></svg></div><div><h1>MileSage</h1><small>by Red Dirt Coding</small><small>1.4.10 · Interface test</small></div></div><button class="top-action" id="dataButton" type="button">Data & backup</button></div></header>
 <main>
 <div id="notice" class="notice" role="status"></div>
 <section id="home" class="section active" aria-label="Home">
@@ -80,15 +96,17 @@ label.field{display:block;font-size:13px;font-weight:700;margin:13px 0 7px}input
 <div class="section-head"><h2>Ownership expenses</h2></div>
 <div id="expensesBody"></div>
 </section>
+<section id="carHistory" class="section" aria-label="Car History"><div class="section-head"><h2>Car History</h2></div><div id="carHistoryBody"></div></section>
 <section id="graphs" class="section" aria-label="Graphs">
 <div class="section-head"><h2>Graphs & insights</h2></div>
 <div id="graphsBody"></div>
+<div id="betaFeedbackBody"></div>
 </section>
 <section id="data" class="section" aria-label="Data and backup">
 <div class="section-head"><h2>Data & backup</h2></div>
 <div class="card feature-card"><h3 style="margin-top:0">Recover or import your data safely</h3><p class="small muted">Your phone data is stored locally. GitHub is checked read-only and will <strong>never</strong> replace it automatically. GitHub vehicles.json may contain incomplete or demo records, not your live phone readings; all-zero placeholder imports are blocked. Importing a JSON file requires review and saves a local recovery snapshot first.</p>
-<div class="button-row"><button id="githubBackupRecovery" class="btn" type="button">Recover from saved GitHub backup</button><button id="fileImportButton" class="btn secondary" type="button">Import JSON file</button></div><button id="githubImport" class="btn secondary" type="button" style="margin-top:8px">Review GitHub vehicles.json</button><input id="jsonFile" type="file" accept=".json,application/json" hidden><p class="note">The saved GitHub backup is older (November 2026), but has recorded odometer and tire pressure data. Recovery fills only currently missing readings and empty histories, retaining your phone settings. Check mileage against your actual odometer after recovery. This will not update the app code or install an APK.</p></div>
-<div class="card"><h3 style="margin-top:0">Phone receipt photo folder</h3><p class="small muted">Choose a location on your phone; MileSage will create <strong>MileSage/Photos</strong> inside it and copy new fuel and service receipts. This requires browser permission and may not work when opening HTML from Downloads. If unavailable, use Download photo in history and move it with Files.</p><button class="btn secondary" type="button" id="choosePhotoDir">Choose phone photo folder</button><p class="small muted" id="photoDirStatus">Phone photo folder not selected.</p></div><div class="card"><h3 style="margin-top:0">Save a backup</h3><p class="small muted">Phone edits are saved in this browser, not uploaded to GitHub or your laptop. Export regularly before clearing browser data or changing phones.</p><div class="button-row"><button id="exportPython" class="btn" type="button">Export vehicles.json</button><button id="exportFull" class="btn secondary" type="button">Full mobile backup</button><button id="undoImport" class="btn secondary" type="button">Restore previous local snapshot</button></div><p class="small muted" style="margin-bottom:0">The Python export uses the same vehicle JSON structure as your desktop app. Mobile-only expense and mileage-log details are included in the full backup.</p></div>
+<div class="button-row"><button id="githubBackupRecovery" class="btn" type="button">Recover from saved GitHub backup</button><button id="fileImportButton" class="btn secondary" type="button">Import JSON file</button></div><button id="githubImport" class="btn secondary" type="button" style="margin-top:8px">Review GitHub vehicles.json</button><input id="jsonFile" type="file" accept=".json,application/json" hidden><p id="jsonImportStatus" class="small muted" role="status" aria-live="polite">No backup selected.</p><p class="note">The saved GitHub backup is older (November 2026), but has recorded odometer and tire pressure data. Recovery fills only currently missing readings and empty histories, retaining your phone settings. Check mileage against your actual odometer after recovery. This will not update the app code or install an APK.</p></div>
+<div class="card"><h3 style="margin-top:0">Phone receipt photo folder</h3><p class="small muted">Choose a location on your phone; MileSage will create <strong>MileSage/Photos</strong> inside it and copy new fuel, service and other-expense receipts. This requires browser permission and may not work when opening HTML from Downloads. If unavailable, use Download photo in history and move it with Files.</p><button class="btn secondary" type="button" id="choosePhotoDir">Choose phone photo folder</button><p class="small muted" id="photoDirStatus">Phone photo folder not selected.</p></div><div class="card"><h3 style="margin-top:0">Save a backup</h3><p class="small muted">Phone edits are saved in this browser, not uploaded to GitHub or your laptop. Export regularly before clearing browser data or changing phones.</p><div class="button-row"><button id="exportPython" class="btn" type="button">Export vehicles.json</button><button id="exportFull" class="btn secondary" type="button">Full mobile backup</button><button id="undoImport" class="btn secondary" type="button">Saved backups &amp; snapshots</button></div><div id="savedBackupLibrary" hidden><p id="savedBackupStatus" class="small muted" role="status">Browse saved backups. Restoring a file does not remove it.</p><button id="browseSavedJson" class="btn secondary" type="button">Browse saved JSON files</button><p class="small muted">In Samsung My Files, look under <strong>Downloads / MileSage</strong>. You can import the same file more than once. Saved snapshots below belong to this installation only.</p><h4 style="margin:12px 0 8px">Reusable local recovery snapshots</h4><div id="savedLocalSnapshots" aria-live="polite"></div><p class="small muted">Only the three most recent local recovery snapshots are retained to conserve phone storage. For long-term storage use Full mobile backup; exported PDFs must be saved separately.</p></div><p class="small muted" style="margin-bottom:0">The Python export uses the same vehicle JSON structure as your desktop app. Expense and mileage-log details are preserved in both exports. Use Full mobile backup to retain receipt photos.</p></div>
 <div class="card"><h3 style="margin-top:0">About this version</h3><p class="small muted">MileSage Alpha 1.3.2 preview • Mobile Preview v8 • VIN-based vehicle entry using the NHTSA decoder (internet required), with review before saving • Fluid & filter buttons on the Service tab • Safe manual data restore • GitHub checks never overwrite records • Works with locally saved data offline. Added vehicle overview cards, fuel-type and octane fields, and three fuel insights charts. Full two-way cloud sync, push alerts, OBD-II and APK packaging are not implemented.</p><p class="small muted" id="storageNote"></p></div>
 </section>
 </main>
@@ -97,6 +115,7 @@ label.field{display:block;font-size:13px;font-weight:700;margin:13px 0 7px}input
 <button class="tab" data-tab="service" type="button"><svg viewBox="0 0 24 24"><path d="M16 3a5 5 0 0 0-5 7L3 18l3 3 8-8a5 5 0 0 0 7-6l-3 3-4-1-1-4z"/></svg>Service</button>
 <button class="tab" data-tab="fuel" type="button"><svg viewBox="0 0 24 24"><path d="M4 21V4a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v17M2 21h16M4 13h11M15 7h2l4 4v7a2 2 0 0 1-4 0v-5"/></svg>Fuel</button>
 <button class="tab" data-tab="expenses" type="button"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="15" rx="2"/><path d="M2 10h20M6 15h4"/></svg>Expenses</button>
+<button class="tab" data-tab="carHistory" type="button" aria-label="Car History"><svg viewBox="0 0 24 24"><path d="M4 5h16v16H4zM8 2v6M16 2v6M8 12h8M8 16h5"/></svg>History</button>
 <button class="tab" data-tab="graphs" type="button"><svg viewBox="0 0 24 24"><path d="M3 3v18h18M7 16l5-6 4 3 5-8"/></svg>Graphs</button>
 </div></nav>
 <div id="toast" role="status" aria-live="polite"></div>
@@ -121,7 +140,7 @@ function message(s){let t=$('toast');t.textContent=s;t.style.display='block';cle
 function validDate(s){if(!/^\d{4}-\d{2}-\d{2}$/.test(s))return false;const d=new Date(s+'T12:00:00');return !Number.isNaN(d.getTime())&&d.toISOString().slice(0,10)===s && s<=localDate()}
 function costCents(str,optional=false){const val=String(str).trim();if(optional&&val==='')return null;if(!/^(?:0|[1-9]\d*)(?:\.\d{1,2})?$/.test(val))throw Error('Enter a valid dollar amount (up to 2 decimal places).');const n=money(val);if(!Number.isSafeInteger(n))throw Error('Amount is too large.');return n}
 function whole(str,label,minimum=0){const n=Number(String(str).trim());if(!/^\d+$/.test(String(str).trim())||!Number.isSafeInteger(n)||n<minimum)throw Error(label+' must be a whole number of '+minimum+' or more.');return n}
-function normalize(data){if(!Array.isArray(data))throw Error('Expected a JSON list of vehicle records.');if(!data.every(x=>x&&typeof x==='object'&&!Array.isArray(x)&&typeof x.name==='string'&&Number.isSafeInteger(Number(x.mileage))&&Number(x.mileage)>=0))throw Error('The file contains invalid vehicle records.');return data.map(x=>({
+function normalize(data){if(!Array.isArray(data))throw Error('Expected a JSON list of vehicle records.');for(const item of data){for(const name of ['service_history','fuel_history','tire_pressure_history','fluid_check_history','air_filter_changes','mobile_expenses','mobile_mileage_log']){if(item&&item[name]!=null&&(!Array.isArray(item[name])||item[name].some(r=>!r||typeof r!=='object'||Array.isArray(r))))throw Error('Invalid '+name+' for '+String(item.name||'vehicle')+'. Import cancelled.');}}if(!data.every(x=>x&&typeof x==='object'&&!Array.isArray(x)&&typeof x.name==='string'&&Number.isSafeInteger(Number(x.mileage))&&Number(x.mileage)>=0))throw Error('The file contains invalid vehicle records.');return data.map(x=>({
   ...x,
   year:Number(x.year)||new Date().getFullYear(),
   mileage:Number(x.mileage),starting_mileage:Number(x.starting_mileage??x.mileage),
@@ -139,6 +158,7 @@ function normalize(data){if(!Array.isArray(data))throw Error('Expected a JSON li
   fluid_check_history:Array.isArray(x.fluid_check_history)?x.fluid_check_history:[],
   air_filter_changes:Array.isArray(x.air_filter_changes)?x.air_filter_changes:[],
   mobile_expenses:Array.isArray(x.mobile_expenses)?x.mobile_expenses:[],
+  car_history:normalizeCarHistory(x.car_history),
   mobile_mileage_log:Array.isArray(x.mobile_mileage_log)?x.mobile_mileage_log:[]
 }));}
 function save(){try{localStorage.setItem(KEY,JSON.stringify({vehicles,current}));hasStorage=true;}catch(e){hasStorage=false;message('Browser storage unavailable — export your data now!')}updateBanner()}
@@ -282,7 +302,7 @@ function additionalGraphCards(a){
 
 function renderHome(){renderVehicles();renderVehicleControls();const a=v(), d=$('homeDetails');if(!a){d.innerHTML='<div class="card"><p>Load your existing vehicle history from GitHub or add a vehicle to begin.</p><button id="startImport" class="btn full" type="button">Import existing vehicle data</button></div>';$('startImport').onclick=()=>switchTab('data');return}
 const oilInt=Number(a.service_interval),oilDelta=Math.max(0,Number(a.mileage)-Number(a.last_service_mileage)),oilRemain=oilInt-oilDelta;const tireInt=Number(a.tire_rotation_interval)||10000;let tireText=a.last_tire_rotation_mileage==null?'Not recorded':status(tireInt-(Number(a.mileage)-Number(a.last_tire_rotation_mileage)),tireInt)[0];let oilStatus=status(oilRemain,oilInt);
-d.innerHTML=`<h3 class="section-title">Quick stats · ${esc(a.name)}</h3><div class="card"><div class="grid2"><div class="stat"><div class="eyebrow">Next oil service</div><strong>${num(Number(a.last_service_mileage)+oilInt)}</strong><div class="small muted">miles on odometer</div></div><div class="stat"><div class="eyebrow">Tire rotation</div><strong style="font-size:17px">${esc(tireText)}</strong><div class="small muted">${num(tireInt)} mi interval</div></div><div class="stat"><div class="eyebrow">Service records</div><strong>${num(a.service_history.length)}</strong></div><div class="stat"><div class="eyebrow">Fuel fill-ups</div><strong>${num(a.fuel_history.length)}</strong></div></div><div class="small" style="display:flex;justify-content:space-between;margin-top:16px"><span>Oil change progress</span><strong>${esc(oilStatus[0])}</strong></div><div class="progress"><span class="${oilStatus[1]}" style="width:${Math.min(100,Math.max(0,100*oilDelta/oilInt))}%"></span></div><p class="small muted" style="margin:6px 0 0">${num(oilDelta)} of ${num(oilInt)} miles since last tracked oil service</p></div>${vehicleOverviewCards(a)}${mileageForm(a)}<div class="button-row"><button type="button" id="quickService" class="btn secondary">+ Service</button><button type="button" id="quickFuel" class="btn secondary">+ Fuel</button><button type="button" id="quickTires" class="btn secondary">Tire PSI</button></div>`;
+d.innerHTML=`<h3 class="section-title">Quick stats · ${esc(a.name)}</h3><div class="card"><div class="grid2"><div class="stat"><div class="eyebrow">Next oil service</div><strong>${num(Number(a.last_service_mileage)+oilInt)}</strong><div class="small muted">miles on odometer</div></div><div class="stat"><div class="eyebrow">Tire rotation</div><strong style="font-size:17px">${esc(tireText)}</strong><div class="small muted">${num(tireInt)} mi interval</div></div><div class="stat"><div class="eyebrow">Service records</div><strong>${num(a.service_history.length)}</strong></div><div class="stat"><div class="eyebrow">Fuel fill-ups</div><strong>${num(a.fuel_history.length)}</strong></div></div><div class="small" style="display:flex;justify-content:space-between;margin-top:16px"><span>Oil change progress</span><strong>${esc(oilStatus[0])}</strong></div><div class="progress"><span class="${oilStatus[1]}" style="width:${Math.min(100,Math.max(0,100*oilDelta/oilInt))}%"></span></div><p class="small muted" style="margin:6px 0 0">${num(oilDelta)} of ${num(oilInt)} miles since last tracked oil service</p></div>${vehicleOverviewCards(a)}${mileageForm(a)}<div class="button-row"><button type="button" id="quickService" class="btn secondary">+ Service</button><button type="button" id="quickFuel" class="btn secondary">+ Fuel</button><button type="button" id="quickHistory" class="btn secondary">Car History review</button><button type="button" id="quickTires" class="btn secondary">Tire PSI</button></div>`;
 let mileageOperation='+';
 const milesInput=$('mileageNew'),preview=$('mileagePreview');
 function previewMileage(){
@@ -316,13 +336,16 @@ $('mileageForm').onsubmit=e=>{e.preventDefault();try{
  a.mobile_mileage_log.push({date:localDate(),from:a.mileage,to:next,operation:mileageOperation,amount,reason:mileageOperation==='+'?'drive':'odometer correction'});
  a.mileage=next;save();renderAll();message(`Odometer updated to ${num(next)} miles for ${a.name}.`);
 }catch(error){alert(error.message)}};
-$('quickService').onclick=()=>switchTab('service');$('quickFuel').onclick=()=>switchTab('fuel');$('quickTires').onclick=()=>{switchTab('service');requestAnimationFrame(()=>document.getElementById('tirePressureCard')?.scrollIntoView({block:'start',behavior:'smooth'}));};}
+$('quickHistory').onclick=()=>switchTab('carHistory');$('quickService').onclick=()=>switchTab('service');$('quickFuel').onclick=()=>switchTab('fuel');$('quickTires').onclick=()=>{switchTab('service');requestAnimationFrame(()=>document.getElementById('tirePressureCard')?.scrollIntoView({block:'start',behavior:'smooth'}));};}
 function recordList(records,kind){
  if(!records.length)return empty('No '+kind+' records yet.');
  return records.map((r,index)=>({r,index})).reverse().slice(0,40).map(({r,index})=>
   '<div class="record"><div><h4>'+esc(r.description||('Fuel fill-up'+(r.full_tank?' · full tank':'')))+
   '</h4><small>'+esc(r.date||'Date unknown')+' · '+num(r.mileage)+' mi'+(kind==='fuel'?' · '+esc(r.gallons)+' gal':'')+
-  '</small></div><strong>'+(r.cost_cents==null?'No cost':usd(r.cost_cents))+'</strong></div>'+photoHistory(r,kind,index)).join('');
+  '</small></div><strong>'+(r.cost_cents==null?'No cost':usd(r.cost_cents))+'</strong></div>'+photoHistory(r,kind,index)+
+ (kind==='service'&&r.service_document?.id?'<div class="button-row"><button class="btn secondary" type="button" data-service-pdf="'+index+'">View scanned invoice · '+num(r.service_document.pages)+' pages</button><button class="btn secondary" type="button" data-service-pdf-share="'+index+'">Share / backup PDF</button></div>':'')+
+ (kind==='expense'&&r.expense_document?.id?'<div class="button-row"><button class="btn secondary" type="button" data-expense-pdf="'+index+'">View expense document · '+num(r.expense_document.pages)+' pages</button><button class="btn secondary" type="button" data-expense-pdf-share="'+index+'">Share / backup PDF</button><button class="btn secondary" type="button" data-expense-pdf-save="'+index+'">Save PDF to My Files</button></div>':'')+
+ (kind==='expense'?'<div class="button-row"><button class="btn secondary" type="button" data-expense-pdf-attach="'+index+'">'+(r.expense_document?.id?'Reattach PDF from My Files':'Attach existing PDF file')+'</button></div>':'')).join('');
 }
 function formVehicleName(a){return `<p class="small muted" style="margin:0 0 10px">Recording for <strong>${esc(a.year)} ${esc(a.name)}</strong> • ${num(a.mileage)} mi</p>`}
 const TIRES=[['driver_front','Driver front'],['passenger_front','Passenger front'],['driver_rear','Driver rear'],['passenger_rear','Passenger rear']];
@@ -335,40 +358,122 @@ function safePsi(raw,label,allowBlank=true){
   return n;
 }
 function psiText(n){return n===null||n===undefined||!Number.isFinite(Number(n))?'—':Number(n).toLocaleString('en-US',{maximumFractionDigits:2})+' PSI'}
+function tireDiagram(a,draft={},activeKey='driver_front'){
+ const p=a.tire_pressures||{};
+ const positions=[
+  ['driver_front','DF','Driver front · front left',90,83],
+  ['passenger_front','PF','Passenger front · front right',270,83],
+  ['driver_rear','DR','Driver rear · rear left',90,215],
+  ['passenger_rear','PR','Passenger rear · rear right',270,215]
+ ];
+ const wheel=(key,abbr,label,x,y)=>{
+  const amount=Object.prototype.hasOwnProperty.call(draft,key)?draft[key]:p[key];
+  const active=key===activeKey,psi=amount==null?'—':Number(amount).toLocaleString('en-US',{maximumFractionDigits:2});
+  return '<g aria-label="'+esc(label+': '+psiText(amount))+'">'+
+   '<rect x="'+(x<180?x+20:x-44)+'" y="'+(y-23)+'" width="24" height="46" rx="7" fill="'+(active?'#9e3b1b':'#253b50')+'"/>'+
+   '<rect x="'+(x<180?x+25:x-39)+'" y="'+(y-18)+'" width="14" height="36" rx="4" fill="#354f66"/>'+
+   '<text x="'+x+'" y="'+(y-25)+'" text-anchor="middle" font-size="11" fill="#546473" font-weight="700">'+abbr+'</text>'+
+   '<text x="'+x+'" y="'+(y+6)+'" text-anchor="middle" font-size="16" fill="#182f43" font-weight="800">'+esc(psi)+'</text>'+
+   '<text x="'+x+'" y="'+(y+20)+'" text-anchor="middle" font-size="9" fill="#5d6972">PSI</text></g>';
+ };
+ return '<div class="tire-map"><div class="eyebrow" style="text-align:center">FRONT OF VEHICLE ↑ · DRIVER ON LEFT</div>'+
+  '<svg role="img" aria-label="Top-down vehicle drivetrain and four tire readings; driver front at upper left, passenger front upper right, driver rear lower left, passenger rear lower right" viewBox="0 0 360 290" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;max-width:355px;height:auto;margin:0 auto">'+
+  '<path d="M130 62 Q130 39 157 35 L203 35 Q230 39 230 62 L230 227 Q230 253 202 256 L158 256 Q130 253 130 227 Z" fill="#e9edf1" stroke="#62798d" stroke-width="3"/>'+
+  '<path d="M145 85 L215 85 L210 123 L150 123 Z" fill="#c1d8e6" stroke="#62798d" stroke-width="2"/>'+
+  '<path d="M149 184 L211 184 L218 219 L142 219 Z" fill="#c1d8e6" stroke="#62798d" stroke-width="2"/>'+
+  '<path d="M126 109 L234 109 M126 209 L234 209" stroke="#657584" stroke-width="6" stroke-linecap="round"/>'+
+  '<path d="M180 121 L180 207" stroke="#9e3b1b" stroke-width="5" stroke-linecap="round"/>'+
+  '<circle cx="180" cy="109" r="13" fill="#9e3b1b" stroke="#fff" stroke-width="3"/>'+
+  '<circle cx="180" cy="209" r="13" fill="#9e3b1b" stroke="#fff" stroke-width="3"/>'+
+  positions.map(v=>wheel(...v)).join('')+'</svg>'+
+  '<p class="small muted" style="margin:2px 0 0;text-align:center">Diagram values are saved readings plus any unsaved entries you have confirmed in this sequence.</p></div>';
+}
 function tirePressureCard(a){
- const p=a.tire_pressures||{},hist=a.tire_pressure_history||[];
+ const hist=a.tire_pressure_history||[];
  const latest=hist.length?hist[hist.length-1]:null;
- const cards=TIRES.map(([k,label])=>`<div class="stat"><div class="eyebrow">${esc(label)}</div><strong>${esc(psiText(p[k]))}</strong></div>`).join('');
- const fields=TIRES.map(([k,label])=>`<div class="pressure-row"><div class="tire-name">${esc(label)}<small>Last: ${esc(psiText(p[k]))}</small></div><input id="pressure-${k}" type="number" min="0" max="200" step="0.01" inputmode="decimal" placeholder="PSI" aria-label="${esc(label)} measured PSI"><input id="added-${k}" type="number" min="0" max="200" step="0.01" inputmode="decimal" placeholder="0" aria-label="${esc(label)} PSI air added"></div>`).join('');
- return `<div id="tirePressureCard" class="card feature-card"><h3 style="margin:0 0 4px">Tire pressures</h3>${formVehicleName(a)}<div class="tire-values">${cards}</div><p class="small muted">${latest?'Last logged: '+esc(latest.recorded_at||'date unknown')+' at '+num(latest.mileage??a.mileage)+' miles':'No pressure readings logged yet.'}</p><form id="tirePressureForm"><h4 style="margin-bottom:3px">Record tire readings / added air</h4><div class="pressure-head"><span>Tire</span><span>Measured PSI</span><span>Air added PSI</span></div>${fields}<p class="small muted">Leave a field empty to keep that value unchanged. A measured reading replaces the previous calculated PSI; air added increases the measured or previously logged PSI. These are manually entered values, not live TPMS readings.</p><button type="submit" class="btn full">Save tire pressures</button></form><p class="small muted" style="margin-bottom:0">Use your vehicle's door-jamb tire placard for recommended <strong>cold</strong> inflation pressure; MileSage does not prescribe a pressure.</p></div>`;
+ return '<div id="tirePressureCard" class="card feature-card">'+
+  '<h3 style="margin:0 0 4px">Tire pressures</h3>'+formVehicleName(a)+
+  '<div id="tireDiagram">'+tireDiagram(a)+'</div>'+
+  '<p class="small muted">'+(latest?'Last logged: '+esc(latest.recorded_at||'date unknown')+' at '+num(latest.mileage??a.mileage)+' miles':'No pressure readings logged yet.')+'</p>'+
+  '<form id="tirePressureForm"><div class="note info" style="margin-top:8px"><strong id="tirePrompt">Tire 1 of 4 · Driver front (front left)</strong>'+
+  '<div class="small" id="tirePreviousReading">Saved: '+esc(psiText(a.tire_pressures?.driver_front))+'</div></div>'+
+  '<div class="grid2"><div><label class="field" for="tireMeasured">Measured PSI</label>'+
+  '<input id="tireMeasured" type="number" min="0" max="200" step="0.01" inputmode="decimal" placeholder="e.g. 35"></div>'+
+  '<div><label class="field" for="tireAdded">Air added PSI</label>'+
+  '<input id="tireAdded" type="number" min="0" max="200" step="0.01" inputmode="decimal" placeholder="Optional"></div></div>'+
+  '<p class="small muted" id="tireStepNote">Enter a measured reading and/or air added. Leaving both blank retains the last saved pressure.</p>'+
+  '<div class="button-row"><button id="tireBack" type="button" class="btn secondary" hidden>Previous tire</button>'+
+  '<button id="tireNext" type="button" class="btn">Next tire</button>'+
+  '<button id="tireFinish" type="submit" class="btn" hidden>Save tire readings</button></div>'+
+  '</form><p class="small muted" style="margin-bottom:0">Measurements are entered manually, not live TPMS. Refer to the door-jamb placard for recommended <strong>cold</strong> tire pressure.</p></div>';
 }
 function wireTirePressureForm(a){
- const form=$('tirePressureForm');
- form.onsubmit=e=>{e.preventDefault();try{
-   const old={...a.tire_pressures};
-   const next={...old};
-   const baselines={...a.starting_tire_pressures};
-   const increases={};
-   let changed=false;
-   for(const [k,label] of TIRES){
-     const measured=safePsi($('pressure-'+k).value,label+' reading');
-     const added=safePsi($('added-'+k).value,label+' air added');
-     increases[k]=added??0;
-     if(measured!==null){next[k]=measured;baselines[k]=measured;}
-     if(added!==null && added>0){
-       if(next[k]===null || next[k]===undefined)throw Error(label+': enter a measured PSI first, then add air.');
-       next[k]=Math.round((Number(next[k])+added)*100)/100;
-       if(next[k]>200)throw Error(label+': combined PSI exceeds 200.');
-     }
-     if(next[k]!==old[k] || baselines[k]!==a.starting_tire_pressures[k])changed=true;
+ const form=$('tirePressureForm'),draft={},TIRES_LOCAL=TIRES;
+ let step=0;
+ const measured=$('tireMeasured'),added=$('tireAdded');
+ function preview(){
+  const computed={};
+  for(const [key,label] of TIRES_LOCAL){
+   if(!Object.prototype.hasOwnProperty.call(draft,key))continue;
+   const values=draft[key],m=safePsi(values.measured,label+' measured PSI'),air=safePsi(values.added,label+' air added PSI');
+   let psi=m??a.tire_pressures?.[key]??null;
+   if(air!==null&&air>0){
+    if(psi===null)throw Error(label+': measure the tire before adding air.');
+    psi=Math.round((Number(psi)+air)*100)/100;
+    if(psi>200)throw Error(label+': combined PSI exceeds 200.');
    }
-   if(!changed){message('No new tire-pressure values entered.');return;}
-   const ev={recorded_at:new Date().toISOString(),mileage:a.mileage,before:old,starting:{...baselines},added_psi:increases,current:{...next}};
-   a.tire_pressures=next;
-   a.starting_tire_pressures=baselines;
-   a.tire_pressure_history.push(ev);
-   save();renderAll();message('Tire-pressure readings saved.');
- }catch(error){alert(error.message)}};
+   computed[key]=psi;
+  }
+  $('tireDiagram').innerHTML=tireDiagram(a,computed,TIRES_LOCAL[step][0]);
+ }
+ function readStep(){
+  const [key,label]=TIRES_LOCAL[step],m=safePsi(measured.value,label+' measured PSI'),air=safePsi(added.value,label+' air added PSI');
+  const start=m??a.tire_pressures?.[key]??null;
+  if(air!==null&&air>0&&start===null)throw Error(label+': enter a measured PSI before adding air.');
+  if(air!==null&&start!==null&&Number(start)+air>200)throw Error(label+': pressure exceeds 200 PSI.');
+  draft[key]={measured:measured.value.trim(),added:added.value.trim()};
+  preview();
+ }
+ function showStep(){
+  const [key,label]=TIRES_LOCAL[step],previous=draft[key]||{};
+  $('tirePrompt').textContent='Tire '+(step+1)+' of 4 · '+label+(key==='driver_front'?' (front left)':key==='passenger_front'?' (front right)':key==='driver_rear'?' (rear left)':' (rear right)');
+  $('tirePreviousReading').textContent='Last saved: '+psiText(a.tire_pressures?.[key]);
+  measured.value=previous.measured||'';
+  added.value=previous.added||'';
+  $('tireBack').hidden=step===0;
+  $('tireNext').hidden=step===TIRES_LOCAL.length-1;
+  $('tireFinish').hidden=step!==TIRES_LOCAL.length-1;
+  preview();
+ }
+ $('tireBack').onclick=()=>{try{readStep();step--;showStep();}catch(e){alert(e.message);}};
+ $('tireNext').onclick=()=>{try{readStep();step++;showStep();measured.focus();}catch(e){alert(e.message);}};
+ form.onsubmit=e=>{e.preventDefault();try{
+  readStep();
+  const old={...a.tire_pressures},oldBaselines={...a.starting_tire_pressures},next={...old},baselines={...oldBaselines},increases={};
+  let changed=false;
+  for(const [key,label] of TIRES_LOCAL){
+   const answer=draft[key]||{},m=safePsi(answer.measured||'',label+' measured PSI'),air=safePsi(answer.added||'',label+' air added PSI');
+   increases[key]=air??0;
+   if(m!==null){next[key]=m;baselines[key]=m;}
+   if(air!==null&&air>0){
+    if(next[key]==null)throw Error(label+': enter a measured PSI before adding air.');
+    next[key]=Math.round((Number(next[key])+air)*100)/100;
+    if(next[key]>200)throw Error(label+': pressure exceeds 200 PSI.');
+   }
+   if(next[key]!==old[key]||baselines[key]!==a.starting_tire_pressures?.[key])changed=true;
+  }
+  if(!changed){message('No tire pressure changes to save.');return;}
+  const event={recorded_at:new Date().toISOString(),mileage:a.mileage,before:old,starting:{...baselines},added_psi:increases,current:{...next}};
+  a.tire_pressures=next;a.starting_tire_pressures=baselines;a.tire_pressure_history.push(event);
+  try{localStorage.setItem(KEY,JSON.stringify({vehicles,current}));hasStorage=true;updateBanner();}
+  catch(err){
+   a.tire_pressures=old;a.starting_tire_pressures=oldBaselines;
+   a.tire_pressure_history.pop();
+   throw Error('Tire readings NOT saved: '+err.message);
+  }
+  renderAll();message('Tire-pressure readings saved for '+a.name+'.');
+ }catch(error){alert(error.message);}};
+ showStep();
 }
 
 const fluidNames={washer:'Windshield washer fluid',coolant:'Engine coolant reservoir'};
@@ -484,53 +589,233 @@ function parseServiceReceiptText(raw,today){
 }
 /* RECEIPT_PARSER_END */
 /* FUEL_RECEIPT_PARSER_BEGIN */
-function parseFuelReceiptText(raw,today){
- const text=String(raw||'');
- const lines=text.split(/\r?\n/).map(x=>x.replace(/\s+/g,' ').trim()).filter(Boolean);
- // Share the validated date and odometer parsing with service receipts.
+// Preserve a consistent three-decimal US gallon reading in UI and history.
+// Reject excess precision rather than silently changing purchased volume.
+function parseGallonsInput(raw){
+ const text=String(raw??'').trim();
+ if(!/^\d+(?:\.\d{1,3})?$/.test(text))
+  throw Error('Enter US gallons using up to 3 decimal places (for example, 10.882).');
+ const amount=Number(text);
+ if(!Number.isFinite(amount)||amount<0.001||amount>9999)
+  throw Error('Enter a valid US gallon amount between 0.001 and 9999.000.');
+ return amount.toFixed(3);
+}
+function parseFuelReceiptTextCore(raw,today){
+ const text=String(raw||'').replace(/\u00a0/g,' ');
+ const lines=text.split(/\r?\n/).map(line=>line.replace(/\s+/g,' ').trim()).filter(Boolean);
  const shared=parseServiceReceiptText(text,today);
  const result={date:shared.date,mileage:shared.mileage,gallons:null,total:null};
- // Favor a quantity explicitly labeled gallons/volume; do NOT infer quantity
- // from the pump price, grade, monetary total, or incidental item numbers.
- const patterns=[
-  /\b(?:gallons?|volume|fuel qty|fuel quantity|quantity|qty)\s*(?:\(us\)|\(gal\)|us|gal|liters?)?\s*[:=\-]?\s*(\d{1,4}(?:\.\d{1,4})?)\b/i,
-  /\b(\d{1,4}\.\d{1,4})\s*(?:us\s*)?gallons?\b/i,
-  /\b(\d{1,4}\.\d{1,4})\s*(?:us\s*)?gal\b/i
- ];
- for(const line of lines){
-  if(/\b(?:price\s*(?:per|\/)\s*(?:gal|gallon)|unit price|ppu|price\/gallon)\b/i.test(line))continue;
-  for(const pattern of patterns){
-   const found=line.match(pattern);
-   if(found){
-    const n=Number(found[1]);
-    if(Number.isFinite(n)&&n>=0.001&&n<=9999){
-     result.gallons=String(n);
-     break;
-    }
+ // Receipts vary: "GALLONS 10.882", "GALL0NS: 10,882", or label and
+ // quantity on adjacent lines. Do not confuse price per gallon with volume.
+ const gallonsLabel=/\b(?:gall(?:o|0)ns?|volume|fuel\s*(?:qty|quantity)|quantity|qty)\b/i;
+ const priceLabel=/\b(?:ppu|unit\s*price|price\s*(?:per|\/)\s*(?:gallons?|gal|g)|(?:gallons?|gal)\s*price)\b/i;
+ const totalLabel=/\b(?:fuel[\s-]*(?:sale|5ale)|sale\s*total|grand\s*total|transaction\s*total|total(?:\s+(?:sale|due|paid|amount|purchase))?|amount(?:\s+(?:paid|due))?|purchase\s*amount)\b/i;
+ const trailingVolume=/\b(\d{1,4}(?:[.,]\d{1,3})?)\s*(?:us\s*)?(?:gallons?|gal)\b/i;
+
+ const numberAfter=fragment=>{
+  const m=String(fragment).match(/(?:^|[^\d])(\d{1,4}(?:[.,]\d{1,3})?)(?!\d)/);
+  if(!m)return null;
+  // Decimal comma is a common OCR error in a gallons-labeled field.
+  const n=Number(m[1].replace(',','.'));
+  return Number.isFinite(n)&&n>=0.001&&n<=9999?n.toFixed(3):null;
+ };
+ for(let i=0;i<lines.length;i++){
+  const line=lines[i],label=gallonsLabel.exec(line);
+  if(!label){
+   const trailing=line.match(trailingVolume);
+   if(trailing&&!priceLabel.test(line)){
+    const n=Number(trailing[1].replace(',','.'));
+    if(Number.isFinite(n)&&n>=0.001&&n<=9999){result.gallons=n.toFixed(3);break;}
    }
+   continue;
   }
-  if(result.gallons!==null)break;
+  const trailing=line.match(trailingVolume);
+  if(trailing&&!priceLabel.test(line)){
+   const n=Number(trailing[1].replace(',','.'));
+   if(Number.isFinite(n)&&n>=0.001&&n<=9999){result.gallons=n.toFixed(3);break;}
+  }
+  const price=priceLabel.exec(line);
+  if(price&&price.index<=label.index)continue;
+  const after=line.slice(label.index+label[0].length);
+  let amount=numberAfter(after);
+  if(amount===null&&i+1<lines.length&&!priceLabel.test(lines[i+1])&&
+     !totalLabel.test(lines[i+1])&&!gallonsLabel.test(lines[i+1]))
+   amount=numberAfter(lines[i+1]);
+  if(amount!==null){result.gallons=amount;break;}
  }
- const moneyRe=/\$?\s*(\d{1,3}(?:,\d{3})*\.\d{2}|\d+\.\d{2})\b/g;
- const totalRe=/\b(?:grand total|fuel total|sale total|transaction total|total(?: sale| due| paid| amount| purchase)?|amount(?: paid| due)?|purchase amount|fuel sale)\b/i;
- // Prefer a line with a labeled total, and reject lines that identify pump
- // unit price, discount or tax. Never use a random dollar figure as a total.
- const labeled=lines.filter(line=>totalRe.test(line)&&
-   !/\b(?:price\s*(?:per|\/)\s*(?:gal|gallon)|unit price|subtotal|sales tax|tax rate|discount|rewards savings)\b/i.test(line));
- for(let i=labeled.length-1;i>=0;i--){
-  const amounts=[...labeled[i].matchAll(moneyRe)];
-  if(amounts.length){
-   const n=Number(amounts.at(-1)[1].replace(/,/g,''));
-   if(Number.isFinite(n)&&n>=0&&n<=100000){
-    result.total=n.toFixed(2);
-    break;
-   }
+ // Trust explicitly labeled fuel sale / total amounts first; a standalone
+ // pump price, tax or subtotal is never a reliable total paid.
+ const paymentLabel=/\b(?:credit|debit|visa|mastercard|amex|discover)\b/i;
+ const excluded=/\b(?:unit\s*price|ppu|price\s*(?:per|\/)\s*(?:gallon|gal|g)|subtotal|sales?\s*tax|tax\s*rate|discount|savings)\b/i;
+ const priceMoney=/\$?\s*(\d{1,6}(?:,\d{3})*\.\d{2})(?!\d)/g;
+ const amountAfter=fragment=>{
+  const numbers=[...String(fragment).matchAll(priceMoney)];
+  if(!numbers.length)return null;
+  const n=Number(numbers[0][1].replace(/,/g,''));
+  return Number.isFinite(n)&&n>=0&&n<=100000?n.toFixed(2):null;
+ };
+ for(const regex of [totalLabel,paymentLabel]){
+  for(let i=0;i<lines.length;i++){
+   const line=lines[i],label=regex.exec(line);
+   if(!label||excluded.test(line.slice(0,label.index)))continue;
+   const after=line.slice(label.index+label[0].length);
+   let amount=amountAfter(after);
+   if(amount===null&&i+1<lines.length&&!excluded.test(lines[i+1])&&
+      !gallonsLabel.test(lines[i+1])&&!totalLabel.test(lines[i+1]))
+    amount=amountAfter(lines[i+1]);
+   if(amount!==null){result.total=amount;return result;}
   }
  }
+ // Standalone USD payment line, when unambiguous.
+ const usd=[...new Set(lines.map(line=>line.match(/^USD\s*\$\s*(\d+(?:,\d{3})*\.\d{2})$/i)).filter(Boolean).map(m=>Number(m[1].replace(/,/g,''))).filter(n=>n>0&&n<=100000))];
+ if(usd.length===1)result.total=usd[0].toFixed(2);
+ return result;
+}
+
+/* Cross-check numeric-only OCR output against a pump total before autofill.
+   Some offline OCR passes recognize the numbers but omit their row labels. */
+function parseFuelReceiptText(raw,today){
+ const result=parseFuelReceiptTextCore(raw,today);
+ const lines=String(raw||'').replace(/\u00a0/g,' ').split(/\r?\n/)
+  .map(line=>line.replace(/\s+/g,' ').trim()).filter(Boolean);
+ const volumes=[],prices=[],totals=[];
+ const skip=/\b(?:card|auth|transaction|invoice|entry|reference|change|tax|subtotal|discount|savings|balance|aid|amount)\b/i;
+ for(let i=0;i<lines.length;i++){
+  const line=lines[i];
+  if(skip.test(line))continue;
+  const volumeRe=/(?:^|[^\d.$])(\d{1,3}[.,]\d{3})(?!\d)/g;
+  for(const m of line.matchAll(volumeRe)){
+   if(/\b(?:price\s*\/|price\s+per|ppu|unit\s+price)\b/i.test(line))continue;
+   const n=Number(m[1].replace(',','.'));
+   if(n>=0.5&&n<=250)volumes.push({i,n});
+  }
+  const priceRe=/\$\s*(\d{1,2}[.,]\d{3})(?!\d)/g;
+  for(const m of line.matchAll(priceRe)){
+   const n=Number(m[1].replace(',','.'));
+   if(n>=0.5&&n<=20)prices.push({i,n});
+  }
+  const totalRe=/\$\s*(\d{1,6}(?:,\d{3})*\.\d{2})(?!\d)/g;
+  for(const m of line.matchAll(totalRe)){
+   const n=Number(m[1].replace(/,/g,''));
+   if(n>0&&n<=10000)totals.push({i,n});
+  }
+ }
+ const verified=new Map();
+ for(const q of volumes)for(const p of prices)for(const t of totals){
+  if(Math.max(q.i,p.i,t.i)-Math.min(q.i,p.i,t.i)>5)continue;
+  if(Math.abs(q.n*p.n-t.n)>0.011)continue;
+  const key=q.n.toFixed(3)+'|'+p.n.toFixed(3)+'|'+t.n.toFixed(2);
+  verified.set(key,{q,p,t});
+ }
+ if(verified.size!==1)return result; // Ambiguity must remain manual.
+ const {q,p,t}=[...verified.values()][0];
+ if(result.total!==null&&Math.abs(Number(result.total)-t.n)>0.005)return result;
+ if(result.gallons!==null&&Math.abs(Number(result.gallons)-q.n)>0.0005
+    &&Math.abs(Number(result.gallons)-p.n)>0.0005)return result;
+ result.gallons=q.n.toFixed(3);
+ result.total=t.n.toFixed(2);
  return result;
 }
 /* FUEL_RECEIPT_PARSER_END */
 
+
+
+/* FUEL_SCANNER_V2_BEGIN */
+// Separate receipt parser for the cropped document scanner. No values are
+// invented from total/quantity arithmetic; arithmetic ONLY validates OCR candidates.
+function parseFuelScanV2(raw,today){
+ const source=String(raw||'').replace(/\u00a0/g,' ').replace(/\r/g,'');
+ const lines=source.split('\n').map(x=>x.replace(/(\d)\s+([.,])\s*(?=\d)/g,'$1$2').replace(/\s*([.,])\s*(?=\d)/g,'$1')
+  .replace(/\bGALL0NS?\b/gi,'GALLONS').replace(/\bFUEL\s*5ALE\b/gi,'FUEL SALE')
+  .replace(/\bPR[1I]CE\b/gi,'PRICE').replace(/\s+/g,' ').trim()).filter(Boolean);
+ const shared=parseServiceReceiptText(source,today);
+ const found={date:shared.date,mileage:shared.mileage,gallons:null,total:null,unitPrice:null,verified:false,conflict:false};
+ const qtyLabel=/\b(?:GALLONS?|GALS?|VOLUME|QUANTITY|QTY)\b/i;
+ const priceLabel=/\b(?:UNIT\s*PRICE|PRICE\s*(?:PER|\/)?\s*(?:GALLONS?|GALS?)?|PPG|P\s*\/\s*G)\b/i;
+ const totalLabel=/\b(?:FUEL\s*SALE|TOTAL(?:\s*(?:PAID|DUE|SALE|AMOUNT))?|AMOUNT\s*PAID|SALE\s*TOTAL)\b/i;
+ const exclude=/\b(?:AUTH|ACCOUNT|CARD|REF|TRANSACTION|PUMP|TAX|DISCOUNT|SUBTOTAL|CHANGE|ZIP|PHONE)\b/i;
+ const entries=[];
+ for(let i=0;i<lines.length;i++){
+  const line=lines[i];
+  const rx=/(\$?)\s*(\d{1,4}[.,]\d{2,3})(?!\d)/g;
+  for(const m of line.matchAll(rx)){
+   const amount=Number(m[2].replace(',','.'));
+   if(!Number.isFinite(amount))continue;
+   const decimals=m[2].split(/[.,]/)[1].length;
+   entries.push({line:i,amount,decimals,dollar:!!m[1],qty:qtyLabel.test(line),
+     price:priceLabel.test(line),total:totalLabel.test(line),excluded:exclude.test(line)});
+  }
+ }
+ // A label may be on the preceding line after OCR column splitting.
+ function nearLabel(item,re){
+  return re.test(lines[item.line]||'')||
+    (item.line>0 && !entries.some(x=>x.line===item.line-1)&&re.test(lines[item.line-1]));
+ }
+ const q=entries.filter(x=>x.decimals===3&&x.amount>=0.5&&x.amount<=250&&!x.excluded&&!x.dollar)
+  .map(x=>({...x,score:(nearLabel(x,qtyLabel)?5:0)+(x.dollar?-3:1)-(nearLabel(x,priceLabel)?4:0)}))
+  .filter(x=>x.score>=0);
+ const p=entries.filter(x=>x.decimals===3&&x.amount>=0.5&&x.amount<=15&&!x.excluded)
+  .map(x=>({...x,score:(nearLabel(x,priceLabel)?5:0)+(x.dollar?3:0)-(nearLabel(x,qtyLabel)&&!x.dollar?3:0)}))
+  .filter(x=>x.score>=2);
+ const t=entries.filter(x=>x.decimals===2&&x.amount>0&&x.amount<=20000&&!x.excluded)
+  .map(x=>({...x,score:(nearLabel(x,totalLabel)?5:0)+(x.dollar?2:0)}))
+  .filter(x=>x.score>=2);
+ const choices=new Map();
+ for(const volume of q)for(const price of p)for(const total of t){
+  if(Math.max(volume.line,price.line,total.line)-Math.min(volume.line,price.line,total.line)>9)continue;
+  if(volume.line===price.line&&volume.amount===price.amount)continue;
+  if(Math.abs(volume.amount*price.amount-total.amount)>0.025)continue;
+  const score=volume.score+price.score+total.score+
+   (volume.line<=price.line&&price.line<=total.line?2:0);
+  const key=[volume.amount.toFixed(3),price.amount.toFixed(3),total.amount.toFixed(2)].join('|');
+  const prev=choices.get(key);
+  if(!prev||score>prev.score)choices.set(key,{volume,price,total,score});
+ }
+ const ordered=[...choices.values()].sort((a,b)=>b.score-a.score);
+ // Don't silently interchange price and volume or pick between equal scores.
+ if(ordered.length&&(!ordered[1]||ordered[0].score>ordered[1].score+2)){
+  const best=ordered[0];
+  found.gallons=best.volume.amount.toFixed(3);
+  found.total=best.total.amount.toFixed(2);
+  found.unitPrice=best.price.amount.toFixed(3);
+  found.verified=true;
+  return found;
+ }
+ // Trust unambiguous explicitly labeled amounts, but never treat a pump
+ // price as a gallon quantity or manufacture a total from multiplication.
+ const select=(candidates,flag)=>candidates.filter(x=>flag(x))
+  .filter((x,i,a)=>a.findIndex(y=>y.amount===x.amount)===i);
+ const labelsQ=select(q,x=>nearLabel(x,qtyLabel)&&!x.dollar&&!nearLabel(x,priceLabel));
+ const labelsT=select(t,x=>nearLabel(x,totalLabel));
+ if(labelsQ.length===1&&labelsT.length===1){
+  const priceLabels=p.filter(x=>nearLabel(x,priceLabel)&&x.score>=5);
+  if(priceLabels.length && !priceLabels.some(x=>
+      Math.abs(labelsQ[0].amount*x.amount-labelsT[0].amount)<=0.025)){
+   found.conflict=true;
+   return found; // Don't fill numbers when OCR fails the pump math check.
+  }
+ }
+ if(labelsQ.length===1)found.gallons=labelsQ[0].amount.toFixed(3);
+ if(labelsT.length===1)found.total=labelsT[0].amount.toFixed(2);
+ // Gallery OCR can split TOTAL and its amount, or read "53 .34".
+ // Accept explicit final-total/payment rows only, never subtotal alone.
+ if(found.total===null&&!found.conflict&&labelsT.length===0){
+  const finalLabel=/\b(?:GRAND\s+TOTAL|TOTAL(?:\s+(?:PAID|DUE|SALE|AMOUNT))?|AMOUNT\s+PAID|CREDIT|DEBIT|USD)\b/i;
+  const reject=/\b(?:SUB\s*TOTAL|TAX|CHANGE|DISCOUNT|SAVINGS|BALANCE|AUTH|CARD|REF|ACCOUNT)\b/i;
+  const candidates=new Set();
+  for(let i=0;i<lines.length;i++){
+   const line=lines[i], label=finalLabel.exec(line);
+   if(!label||reject.test(line))continue;
+   let tail=line.slice(label.index+label[0].length).trim();
+   if(!tail||/^[:$ ]+$/.test(tail))tail=lines[i+1]||'';
+   const m=tail.match(/^\s*[:$]?\s*(\d{1,5})\s*[.,]\s*(\d{2})(?!\d)\s*$/);
+   if(m&&Number(m[1]+'.'+m[2])>0)candidates.add(Number(m[1]+'.'+m[2]).toFixed(2));
+  }
+  if(candidates.size===1)found.total=[...candidates][0];
+ }
+ return found;
+}
+/* FUEL_SCANNER_V2_END */
 
 let receiptScriptPromise=null;
 function ensureReceiptOCR(){
@@ -548,9 +833,68 @@ function ensureReceiptOCR(){
  }
  return receiptScriptPromise;
 }
+
+// Native Android APKs use bundled ML Kit instead of a CDN/worker download.
+// Browser-only HTML keeps Tesseract.js as a fallback. Receipt pixels remain on
+// the device; Android receives a resized JPEG, never a remote image URL.
+let receiptOcrNextId=0;
+const receiptOcrPending=new Map();
+window.milesageReceiptOcrComplete=function(payload){
+ const id=String(payload?.id??''),pending=receiptOcrPending.get(id);
+ if(!pending)return; // Ignore stale or timed-out responses.
+ receiptOcrPending.delete(id);
+ clearTimeout(pending.timer);
+ if(payload.error)pending.reject(Error(String(payload.error)));
+ else pending.resolve(String(payload.text||''));
+};
+async function androidReceiptImage(file){
+ const url=URL.createObjectURL(file);
+ try{
+  const img=new Image();
+  img.src=url;
+  await img.decode();
+  // Keep fine receipt print readable but avoid huge WebView bridge payloads.
+  const scale=Math.min(1,2800/Math.max(img.naturalWidth,img.naturalHeight));
+  const canvas=document.createElement('canvas');
+  canvas.width=Math.max(1,Math.round(img.naturalWidth*scale));
+  canvas.height=Math.max(1,Math.round(img.naturalHeight*scale));
+  const ctx=canvas.getContext('2d');
+  if(!ctx)throw Error('Cannot prepare receipt for Android OCR.');
+  ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(img,0,0,canvas.width,canvas.height);
+  const base64=canvas.toDataURL('image/jpeg',0.9).split(',')[1];
+  if(!base64||base64.length>11000000)throw Error('Receipt image is too large to scan. Retake it closer.');
+  return base64;
+ }finally{URL.revokeObjectURL(url);}
+}
+async function recognizeReceiptPhoto(file){
+ if(window.MileSageAndroid&&typeof window.MileSageAndroid.recognizeReceipt==='function'){
+  const base64=await androidReceiptImage(file);
+  return await new Promise((resolve,reject)=>{
+   const id=String(++receiptOcrNextId);
+   const timer=setTimeout(()=>{
+    receiptOcrPending.delete(id);
+    reject(Error('Android receipt reader timed out. Try a clearer photo.'));
+   },45000);
+   receiptOcrPending.set(id,{resolve,reject,timer});
+   try{window.MileSageAndroid.recognizeReceipt(id,base64);}
+   catch(error){
+    clearTimeout(timer);receiptOcrPending.delete(id);reject(error);
+   }
+  });
+ }
+ const engine=await ensureReceiptOCR();
+ let worker=null;
+ try{
+  worker=await engine.createWorker('eng');
+  const result=await worker.recognize(file);
+  return String(result?.data?.text||'');
+ }finally{if(worker)await worker.terminate();}
+}
+
 // Show a temporary receipt thumbnail before OCR starts, including when OCR fails.
 // Object URLs are short-lived and never written to localStorage, JSON or GitHub.
-const receiptPreviewUrls={service:null,fuel:null};
+const receiptPreviewUrls={service:null,fuel:null,expense:null};
 function showReceiptPreview(kind,file){
  receiptFiles[kind]=file;
  const panel=$(kind+'PhotoPreview'),img=$(kind+'PhotoImage'),info=$(kind+'PhotoInfo');
@@ -561,77 +905,124 @@ function showReceiptPreview(kind,file){
  img.src=url;
  panel.hidden=false;
  info.textContent='Photo received ('+(file.size/1048576).toFixed(1)+
-   ' MB). Photo selected. It will be attached to the fuel or service entry when you save; phone-folder copies require folder permission.';
+   ' MB). Photo selected. It will be attached to the selected entry when you save; phone-folder copies require folder permission.';
 }
 function clearReceiptPreview(kind){
  receiptFiles[kind]=null;
  if(receiptPreviewUrls[kind])URL.revokeObjectURL(receiptPreviewUrls[kind]);
  receiptPreviewUrls[kind]=null;
 }
+/* SERVICE_RECEIPT_V2_BEGIN */
+let serviceReceiptScanOwner=null,serviceReceiptScanEpoch=null;
+function applyServiceScanV2(raw,a,origin){
+ const status=$('receiptProgress');
+ if(!status||v()!==a)throw Error('Selected vehicle changed during scan.');
+ $('receiptTextReview').style.display='';
+ $('receiptOcrText').textContent=String(raw||'').slice(0,12000);
+ const found=parseServiceReceiptText(raw,localDate());
+ const fields=[];
+ if(found.description){
+  // Do not overwrite work already typed by the user.
+  if(!$('serviceDesc').value.trim()){
+   $('serviceDesc').value=found.description;
+   fields.push('work performed');
+  }
+ }
+ if(found.date){$('serviceDate').value=found.date;fields.push('service date');}
+ if(found.mileage!=null){
+  if(found.mileage<=a.mileage){
+   $('serviceOdo').value=String(found.mileage);fields.push('odometer');
+  }else status.textContent='Receipt odometer exceeds vehicle mileage; verify on Home.';
+ }
+ if(found.cost!=null){$('serviceCost').value=found.cost;fields.push('cost ($'+found.cost+')');}
+ // OCR cannot prove actual work or establish whether a service reset occurred.
+ // Suggest maintenance checkboxes for review; never save or reset automatically.
+ for(const [flag,id,label] of [
+  ['oil','oilReset','oil service'],['tire','tireReset','tire rotation'],
+  ['cabin','cabinReplaced','cabin filter'],['engine','engineReplaced','engine filter']
+ ]){
+  if(found[flag]){$(id).checked=true;fields.push(label);}
+ }
+ status.textContent=(fields.length?'Suggested from scanned service receipt: '+fields.join(', ')+'.'
+  :'No reliable service details identified. Review recognized text and enter fields manually.')+
+  ' REVIEW all fields, especially service resets, before saving.'+
+  (found.mileage!=null&&found.mileage>a.mileage
+   ?' Receipt odometer is ahead of this vehicle; update Home only after checking your odometer.':'');
+ message(origin+' complete. Review and save the service entry manually.');
+}
+window.milesageServiceReceiptComplete=async function(data){
+ const status=$('receiptProgress');
+ const buttons=[$('serviceCameraButton'),$('serviceGalleryButton')];
+ buttons.forEach(b=>{if(b)b.disabled=false;});
+ const owner=serviceReceiptScanOwner,epoch=serviceReceiptScanEpoch;
+ serviceReceiptScanOwner=null;serviceReceiptScanEpoch=null;
+ if(!status||!owner||v()!==owner||epoch!==serviceDraftEpoch)return;
+ try{
+  if(data?.image){
+   if(!/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(data.image)||
+      data.image.length>5000000)throw Error('Invalid receipt preview from scanner.');
+   const blob=await (await fetch(data.image)).blob();
+   if(epoch!==serviceDraftEpoch||v()!==owner)return;
+   const file=new File([blob],'MileSage-Service-Scan-'+Date.now()+'.jpg',{type:'image/jpeg'});
+   showReceiptPreview('service',file);
+  }
+  if(epoch!==serviceDraftEpoch||v()!==owner)return;
+  if(!data?.text){
+   status.textContent=(data?.error||'No readable service text detected.')+
+    ' Photo remains attached for manual entry; nothing was saved.';
+   return;
+  }
+  applyServiceScanV2(data.text,owner,'Service document scan');
+  if(data?.error)status.textContent+=' Scanner note: '+data.error;
+ }catch(error){
+  if(epoch!==serviceDraftEpoch)return;
+  status.textContent='Could not fill service details: '+error.message+
+   '. Keep the photo and enter service information manually.';
+ }
+};
 function wireServiceReceiptPhoto(a){
  const camera=$('serviceCameraInput'),gallery=$('serviceGalleryInput');
  const buttons=[$('serviceCameraButton'),$('serviceGalleryButton')];
- $('serviceCameraButton').onclick=()=>{$('receiptProgress').textContent='Opening camera… Take a photo and confirm Use photo to return to MileSage.';camera.click();};
+ const nativeAvailable=()=>!!(window.MileSageAndroid&&
+   typeof window.MileSageAndroid.scanServiceReceipt==='function');
+ $('serviceCameraButton').textContent=nativeAvailable()?'Scan service receipt':'Take receipt photo';
+ $('serviceCameraButton').onclick=()=>{
+  if(nativeAvailable()){
+   serviceReceiptScanOwner=a;
+   serviceReceiptScanEpoch=serviceDraftEpoch;
+   buttons.forEach(x=>x.disabled=true);
+   $('receiptProgress').textContent='Opening one-page document scanner. Crop and straighten the service receipt, then tap Done.';
+   try{window.MileSageAndroid.scanServiceReceipt();}
+   catch(error){
+    serviceReceiptScanOwner=null;serviceReceiptScanEpoch=null;
+    buttons.forEach(x=>x.disabled=false);
+    $('receiptProgress').textContent='Could not open document scanner: '+error.message;
+   }
+  }else{
+   $('receiptProgress').textContent='Opening camera… Take a clear, close-up service receipt photo.';
+   camera.click();
+  }
+ };
  $('serviceGalleryButton').onclick=()=>gallery.click();
  const read=async input=>{
   const file=input.files?.[0];
   if(!file)return;
   const requestEpoch=serviceDraftEpoch;
-  if(!file.type.startsWith('image/')){alert('Choose an image of the receipt.');input.value='';return;}
-  if(file.size>15_000_000){alert('Receipt photo is too large. Use an image under 15 MB.');input.value='';return;}
+  if(!file.type.startsWith('image/')){alert('Select a service receipt photo.');input.value='';return;}
+  if(file.size>15_000_000){alert('Service receipt photo exceeds 15 MB.');input.value='';return;}
   showReceiptPreview('service',file);
   buttons.forEach(x=>x.disabled=true);
-  const status=$('receiptProgress');
-  status.textContent='Photo received. Preparing receipt reader… (first scan needs internet).';
-  let worker=null;
   try{
-   const engine=await ensureReceiptOCR();
-   if(requestEpoch!==serviceDraftEpoch)return;
-   status.textContent='Reading receipt on this device…';
-   worker=await engine.createWorker('eng');
-   const result=await worker.recognize(file);
-   if(requestEpoch!==serviceDraftEpoch)return;
-   const text=String(result?.data?.text||'').trim();
-   if(v()!==a)throw Error('Selected vehicle changed during scanning. Select the correct vehicle and rescan.');
-   if(!text)throw Error('No readable text found. Try retaking the photo in better light.');
-   const details=$('receiptTextReview');
-   const textArea=$('receiptOcrText');
-   details.style.display='';
-   textArea.textContent=text.slice(0,12000);
-   const suggestion=parseServiceReceiptText(text,localDate());
-   const fields=[];
-   if(suggestion.description){
-    if(!$('serviceDesc').value.trim()){
-     $('serviceDesc').value=suggestion.description;
-     fields.push('work performed');
-    }else status.textContent='Existing service description kept; review extracted text below.';
-   }
-   if(suggestion.date){$('serviceDate').value=suggestion.date;fields.push('date');}
-   if(suggestion.mileage!=null){
-    $('serviceOdo').value=String(suggestion.mileage);fields.push('mileage');
-   }
-   if(suggestion.cost){
-    $('serviceCost').value=suggestion.cost;fields.push('total cost');
-   }
-   if(suggestion.oil)$('oilReset').checked=true;
-   if(suggestion.tire)$('tireReset').checked=true;
-   if(suggestion.cabin)$('cabinReplaced').checked=true;
-   if(suggestion.engine)$('engineReplaced').checked=true;
-   const flags=[suggestion.oil&&'oil countdown',suggestion.tire&&'tire countdown',
-                suggestion.cabin&&'cabin filter',suggestion.engine&&'engine filter'].filter(Boolean);
-   if(flags.length)fields.push(...flags);
-   status.textContent=fields.length
-      ?'Suggested from photo: '+fields.join(', ')+'. REVIEW before saving.'
-      :'Photo captured and text recognized, but no reliable fields identified. Open View recognized text to compare the receipt, then enter missing details manually.';
-   if(suggestion.mileage!=null&&suggestion.mileage>a.mileage)
-    status.textContent+=' Photo mileage exceeds the current odometer. Update mileage on Home first, then rescan.';
-   message('Receipt scanned; review the suggested service fields.');
+   $('receiptProgress').textContent='Recognizing saved service receipt photo…';
+   const raw=(await recognizeReceiptPhoto(file)).trim();
+   if(requestEpoch!==serviceDraftEpoch||v()!==a)return;
+   if(!raw)throw Error('No readable text. Try Scan service receipt for automatic crop and enhancement.');
+   applyServiceScanV2(raw,a,'Service photo');
   }catch(error){
    if(requestEpoch!==serviceDraftEpoch)return;
-   status.textContent='Photo preview is shown, but receipt scanning failed: '+error.message+
+   $('receiptProgress').textContent='Photo preview is shown, but receipt scanning failed: '+error.message+
       ' You can still enter the service details manually.';
   }finally{
-   if(worker){try{await worker.terminate();}catch(e){}}
    buttons.forEach(x=>x.disabled=false);
    input.value='';
   }
@@ -639,12 +1030,62 @@ function wireServiceReceiptPhoto(a){
  camera.onchange=()=>read(camera);
  gallery.onchange=()=>read(gallery);
 }
+/* SERVICE_RECEIPT_V2_END */
+
+/* SERVICE_MULTIPAGE_PDF_BEGIN */
+let servicePdfDraft=null, servicePdfScanOwner=null;
+window.milesageServiceScannerComplete=function(result){
+ const info=result||{},status=$('servicePdfScanStatus'),preview=$('servicePdfPreview');
+ if(!status)return;
+ if(info.error){status.textContent=info.error;return;}
+ if(!info.id||!Number.isInteger(info.pages)||info.pages<1){status.textContent='Scanner did not return a valid PDF.';return;}
+ if(v()!==servicePdfScanOwner){
+  status.textContent='Selected vehicle changed during scanning. Document not attached; scan again for the correct vehicle.';return;
+ }
+ servicePdfDraft={vehicle:servicePdfScanOwner,id:info.id,pages:info.pages,name:String(info.name||'Service invoice.pdf')};
+ status.textContent='Scanned '+info.pages+' page(s) into one PDF. Save the service entry to attach it.';
+ if(preview){preview.hidden=false;preview.textContent='Ready: '+servicePdfDraft.name+' · '+info.pages+' pages';}
+ message('Multi-page invoice ready. Save the service record.');
+};
+function wireServicePdfScanner(a){
+ const button=$('scanServicePdf'),status=$('servicePdfScanStatus'),preview=$('servicePdfPreview');
+ if(!button)return;
+ if(servicePdfDraft&&servicePdfDraft.vehicle!==a)servicePdfDraft=null;
+ if(servicePdfDraft){
+  preview.hidden=false;preview.textContent='Ready: '+servicePdfDraft.name+' · '+servicePdfDraft.pages+' pages';
+  status.textContent='Finish and save the service entry to attach this PDF.';
+ }
+ button.onclick=()=>{
+  if(!window.MileSageAndroid||typeof window.MileSageAndroid.scanServiceInvoice!=='function'){
+   status.textContent='Multi-page scanner requires the MileSage Service Scanner Test Android app.';return;
+  }
+  servicePdfScanOwner=a;
+  status.textContent='Opening document scanner. Capture all pages, review their order and save in the scanner.';
+  window.MileSageAndroid.scanServiceInvoice();
+ };
+}
+function wireServicePdfHistory(){
+ $('serviceBody').querySelectorAll('[data-service-pdf]').forEach(btn=>btn.onclick=()=>{
+  const index=Number(btn.dataset.servicePdf),item=v()?.service_history?.[index]?.service_document;
+  if(!item)return;
+  if(window.MileSageAndroid?.openServiceInvoice)window.MileSageAndroid.openServiceInvoice(item.id);
+  else alert('Open this PDF inside the MileSage Service Scanner Test Android app.');
+ });
+ $('serviceBody').querySelectorAll('[data-service-pdf-share]').forEach(btn=>btn.onclick=()=>{
+  const index=Number(btn.dataset.servicePdfShare),item=v()?.service_history?.[index]?.service_document;
+  if(!item)return;
+  if(window.MileSageAndroid?.shareServiceInvoice)window.MileSageAndroid.shareServiceInvoice(item.id);
+  else alert('PDF sharing requires the Android Service Scanner Test app.');
+ });
+}
+/* SERVICE_MULTIPAGE_PDF_END */
 
 let serviceDraftEpoch=0;
 function cancelServiceEntry(a){
  const form=$('serviceForm');
  if(!form)return;
  serviceDraftEpoch++;
+ serviceReceiptScanOwner=null;serviceReceiptScanEpoch=null;
  form.reset();
  $('serviceDate').value=localDate();
  $('serviceOdo').value=String(a.mileage);
@@ -665,9 +1106,9 @@ function cancelServiceEntry(a){
  message('Service entry canceled. No record saved.');
 }
 
-function renderService(){clearReceiptPreview('service');const a=v(), el=$('serviceBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}el.innerHTML=tirePressureCard(a)+`<div class="card feature-card"><h3 style="margin-top:0">Log maintenance</h3>${formVehicleName(a)}<form id="serviceForm"><div class="note info"><strong>Service receipt photo</strong><div class="small">Take a photo or choose an existing image. MileSage will attempt to fill the date, mileage, service description and cost; review all fields before saving. OCR downloads recognition tools when connected, and the photo is attached to the entry and Full mobile backup. Choose a phone photo folder in Data & backup for a MileSage/Photos copy.</div></div><div class="button-row"><button id="serviceCameraButton" class="btn secondary" type="button">Take receipt photo</button><button id="serviceGalleryButton" class="btn secondary" type="button">Choose photo</button></div><input id="serviceCameraInput" type="file" accept="image/*" capture="environment" hidden><input id="serviceGalleryInput" type="file" accept="image/*" hidden><div id="receiptProgress" class="small muted" role="status" aria-live="polite">No receipt scanned yet.</div><div id="servicePhotoPreview" class="note info" hidden><strong>Photo ready to attach</strong><img id="servicePhotoImage" alt="Selected service receipt" style="display:block;max-width:100%;max-height:230px;object-fit:contain;margin:8px auto;border-radius:8px"><div id="servicePhotoInfo" class="small"></div></div><details id="receiptTextReview" style="display:none"><summary>View recognized text</summary><pre id="receiptOcrText" style="white-space:pre-wrap;word-wrap:break-word;max-height:180px;overflow:auto"></pre></details><label class="field" for="serviceDesc">Work performed</label><input id="serviceDesc" type="text" required maxlength="180" placeholder="Oil change, tire rotation…"><div class="grid2"><div><label class="field" for="serviceDate">Date</label><input type="date" id="serviceDate" required value="${localDate()}"></div><div><label class="field" for="serviceOdo">Odometer</label><input type="number" id="serviceOdo" inputmode="numeric" min="0" required step="1" value="${a.mileage}"></div></div><label class="field" for="serviceCost">Cost in dollars (optional)</label><input id="serviceCost" inputmode="decimal" type="text" placeholder="89.95"><div class="check"><input type="checkbox" id="oilReset"><label for="oilReset">Reset oil-change countdown</label></div><div class="check"><input type="checkbox" id="tireReset"><label for="tireReset">Reset tire-rotation countdown</label></div><div class="check"><input type="checkbox" id="cabinReplaced"><label for="cabinReplaced">Cabin air filter replaced (log replacement)</label></div><div class="check"><input type="checkbox" id="engineReplaced"><label for="engineReplaced">Engine air filter replaced (log replacement)</label></div><div class="button-row" style="margin-top:12px"><button type="submit" class="btn">Save service record</button><button id="cancelServiceEntry" type="button" class="btn secondary">Cancel</button></div></form></div><div class="card"><h3 style="margin-top:0">Service history (${num(a.service_history.length)})</h3>${recordList(a.service_history,'service')}</div>`+fluidFilterCard(a);
+function renderService(){serviceDraftEpoch++;serviceReceiptScanOwner=null;serviceReceiptScanEpoch=null;clearReceiptPreview('service');const a=v(), el=$('serviceBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}el.innerHTML=tirePressureCard(a)+`<div class="card feature-card"><h3 style="margin-top:0">Log maintenance</h3>${formVehicleName(a)}<form id="serviceForm"><div class="note info"><strong>Service receipt photo</strong><div class="small">Scan a one-page receipt with crop and straightening, or choose a saved image. MileSage suggests date, mileage, work performed and cost. Confirm all fields and resets before saving. Android receipt scanning works offline; browser-only OCR downloads recognition tools when connected, and the photo is attached to the entry and Full mobile backup. Choose a phone photo folder in Data & backup for a MileSage/Photos copy.</div></div><div class="card" style="margin:12px 0;padding:12px;background:#f7fafc"><strong>Multi-page dealership or repair invoice</strong><p class="small muted">Scan up to 30 pages in one session. Review page order in the scanner. One PDF is attached when you save this service entry. Scanned PDFs stay in this app and are not included in JSON backups; share/export them separately before changing phones.</p><button id="scanServicePdf" class="btn secondary" type="button">Scan multi-page service invoice</button><p id="servicePdfScanStatus" class="small muted" role="status">No multi-page PDF scanned yet.</p><p id="servicePdfPreview" class="note info" hidden></p></div><div class="button-row"><button id="serviceCameraButton" class="btn secondary" type="button">Take receipt photo</button><button id="serviceGalleryButton" class="btn secondary" type="button">Choose photo</button></div><input id="serviceCameraInput" type="file" accept="image/*" capture="environment" hidden><input id="serviceGalleryInput" type="file" accept="image/*" hidden><div id="receiptProgress" class="small muted" role="status" aria-live="polite">No receipt scanned yet.</div><div id="servicePhotoPreview" class="note info" hidden><strong>Photo ready to attach</strong><img id="servicePhotoImage" alt="Selected service receipt" style="display:block;max-width:100%;max-height:230px;object-fit:contain;margin:8px auto;border-radius:8px"><div id="servicePhotoInfo" class="small"></div></div><details id="receiptTextReview" style="display:none"><summary>View recognized text</summary><pre id="receiptOcrText" style="white-space:pre-wrap;word-wrap:break-word;max-height:180px;overflow:auto"></pre></details><label class="field" for="serviceDesc">Work performed</label><input id="serviceDesc" type="text" required maxlength="180" placeholder="Oil change, tire rotation…"><div class="grid2"><div><label class="field" for="serviceDate">Date</label><input type="date" id="serviceDate" required value="${localDate()}"></div><div><label class="field" for="serviceOdo">Odometer</label><input type="number" id="serviceOdo" inputmode="numeric" min="0" required step="1" value="${a.mileage}"></div></div><label class="field" for="serviceCost">Cost in dollars (optional)</label><input id="serviceCost" inputmode="decimal" type="text" placeholder="89.95"><div class="check"><input type="checkbox" id="oilReset"><label for="oilReset">Reset oil-change countdown</label></div><div class="check"><input type="checkbox" id="tireReset"><label for="tireReset">Reset tire-rotation countdown</label></div><div class="check"><input type="checkbox" id="cabinReplaced"><label for="cabinReplaced">Cabin air filter replaced (log replacement)</label></div><div class="check"><input type="checkbox" id="engineReplaced"><label for="engineReplaced">Engine air filter replaced (log replacement)</label></div><div class="button-row" style="margin-top:12px"><button type="submit" class="btn">Save service record</button><button id="cancelServiceEntry" type="button" class="btn secondary">Cancel</button></div></form></div><div class="card"><h3 style="margin-top:0">Service history (${num(a.service_history.length)})</h3>${recordList(a.service_history,'service')}</div>`+fluidFilterCard(a);
 wireTirePressureForm(a);wireFluidAndFilters(a);wireServiceReceiptPhoto(a);wirePhotoHistory('service');
- $('cancelServiceEntry').onclick=()=>cancelServiceEntry(a);
+ $('cancelServiceEntry').onclick=()=>cancelServiceEntry(a);wireServicePdfScanner(a);wireServicePdfHistory();
 $('serviceForm').onsubmit=async e=>{
  e.preventDefault();
  const cancel=$('cancelServiceEntry');cancel.disabled=true;
@@ -678,6 +1119,8 @@ $('serviceForm').onsubmit=async e=>{
   const desc=$('serviceDesc').value.trim();if(!desc)throw Error('Enter the work performed.');
   const record={date,mileage:od,description:desc,cost_cents:costCents($('serviceCost').value,true),
    oil_reset:$('oilReset').checked,tire_reset:$('tireReset').checked};
+  const pdf=servicePdfDraft?.vehicle===a?servicePdfDraft:null;
+  if(pdf)record.service_document={id:pdf.id,pages:pdf.pages,name:pdf.name};
   const cabin=$('cabinReplaced').checked,engine=$('engineReplaced').checked;
   await storeReceipt(a,'service',record,()=>{
    a.service_history.push(record);
@@ -688,63 +1131,121 @@ $('serviceForm').onsubmit=async e=>{
    if(record.oil_reset)a.last_service_mileage=od;
    if(record.tire_reset)a.last_tire_rotation_mileage=od;
   });
+  if(pdf){servicePdfDraft=null;renderService();}
  }catch(err){alert(err.message);}
  finally{cancel.disabled=false;}
 };
 }
 
+// The fuel scanner's new Android document-capture callback returns a
+// corrected JPEG plus the text recognized from that same scanned page.
+let fuelScanOwner=null;
+function applyFuelScanV2(text,a,origin){
+ const progress=$('fuelReceiptProgress');
+ if(!progress||v()!==a)throw Error('Selected vehicle changed during scan.');
+ const preview=$('fuelReceiptTextReview'),raw=$('fuelReceiptOcrText');
+ if(preview&&raw){preview.style.display='';raw.textContent=String(text||'').slice(0,12000);}
+ const found=parseFuelScanV2(text,localDate());
+ const fields=[];
+ if(found.date){$('fuelDate').value=found.date;fields.push('date');}
+ if(found.gallons!==null){$('fuelGallons').value=found.gallons;fields.push(found.gallons+' gallons');}
+ if(found.total!==null){$('fuelCost').value=found.total;fields.push('$'+found.total+' paid');}
+ if(found.mileage!==null){$('fuelOdo').value=String(found.mileage);fields.push('odometer');}
+ $('fullTank').checked=false;
+ const checked=found.conflict?' Receipt values disagree with the pump calculation; enter manually.' :found.verified
+  ? ' Verified calculation: '+found.gallons+' gal × $'+found.unitPrice+'/gal ≈ $'+found.total+'.'
+  : ' Values not mathematically verified; compare against receipt.';
+ progress.textContent=(fields.length?'Recognized: '+fields.join(', ')+'.'
+  :'No safe fuel values recognized. Review the cropped receipt and text.')+
+  checked+' REVIEW all fields and select Full Tank manually before saving.'+
+  (found.mileage!==null&&found.mileage<a.mileage
+   ?' Older receipt mileage will not lower vehicle odometer.':'');
+ message(origin+' complete. Review fuel entry before saving.');
+}
+window.milesageFuelScanComplete=async function(data){
+ const status=$('fuelReceiptProgress'),buttons=[$('fuelCameraButton'),$('fuelGalleryButton')];
+ buttons.forEach(b=>{if(b)b.disabled=false;});
+ if(!status)return;
+ const owner=fuelScanOwner;
+ fuelScanOwner=null;
+ if(!owner||v()!==owner){
+  status.textContent='Vehicle selection changed. Scanner results discarded; no entry saved.';
+  return;
+ }
+ try {
+  if(data?.image){
+   if(!/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(data.image)||
+      data.image.length>5000000)throw Error('Invalid scanner photo received.');
+   const blob=await (await fetch(data.image)).blob();
+   if(v()!==owner)throw Error('Vehicle changed while loading scanned photo.');
+   const file=new File([blob],'MileSage-Fuel-Scan-'+Date.now()+'.jpg',{type:'image/jpeg'});
+   showReceiptPreview('fuel',file);
+  }
+  if(!data?.text){
+   status.textContent=(data?.error||'Nothing readable in scanned receipt.')+
+     ' Photo can still be attached; enter fuel values manually.';
+   return;
+  }
+  applyFuelScanV2(data.text,owner,'Fuel document scan');
+  if(data?.error)status.textContent+=' Scanner note: '+data.error;
+ }catch(e){
+  status.textContent='Scanner did not populate fields: '+e.message+
+    ' Use Choose photo or enter fuel details manually.';
+ }
+};
 function wireFuelReceiptPhoto(a){
  const camera=$('fuelCameraInput'),gallery=$('fuelGalleryInput');
  const buttons=[$('fuelCameraButton'),$('fuelGalleryButton')];
  if(!camera||!gallery)return;
- $('fuelCameraButton').onclick=()=>{$('fuelReceiptProgress').textContent='Opening camera… Take a photo and confirm Use photo to return to MileSage.';camera.click();};
- $('fuelGalleryButton').onclick=()=>gallery.click();
+ const nativeAvailable=()=>!!(window.MileSageAndroid&&typeof window.MileSageAndroid.scanFuelReceipt==='function');
+ $('fuelCameraButton').textContent=nativeAvailable()?'Scan fuel receipt':'Take fuel receipt photo';
+ $('fuelCameraButton').onclick=()=>{
+  const status=$('fuelReceiptProgress');
+  if(nativeAvailable()){
+   fuelScanOwner=a;
+   buttons.forEach(x=>x.disabled=true);
+   status.textContent='Opening document scanner. Fill the frame with the receipt, crop/straighten it, then tap Done.';
+   try{window.MileSageAndroid.scanFuelReceipt();}
+   catch(e){fuelScanOwner=null;buttons.forEach(x=>x.disabled=false);status.textContent='Cannot open scanner: '+e.message;}
+  }else{
+   status.textContent='Opening camera… Fill the image with the printed receipt.';
+   camera.click();
+  }
+ };
+ $('fuelGalleryButton').onclick=()=>{
+  const status=$('fuelReceiptProgress');
+  // The native picker hands a content URI directly to bundled ML Kit OCR.
+  // This avoids large base64 transfers through the WebView JavaScript bridge.
+  if(window.MileSageAndroid&&typeof window.MileSageAndroid.chooseFuelReceiptPhoto==='function'){
+   fuelScanOwner=a;
+   buttons.forEach(x=>x.disabled=true);
+   status.textContent='Choose a saved receipt photo. Reading and autofill will begin after selection…';
+   try{window.MileSageAndroid.chooseFuelReceiptPhoto();}
+   catch(error){
+    fuelScanOwner=null;
+    buttons.forEach(x=>x.disabled=false);
+    status.textContent='Could not open saved photo: '+error.message;
+   }
+  }else gallery.click();
+ };
  const read=async input=>{
   const file=input.files?.[0];
   if(!file)return;
-  if(!file.type.startsWith('image/')){
-   alert('Choose a photo of a fuel receipt.');input.value='';return;
-  }
-  if(file.size>15_000_000){
-   alert('Fuel receipt photo exceeds 15 MB. Choose a smaller image.');input.value='';return;
-  }
+  if(!file.type.startsWith('image/')){alert('Choose a fuel receipt image.');input.value='';return;}
+  if(file.size>15_000_000){alert('Fuel receipt must be under 15 MB.');input.value='';return;}
   const progress=$('fuelReceiptProgress');
   showReceiptPreview('fuel',file);
   buttons.forEach(x=>x.disabled=true);
-  progress.textContent='Photo received. Preparing on-device receipt reader… (internet needed for first scan).';
-  let worker=null;
   try{
-   const engine=await ensureReceiptOCR();
-   worker=await engine.createWorker('eng');
-   progress.textContent='Recognizing fuel receipt on this device…';
-   const detected=await worker.recognize(file);
-   const text=String(detected?.data?.text||'').trim();
-   if(v()!==a)throw Error('Selected vehicle changed during scanning. Select the correct vehicle and rescan.');
-   if(!text)throw Error('No readable receipt text found. Retake the photo with better lighting.');
-   $('fuelReceiptTextReview').style.display='';
-   $('fuelReceiptOcrText').textContent=text.slice(0,12000);
-   const found=parseFuelReceiptText(text,localDate());
-   const fields=[];
-   if(found.date){$('fuelDate').value=found.date;fields.push('date');}
-   if(found.gallons!==null){$('fuelGallons').value=found.gallons;fields.push('gallons');}
-   if(found.total!==null){$('fuelCost').value=found.total;fields.push('total paid');}
-   if(found.mileage!==null){
-    $('fuelOdo').value=String(found.mileage);fields.push('odometer');
-   }
-   // Never infer full_tank from OCR; partial/full must be user-confirmed.
-   $('fullTank').checked=false;
-   progress.textContent=(fields.length
-    ?'Suggested from photo: '+fields.join(', ')+'.'
-    :'Photo received, but no reliable fuel fields recognized. Open View recognized text.')+
-    ' REVIEW every field. Confirm Full Tank manually before saving.'+
-    (found.mileage!==null&&found.mileage<a.mileage
-     ?' Receipt odometer is older and will be logged as a historical fill-up without lowering the vehicle odometer.':'');
-   message('Fuel receipt scanned. Check suggested values before saving.');
+   progress.textContent='Reading saved receipt image…';
+   const text=(await recognizeReceiptPhoto(file)).trim();
+   if(v()!==a)throw Error('Vehicle selection changed during scanning.');
+   if(!text)throw Error('No readable text. Try Scan fuel receipt to crop it first.');
+   applyFuelScanV2(text,a,'Receipt image');
   }catch(error){
-   progress.textContent='Photo preview is shown, but fuel receipt scanning failed: '+error.message+
-    ' You can still enter the fill-up details manually.';
+   progress.textContent='Photo attached, but autofill failed: '+error.message+
+     ' Try Scan fuel receipt, or enter fields manually.';
   }finally{
-   if(worker){try{await worker.terminate();}catch(e){}}
    buttons.forEach(x=>x.disabled=false);
    input.value='';
   }
@@ -753,7 +1254,7 @@ function wireFuelReceiptPhoto(a){
  gallery.onchange=()=>read(gallery);
 }
 
-function renderFuel(){clearReceiptPreview('fuel');const a=v(), el=$('fuelBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}el.innerHTML=`<div class="card feature-card"><h3 style="margin-top:0">Record a fill-up</h3>${formVehicleName(a)}<form id="fuelForm"><div class="note info"><strong>Fuel receipt photo</strong><div class="small">Photograph your pump receipt or choose a saved photo. Suggested purchase date, gallons, total paid and odometer will fill in for review. Many receipts do not show odometer mileage. You must still confirm whether the tank was completely filled. The photo is attached to the entry and Full mobile backup. To copy it to MileSage/Photos, grant folder access under Data & backup.</div></div><div class="button-row"><button id="fuelCameraButton" class="btn secondary" type="button">Take fuel receipt photo</button><button id="fuelGalleryButton" class="btn secondary" type="button">Choose photo</button></div><input id="fuelCameraInput" type="file" accept="image/*" capture="environment" hidden><input id="fuelGalleryInput" type="file" accept="image/*" hidden><div id="fuelReceiptProgress" class="small muted" role="status" aria-live="polite">No receipt scanned yet.</div><div id="fuelPhotoPreview" class="note info" hidden><strong>Photo ready to attach</strong><img id="fuelPhotoImage" alt="Selected fuel receipt" style="display:block;max-width:100%;max-height:230px;object-fit:contain;margin:8px auto;border-radius:8px"><div id="fuelPhotoInfo" class="small"></div></div><details id="fuelReceiptTextReview" style="display:none"><summary>View recognized receipt text</summary><pre id="fuelReceiptOcrText" style="white-space:pre-wrap;word-wrap:break-word;max-height:180px;overflow:auto"></pre></details><div class="grid2"><div><label class="field" for="fuelDate">Date</label><input type="date" id="fuelDate" required value="${localDate()}"></div><div><label class="field" for="fuelOdo">Odometer</label><input type="number" min="0" step="1" inputmode="numeric" id="fuelOdo" required value="${a.mileage}"></div></div><div class="grid2"><div><label class="field" for="fuelGallons">US gallons</label><input id="fuelGallons" required inputmode="decimal" type="number" min="0.001" max="9999" step="any" placeholder="12.5"></div><div><label class="field" for="fuelCost">Total paid ($)</label><input id="fuelCost" required type="text" inputmode="decimal" placeholder="42.85"></div></div><div class="grid2"><div><label class="field" for="fuelType">Fuel type / blend</label><select id="fuelType"><option value="">Not recorded</option><option>Gasoline — blend unknown</option><option>E0 — Non-ethanol</option><option>E10 — gasoline</option><option>E15 — gasoline</option><option>E85 — flex fuel</option><option>Diesel</option><option>Diesel — B5</option><option>Diesel — B20</option><option>Biodiesel — B100</option></select></div><div><label class="field" for="fuelOctane">Octane (optional)</label><input id="fuelOctane" inputmode="numeric" type="number" min="1" max="150" step="1" placeholder="87"></div></div><div class="check"><input type="checkbox" id="fullTank" checked><label for="fullTank">Filled the tank completely</label></div><p class="small muted">MPG uses distances between full tanks and includes partial fill-ups in between.</p><button type="submit" class="btn full">Save fuel & mileage</button></form></div><div class="card"><h3 style="margin-top:0">Fuel history (${num(a.fuel_history.length)})</h3>${recordList(a.fuel_history,'fuel')}</div>`;
+function renderFuel(){clearReceiptPreview('fuel');const a=v(), el=$('fuelBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}el.innerHTML=`<div class="card feature-card"><h3 style="margin-top:0">Record a fill-up</h3>${formVehicleName(a)}<form id="fuelForm"><div class="note info"><strong>Fuel receipt photo</strong><div class="small">Use Scan fuel receipt for automatic crop, straightening and clearer text recognition; you can also choose a saved image. All recognized numbers must be reviewed before saving. Many receipts do not show odometer mileage. You must still confirm whether the tank was completely filled. The photo is attached to the entry and Full mobile backup. To copy it to MileSage/Photos, grant folder access under Data & backup.</div></div><div class="button-row"><button id="fuelCameraButton" class="btn secondary" type="button">Take fuel receipt photo</button><button id="fuelGalleryButton" class="btn secondary" type="button">Choose photo</button></div><input id="fuelCameraInput" type="file" accept="image/*" capture="environment" hidden><input id="fuelGalleryInput" type="file" accept="image/*" hidden><div id="fuelReceiptProgress" class="small muted" role="status" aria-live="polite">No receipt scanned yet.</div><div id="fuelPhotoPreview" class="note info" hidden><strong>Photo ready to attach</strong><img id="fuelPhotoImage" alt="Selected fuel receipt" style="display:block;max-width:100%;max-height:230px;object-fit:contain;margin:8px auto;border-radius:8px"><div id="fuelPhotoInfo" class="small"></div></div><details id="fuelReceiptTextReview" style="display:none"><summary>View recognized receipt text</summary><pre id="fuelReceiptOcrText" style="white-space:pre-wrap;word-wrap:break-word;max-height:180px;overflow:auto"></pre></details><div class="grid2"><div><label class="field" for="fuelDate">Date</label><input type="date" id="fuelDate" required value="${localDate()}"></div><div><label class="field" for="fuelOdo">Odometer</label><input type="number" min="0" step="1" inputmode="numeric" id="fuelOdo" required value="${a.mileage}"></div></div><div class="grid2"><div><label class="field" for="fuelGallons">US gallons</label><input id="fuelGallons" required inputmode="decimal" type="number" min="0.001" max="9999" step="0.001" placeholder="12.500"></div><div><label class="field" for="fuelCost">Total paid ($)</label><input id="fuelCost" required type="text" inputmode="decimal" placeholder="42.85"></div></div><div class="grid2"><div><label class="field" for="fuelType">Fuel type / blend</label><select id="fuelType"><option value="">Not recorded</option><option>Gasoline — blend unknown</option><option>E0 — Non-ethanol</option><option>E10 — gasoline</option><option>E15 — gasoline</option><option>E85 — flex fuel</option><option>Diesel</option><option>Diesel — B5</option><option>Diesel — B20</option><option>Biodiesel — B100</option></select></div><div><label class="field" for="fuelOctane">Octane (optional)</label><input id="fuelOctane" inputmode="numeric" type="number" min="1" max="150" step="1" placeholder="87"></div></div><div class="check"><input type="checkbox" id="fullTank" checked><label for="fullTank">Filled the tank completely</label></div><p class="small muted">MPG uses distances between full tanks and includes partial fill-ups in between.</p><button type="submit" class="btn full">Save fuel & mileage</button></form></div><div class="card"><h3 style="margin-top:0">Fuel history (${num(a.fuel_history.length)})</h3>${recordList(a.fuel_history,'fuel')}</div>`;
 wireFuelReceiptPhoto(a);wirePhotoHistory('fuel');
 $('fuelType').onchange=()=>{const diesel=$('fuelType').value.toLowerCase().includes('diesel');$('fuelOctane').disabled=diesel;if(diesel)$('fuelOctane').value='';};
 $('fuelForm').onsubmit=async e=>{
@@ -761,30 +1262,413 @@ $('fuelForm').onsubmit=async e=>{
  try{
   const od=whole($('fuelOdo').value,'Odometer',0),dt=$('fuelDate').value;
   if(!validDate(dt))throw Error('Enter a valid fill-up date.');
-  const gal=Number($('fuelGallons').value);
-  if(!Number.isFinite(gal)||gal<=0||gal>9999)throw Error('Enter a valid positive number of gallons.');
+  const gal=parseGallonsInput($('fuelGallons').value);
   const cost=costCents($('fuelCost').value),fuelType=$('fuelType').value;
   const diesel=fuelType.toLowerCase().includes('diesel'),octaneInput=$('fuelOctane').value.trim();
   const octane=diesel||!octaneInput?null:whole(octaneInput,'Octane',1);
   if(octane!==null&&octane>150)throw Error('Octane must be between 1 and 150, or blank.');
-  const record={date:dt,mileage:od,gallons:String(gal),cost_cents:cost,full_tank:$('fullTank').checked,
+  const record={date:dt,mileage:od,gallons:gal,cost_cents:cost,full_tank:$('fullTank').checked,
    octane,fuel_type:fuelType||null};
   await storeReceipt(a,'fuel',record,()=>{
    a.fuel_history.push(record);
    a.fuel_history.sort((x,y)=>String(x.date).localeCompare(String(y.date))||Number(x.mileage)-Number(y.mileage));
    if(od>a.mileage){a.mobile_mileage_log.push({date:dt,from:a.mileage,to:od});a.mileage=od;}
   });
- }catch(err){alert(err.message);}
+ }catch(err){
+  const status=$('fuelReceiptProgress');
+  if(status)status.textContent='Fuel entry NOT saved: '+err.message;
+  alert(err.message);
+ }
 };
 }
 function expenseSummary(a){let service=a.service_history.reduce((s,r)=>s+(Number(r.cost_cents)||0),0);let fuel=a.fuel_history.reduce((s,r)=>s+(Number(r.cost_cents)||0),0);let extra=a.mobile_expenses.reduce((s,r)=>s+(Number(r.cost_cents)||0),0);return {service,fuel,extra,total:service+fuel+extra}}
-function renderExpenses(){const a=v(),el=$('expensesBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}const totals=expenseSummary(a);el.innerHTML=`<div class="card"><div class="eyebrow">Recorded spending · ${esc(a.name)}</div><h2 style="font-size:31px;margin:4px 0 13px">${usd(totals.total)}</h2><div class="grid2 triple"><div class="stat"><div class="eyebrow">Service</div><strong style="font-size:18px">${usd(totals.service)}</strong></div><div class="stat"><div class="eyebrow">Fuel</div><strong style="font-size:18px">${usd(totals.fuel)}</strong></div><div class="stat"><div class="eyebrow">Other</div><strong style="font-size:18px">${usd(totals.extra)}</strong></div></div><p class="small muted" style="margin-bottom:0">Totals cover recorded expenses only; missing service costs are excluded.</p></div><div class="card"><h3 style="margin-top:0">Add other expense</h3>${formVehicleName(a)}<form id="extraForm"><label class="field" for="extraDesc">Description</label><input id="extraDesc" required type="text" maxlength="180" placeholder="Registration, parking, detailing…"><div class="grid2"><div><label class="field" for="extraDate">Date</label><input id="extraDate" required type="date" value="${localDate()}"></div><div><label class="field" for="extraCost">Cost ($)</label><input id="extraCost" required type="text" inputmode="decimal" placeholder="25.00"></div></div><button type="submit" class="btn full" style="margin-top:12px">Save other expense</button></form><p class="small muted">Other-expense entries are mobile-only until merged into the desktop app. Use <strong>Full mobile backup</strong> to preserve them.</p></div><div class="card"><h3 style="margin-top:0">Other expense history</h3>${recordList(a.mobile_expenses,'expense')}</div>`;
-$('extraForm').onsubmit=e=>{e.preventDefault();try{const desc=$('extraDesc').value.trim(),date=$('extraDate').value;if(!desc)throw Error('Description is required.');if(!validDate(date))throw Error('Enter a valid date.');a.mobile_expenses.push({date,description:desc,mileage:a.mileage,cost_cents:costCents($('extraCost').value)});save();renderAll();message('Other expense saved.')}catch(error){alert(error.message)}};}
+
+/* EXPENSE_PDF_OCR_BEGIN */
+function parseExpenseDocumentText(raw,today){
+ const text=String(raw||'').replace(/\u00a0/g,' ').replace(/\r/g,'').slice(0,48000);
+ const lines=text.split('\n').map(x=>x.replace(/\s+/g,' ').trim()).filter(Boolean);
+ const date=parseServiceReceiptText(text,today).date;
+ const strong=/\b(?:grand total|final total|total amount due|amount due|balance due|total due|invoice total|repair total|total repair cost|net repair cost|total estimate|estimate total|estimate amount|total charges|total paid|amount paid|payment total|total cost)\b/i;
+ const weak=/^(?:total|total amount|total price)\s*[:$ ]/i;
+ const excluded=/\b(?:subtotal|sub total|sales tax|tax rate|parts total|labor total|discount|deductible|deposit|supplement|insurance contribution|estimated hours|page total)\b/i;
+ const money=/\$?\s*((?:\d{1,3}(?:,\d{3})+|\d{1,7})\.\d{2})(?!\d)/g;
+ const found=[];
+ for(let i=0;i<lines.length;i++){
+  if(excluded.test(lines[i]))continue;
+  const score=strong.test(lines[i])?5:weak.test(lines[i])?3:0;
+  if(!score)continue;
+  let matches=[...lines[i].matchAll(money)];
+  if(!matches.length&&i+1<lines.length&&!excluded.test(lines[i+1]))
+   matches=[...lines[i+1].matchAll(money)];
+  if(matches.length!==1)continue;
+  const n=Number(matches[0][1].replace(/,/g,''));
+  if(Number.isFinite(n)&&n>=0&&n<=500000)found.push({score,amount:n.toFixed(2)});
+ }
+ const strongest=Math.max(0,...found.map(x=>x.score));
+ const amounts=[...new Set(found.filter(x=>x.score===strongest).map(x=>x.amount))];
+ const cost=strongest>=3&&amounts.length===1?amounts[0]:null;
+ const conflict=strongest>=3&&amounts.length>1;
+ let description=null;
+ if(/\b(?:collision|auto body|body shop|body repair|bodywork|paint and body|repair estimate|collision center|bumper replacement|fender repair)\b/i.test(text))
+  description=/\b(?:estimate|appraisal|quotation|quote)\b/i.test(text)?'Body repair estimate':'Body repair / collision work';
+ else if(/\b(?:insurance claim|claim number|claimant)\b/i.test(text))
+  description='Vehicle insurance paperwork';
+ else if(/\b(?:parts invoice|auto parts|replacement parts)\b/i.test(text))
+  description='Vehicle parts purchase';
+ else if(/\b(?:vehicle registration|registration renewal)\b/i.test(text))
+  description='Vehicle registration';
+ else description=parseServiceReceiptText(text,today).description;
+ return {date,cost,description,conflict};
+}
+/* EXPENSE_PDF_OCR_END */
+
+/* EXPENSE_MULTIPAGE_PDF_BEGIN */
+// Expense documents are stored separately from compressed receipt photos.
+// JSON backups contain the document reference, not its PDF bytes.
+let expensePdfDraft=null,expensePdfScanOwner=null,expensePdfScanEpoch=null,expensePdfScanInputs=null;
+let pendingExpensePdfHistory=null;
+window.milesageExpenseScannerComplete=function(result){
+ const info=result||{},status=$('expensePdfScanStatus'),preview=$('expensePdfPreview');
+ const owner=expensePdfScanOwner,epoch=expensePdfScanEpoch,baseline=expensePdfScanInputs;
+ expensePdfScanOwner=null;expensePdfScanEpoch=null;expensePdfScanInputs=null;
+ if(!status||!owner||v()!==owner||epoch!==expensePhotoDraftEpoch)return;
+ if(info.error){status.textContent=String(info.error);return;}
+ if(!/^[a-f0-9-]{36}$/.test(String(info.id||''))||
+    !Number.isInteger(info.pages)||info.pages<1||info.pages>30){
+  status.textContent='Scanner did not return a valid multi-page expense PDF.';return;
+ }
+ expensePdfDraft={vehicle:owner,id:info.id,pages:info.pages,epoch,baseline:baseline||{},
+    name:String(info.name||'Expense invoice.pdf').slice(0,120)};
+ refreshExpensePdfActions();
+ status.textContent=(info.imported?'Loaded existing PDF with ':'Captured ')+info.pages+' page(s). '+(info.ocr_pending?'Reading pages for date, total and description…':info.imported?'No readable pages available; enter or check the expense fields. ':'No page images for OCR; enter fields manually. ')+'PDF ready to view/export; save expense to attach it.';
+ const review=$('expensePdfTextReview');if(review){review.hidden=true;$('expensePdfOcrText').textContent='';}
+ const summary=$('expenseOcrSummary');
+ if(summary){summary.hidden=false;summary.textContent=info.ocr_pending?'PDF loaded. Reading pages for suggestions…':'PDF loaded but no OCR pages were supplied. Fill expense fields manually.';}
+ message(info.imported?'Expense PDF loaded. Review and save the expense record.':'Expense PDF scanned. Review and save the expense record.');
+};
+
+function refreshExpensePdfActions(){
+ const d=expensePdfDraft,preview=$('expensePdfPreview'),
+  actions=$('expensePdfActions'),clear=$('clearExpensePdf');
+ if(!preview||!actions||!clear)return;
+ const ready=!!d&&d.vehicle===v();
+ preview.hidden=!ready;actions.hidden=!ready;clear.hidden=!ready;
+ preview.textContent=ready?
+  'PDF ready: '+d.pages+' page(s). Stored inside this MileSage app. Tap View PDF or Save PDF to My Files. Save other expense to attach it to Expense History.':'';
+}
+window.milesageExpenseOCRComplete=function(result){
+ const info=result||{},draft=expensePdfDraft,status=$('expensePdfScanStatus');
+ if(!draft||!status||v()!==draft.vehicle||
+    draft.epoch!==expensePhotoDraftEpoch||info.id!==draft.id)return;
+ const raw=String(info.text||'').slice(0,48000);
+ const review=$('expensePdfTextReview');
+ if(review){review.hidden=!raw.trim();$('expensePdfOcrText').textContent=raw;}
+ if(!raw.trim()){
+  const summary=$('expenseOcrSummary');
+  if(summary){summary.hidden=false;summary.textContent='PDF attached, but OCR could not read text. Enter the expense description and cost manually; you can still view the PDF.';}
+  status.textContent='PDF ready. No readable page text: '+
+    (info.error||'Enter expense fields manually.')+
+    ' You can still view and export the PDF.';
+  return;
+ }
+ const found=parseExpenseDocumentText(raw,localDate()),changed=[];
+ const baseline=draft.baseline||{};
+ if(found.date&&baseline.date===localDate()&&$('extraDate').value===baseline.date){
+  $('extraDate').value=found.date;changed.push('date');
+ }
+ if(found.cost!==null&&baseline.cost===''&&$('extraCost').value===baseline.cost){
+  $('extraCost').value=found.cost;changed.push('total $'+found.cost);
+ }
+ if(found.description&&baseline.description===''&&$('extraDesc').value===baseline.description){
+  $('extraDesc').value=found.description;changed.push('description');
+ }
+ const summary=$('expenseOcrSummary');
+ if(summary){summary.hidden=false;summary.textContent='PDF OCR read '+(info.ocr_pages||0)+' page(s). '+
+   (changed.length?'Suggested '+changed.join(', ')+'. ':'No matching date, total or description could safely be filled. ')+
+   (found.conflict?'Multiple different totals detected. ':'')+
+   (info.error?'Some pages failed OCR. ':'')+
+   'Review the fields, then tap Save other expense.';}
+ status.textContent='OCR checked '+(info.ocr_pages||0)+' page(s). '+
+  (changed.length?'Suggested: '+changed.join(', ')+'. ':'No safe blank fields to fill. ')+
+  (found.conflict?'Conflicting totals detected; enter the amount manually. ':'')+
+  (info.error?'Some pages could not be read. ':'')+
+  'Check date, total and description before Save. View/export the PDF using the buttons above.';
+};
+
+function wireExpensePdfScanner(a){
+ const button=$('scanExpensePdf'),status=$('expensePdfScanStatus'),clear=$('clearExpensePdf');
+ if(!button||!status||!clear)return;
+ if(expensePdfDraft&&expensePdfDraft.vehicle!==a)expensePdfDraft=null;
+ refreshExpensePdfActions();
+ if(expensePdfDraft?.vehicle===a)
+  status.textContent='PDF ready: '+expensePdfDraft.pages+' page(s). View/export or Save expense.';
+ const current=()=>expensePdfDraft?.vehicle===a?expensePdfDraft:null;
+ clear.onclick=()=>{
+  expensePdfDraft=null;expensePdfScanOwner=null;expensePdfScanEpoch=null;expensePdfScanInputs=null;
+  refreshExpensePdfActions();
+  $('expensePdfTextReview').hidden=true;$('expensePdfOcrText').textContent='';
+  status.textContent='Unsaved PDF removed from this expense form. No record changed.';
+ };
+ const act=(buttonId,nativeMethod)=>{
+  $(buttonId).onclick=()=>{
+   const d=current();
+   if(d&&typeof window.MileSageAndroid?.[nativeMethod]==='function')
+    window.MileSageAndroid[nativeMethod](d.id);
+   else alert('PDF action requires the MileSage Android app.');
+   if(d&&nativeMethod==='saveExpenseDocument')
+    status.textContent='Copy requested: My Files > Downloads > MileSage > Expenses. Check Android confirmation.';
+  };
+ };
+ act('viewExpensePdfDraft','openExpenseDocument');
+ act('shareExpensePdfDraft','shareExpenseDocument');
+ act('saveExpensePdfDraft','saveExpenseDocument');
+ const load=$('loadExpensePdf');
+ if(load)load.onclick=()=>{
+  if(typeof window.MileSageAndroid?.chooseExpensePdfFile!=='function'){
+   status.textContent='Loading existing PDF files requires the MileSage Android app.';return;
+  }
+  if(expensePdfDraft&&!confirm('Replace the unsaved expense PDF with a selected file?'))return;
+  expensePdfScanOwner=a;expensePdfScanEpoch=expensePhotoDraftEpoch;
+  expensePdfScanInputs={date:$('extraDate').value,cost:$('extraCost').value,
+   description:$('extraDesc').value};
+  status.textContent='Opening My Files. Choose a PDF to attach to this expense.';
+  try{window.MileSageAndroid.chooseExpensePdfFile(false);}
+  catch(error){expensePdfScanOwner=null;expensePdfScanEpoch=null;expensePdfScanInputs=null;
+   status.textContent='Unable to open PDF picker: '+error.message;}
+ };
+ button.onclick=()=>{
+  if(typeof window.MileSageAndroid?.scanExpenseDocument!=='function'){
+   status.textContent='Multi-page expense scanning requires the MileSage Android app.';return;
+  }
+  if(expensePdfDraft&&!confirm('Replace the unsaved expense PDF with another scan?'))return;
+  expensePdfScanOwner=a;expensePdfScanEpoch=expensePhotoDraftEpoch;
+  expensePdfScanInputs={date:$('extraDate').value,cost:$('extraCost').value,
+    description:$('extraDesc').value};
+  status.textContent='Opening scanner. Capture up to 30 pages and check their order; OCR will read each page.';
+  try{window.MileSageAndroid.scanExpenseDocument();}
+  catch(error){expensePdfScanOwner=null;expensePdfScanEpoch=null;expensePdfScanInputs=null;
+   status.textContent='Could not open scanner: '+error.message;}
+ };
+}
+// Reattach an exported PDF to an expense restored from another Alpha APK.
+window.milesageExpenseHistoryImportComplete=function(result){
+ const target=pendingExpensePdfHistory;pendingExpensePdfHistory=null;
+ if(!target)return;
+ const info=result||{};
+ if(info.error){message(String(info.error));return;}
+ if(!/^[a-f0-9-]{36}$/.test(String(info.id||''))||
+    !Number.isInteger(info.pages)||info.pages<1||info.pages>30){
+  alert('Selected file did not produce a valid expense PDF. No record changed.');return;
+ }
+ const vehicle=v(),record=vehicle?.mobile_expenses?.[target.index];
+ if(vehicle!==target.vehicle||record!==target.record||
+    (record.expense_document?.id||null)!==target.priorId){
+  alert('Expense or vehicle selection changed. PDF was copied but is not linked to any record. No expense records changed.');return;
+ }
+ const previous=record.expense_document;
+ record.expense_document={id:info.id,pages:info.pages,
+  name:String(info.name||'Expense invoice.pdf').slice(0,120)};
+ try{
+  localStorage.setItem(KEY,JSON.stringify({vehicles,current}));
+  hasStorage=true;
+  renderAll();
+  message('PDF attached to saved expense. View it in Expense History.');
+ }catch(err){
+  record.expense_document=previous;
+  alert('Could not save expense attachment. Your expense record was not changed: '+err.message);
+ }
+};
+
+function wireExpensePdfHistory(){
+ $('expensesBody').querySelectorAll('[data-expense-pdf-attach]').forEach(button=>button.onclick=()=>{
+  const a=v(),index=Number(button.dataset.expensePdfAttach),
+   record=a?.mobile_expenses?.[index];
+  if(!record)return;
+  if(typeof window.MileSageAndroid?.chooseExpensePdfFile!=='function'){
+   alert('Loading PDF files requires the MileSage Android app.');return;
+  }
+  if(pendingExpensePdfHistory){alert('Finish the previous PDF import first.');return;}
+  if(record.expense_document?.id&&!confirm('Attach a PDF from My Files to this existing expense? This replaces its current PDF link, but does not change the expense details or delete the old file.'))return;
+  pendingExpensePdfHistory={vehicle:a,index,record,priorId:record.expense_document?.id||null};
+  try{window.MileSageAndroid.chooseExpensePdfFile(true);}
+  catch(error){pendingExpensePdfHistory=null;alert('Could not open PDF file picker: '+error.message);}
+ });
+ $('expensesBody').querySelectorAll('[data-expense-pdf]').forEach(button=>button.onclick=()=>{
+  const index=Number(button.dataset.expensePdf);
+  const doc=v()?.mobile_expenses?.[index]?.expense_document;
+  if(!doc?.id)return;
+  if(window.MileSageAndroid?.openExpenseDocument)
+   window.MileSageAndroid.openExpenseDocument(doc.id);
+  else alert('View scanned expense documents in the MileSage Android app.');
+ });
+ $('expensesBody').querySelectorAll('[data-expense-pdf-share]').forEach(button=>button.onclick=()=>{
+  const index=Number(button.dataset.expensePdfShare);
+  const doc=v()?.mobile_expenses?.[index]?.expense_document;
+  if(!doc?.id)return;
+  if(window.MileSageAndroid?.shareExpenseDocument)
+   window.MileSageAndroid.shareExpenseDocument(doc.id);
+  else alert('PDF sharing requires the MileSage Android app.');
+ });
+ $('expensesBody').querySelectorAll('[data-expense-pdf-save]').forEach(button=>button.onclick=()=>{
+  const index=Number(button.dataset.expensePdfSave),
+   doc=v()?.mobile_expenses?.[index]?.expense_document;
+  if(!doc?.id)return;
+  if(window.MileSageAndroid?.saveExpenseDocument){
+   window.MileSageAndroid.saveExpenseDocument(doc.id);
+   message('Copy requested: My Files > Downloads > MileSage > Expenses.');
+  }else alert('Saving PDF to My Files requires MileSage Android app.');
+ });
+}
+/* EXPENSE_MULTIPAGE_PDF_END */
+
+let expensePhotoDraftEpoch=0;
+function wireExpenseReceiptPhoto(a){
+ const camera=$('expenseCameraInput'),gallery=$('expenseGalleryInput');
+ const buttons=[$('expenseCameraButton'),$('expenseGalleryButton')];
+ $('expenseCameraButton').onclick=()=>{$('expenseReceiptProgress').textContent='Opening camera… Take a photo and confirm Use photo to return to MileSage.';camera.click();};
+ $('expenseGalleryButton').onclick=()=>gallery.click();
+ const read=async input=>{
+  const file=input.files?.[0];
+  if(!file)return;
+  if(!file.type.startsWith('image/')){alert('Choose an image of the expense receipt.');input.value='';return;}
+  if(file.size>15000000){alert('Expense photo exceeds 15 MB. Choose a smaller photo.');input.value='';return;}
+  const epoch=expensePhotoDraftEpoch;
+  showReceiptPreview('expense',file);
+  const status=$('expenseReceiptProgress');
+  status.textContent='Photo selected. Reading the receipt for suggested date and cost… (Android OCR works offline; browser-only scans may need internet).';
+  buttons.forEach(button=>button.disabled=true);
+  try{
+   if(epoch!==expensePhotoDraftEpoch||v()!==a)return;
+   const text=(await recognizeReceiptPhoto(file)).trim();
+   if(epoch!==expensePhotoDraftEpoch||v()!==a)return;
+   if(!text)throw Error('No readable receipt text detected.');
+   $('expenseReceiptTextReview').style.display='';
+   $('expenseReceiptOcrText').textContent=text.slice(0,12000);
+   const fuel=parseFuelReceiptText(text,localDate()),service=parseServiceReceiptText(text,localDate());
+   const detectedDate=fuel.date||service.date, detectedTotal=fuel.total||service.cost;
+   const fields=[];
+   if(detectedDate){$('extraDate').value=detectedDate;fields.push('date');}
+   if(detectedTotal){
+    if(!$('extraCost').value.trim()){$('extraCost').value=detectedTotal;fields.push('total cost');}
+    else fields.push('cost available in recognized text; existing entry kept');
+   }
+   status.textContent=(fields.length?'Suggested: '+fields.join(', ')+'.':'No reliable date or total detected.')+
+    ' Confirm the expense description, date and cost before saving. The photo is ready to attach.';
+  }catch(err){
+   if(epoch!==expensePhotoDraftEpoch)return;
+   status.textContent='Photo ready to attach. Automatic text reading unavailable: '+err.message+
+    ' Enter expense details manually, then Save other expense.';
+  }finally{
+
+   buttons.forEach(button=>button.disabled=false);
+   input.value='';
+  }
+ };
+ camera.onchange=()=>read(camera);
+ gallery.onchange=()=>read(gallery);
+}
+function renderExpenses(){expensePhotoDraftEpoch++;expensePdfScanOwner=null;expensePdfScanEpoch=null;clearReceiptPreview('expense');const a=v(),el=$('expensesBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}const totals=expenseSummary(a);el.innerHTML=`<div class="card"><div class="eyebrow">Recorded spending · ${esc(a.name)}</div><h2 style="font-size:31px;margin:4px 0 13px">${usd(totals.total)}</h2><div class="grid2 triple"><div class="stat"><div class="eyebrow">Service</div><strong style="font-size:18px">${usd(totals.service)}</strong></div><div class="stat"><div class="eyebrow">Fuel</div><strong style="font-size:18px">${usd(totals.fuel)}</strong></div><div class="stat"><div class="eyebrow">Other</div><strong style="font-size:18px">${usd(totals.extra)}</strong></div></div><p class="small muted" style="margin-bottom:0">Totals cover recorded expenses only; missing service costs are excluded.</p></div><div class="card"><h3 style="margin-top:0">Add other expense</h3>${formVehicleName(a)}<form id="extraForm"><div class="note info"><strong>Expense receipt photo</strong><div class="small">Take a photo or choose an existing receipt. MileSage will suggest a date and total when text is readable; review the description, date and cost before saving. The compressed photo stays attached to this expense and is included in Full mobile backup.</div></div><div class="card" style="margin:12px 0;padding:12px;background:#f7fafc"><strong>Multi-page expense document</strong><p class="small muted">For body-shop estimates, collision repairs, parts invoices and other paperwork. Scan up to 30 pages into one PDF and attach it to this expense. PDFs stay on this phone; <strong>Full mobile JSON backup does not include PDF files.</strong> Open or export the PDF immediately after scanning, or from Expense History after saving. In My Files, look under Downloads / MileSage / Expenses.</p><div class="button-row"><button id="scanExpensePdf" class="btn secondary" type="button">Scan multi-page expense document</button><button id="loadExpensePdf" class="btn secondary" type="button">Load existing PDF file</button></div><p class="small muted">Use Load existing PDF to find a previously exported PDF in My Files → Downloads → MileSage → Expenses. Supports PDF files up to 30 pages and 30 MB. OCR suggests values when text is readable. Loading a PDF does not create a History record; review the fields and tap Save other expense.</p><div id="expensePdfActions" class="button-row" hidden><button id="viewExpensePdfDraft" class="btn secondary" type="button">View attached PDF</button><button id="saveExpensePdfDraft" class="btn secondary" type="button">Save PDF to My Files</button><button id="shareExpensePdfDraft" class="btn secondary" type="button">Share PDF</button></div><button id="clearExpensePdf" class="btn secondary" type="button" hidden>Remove scanned PDF</button><p id="expensePdfScanStatus" class="small muted" role="status">No multi-page expense PDF scanned yet.</p><p id="expensePdfPreview" class="note info" hidden></p><details id="expensePdfTextReview" hidden><summary>View recognized text from all pages</summary><pre id="expensePdfOcrText" style="white-space:pre-wrap;word-wrap:break-word;max-height:220px;overflow:auto"></pre></details></div><div class="button-row"><button id="expenseCameraButton" class="btn secondary" type="button">Take expense photo</button><button id="expenseGalleryButton" class="btn secondary" type="button">Choose photo</button></div><input id="expenseCameraInput" type="file" accept="image/*" capture="environment" hidden><input id="expenseGalleryInput" type="file" accept="image/*" hidden><p id="expenseReceiptProgress" class="small muted" role="status" aria-live="polite">No receipt selected.</p><div id="expensePhotoPreview" class="note info" hidden><strong>Photo ready to attach</strong><img id="expensePhotoImage" alt="Selected expense receipt" style="display:block;max-width:100%;max-height:230px;object-fit:contain;margin:8px auto;border-radius:8px"><div id="expensePhotoInfo" class="small"></div></div><details id="expenseReceiptTextReview" style="display:none"><summary>View recognized text</summary><pre id="expenseReceiptOcrText" style="white-space:pre-wrap;word-wrap:break-word;max-height:180px;overflow:auto"></pre></details><p id="expenseOcrSummary" class="note info" role="status" hidden></p><label class="field" for="extraDesc">Description</label><input id="extraDesc" required type="text" maxlength="180" placeholder="Registration, parking, detailing…"><div class="grid2"><div><label class="field" for="extraDate">Date</label><input id="extraDate" required type="date" value="${localDate()}"></div><div><label class="field" for="extraCost">Cost ($)</label><input id="extraCost" required type="text" inputmode="decimal" placeholder="25.00"></div></div><button id="saveOtherExpense" type="submit" class="btn full" style="margin-top:12px">Save other expense</button></form><p class="small muted">The desktop Expenses screen can read other-expense entries. Receipt photos are preserved by Full mobile backup; PDF files must be copied separately. Use <strong>Full mobile backup</strong> to preserve them.</p></div><div class="card"><h3 style="margin-top:0">Other expense history</h3>${recordList(a.mobile_expenses,'expense')}</div>`;
+wireExpenseReceiptPhoto(a);wirePhotoHistory('expense');wireExpensePdfScanner(a);wireExpensePdfHistory();
+$('extraForm').onsubmit=async e=>{
+ e.preventDefault();
+ const submit=$('saveOtherExpense');submit.disabled=true;
+ try{
+  const desc=$('extraDesc').value.trim(),date=$('extraDate').value;
+  if(!desc)throw Error('Description is required.');
+  if(!validDate(date))throw Error('Enter a valid date.');
+  const record={date,description:desc,mileage:a.mileage,cost_cents:costCents($('extraCost').value)};
+  const pdf=expensePdfDraft?.vehicle===a?expensePdfDraft:null;
+  if(pdf)record.expense_document={id:pdf.id,pages:pdf.pages,name:pdf.name};
+  await storeReceipt(a,'expense',record,()=>a.mobile_expenses.push(record));
+  if(pdf){expensePdfDraft=null;renderExpenses();}
+ }catch(error){alert(error.message);}
+ finally{submit.disabled=false;}
+};}
 function mpgSeries(a){let start=null,gallons=0;let values=[];for(const r of a.fuel_history){if(r.mileage==null){start=null;gallons=0;continue}let current=Number(r.mileage),g=Number(r.gallons);if(!Number.isFinite(current)||!Number.isFinite(g))continue;if(start==null){if(r.full_tank){start=current;gallons=0;}continue;}gallons+=g;if(r.full_tank){let miles=current-start;if(miles>0&&gallons>0)values.push({label:r.date||'',mpg:miles/gallons});start=current;gallons=0;}}return values;}
 function mpgChart(values){if(values.length<2)return `<p class="muted small">At least 2 completed MPG calculations are needed to draw a trend. A starting full tank and a later full tank establish the first result.</p>`;const vals=values.slice(-8),min=Math.min(...vals.map(x=>x.mpg)),max=Math.max(...vals.map(x=>x.mpg));const hi=max===min?max+1:max;const lo=max===min?Math.max(0,min-1):Math.max(0,min-1);let pts=vals.map((x,i)=>`${(15+i*270/Math.max(1,vals.length-1)).toFixed(1)},${(145-120*(x.mpg-lo)/(hi-lo)).toFixed(1)}`).join(' ');return `<svg viewBox="0 0 300 170" class="linechart" role="img" aria-label="Recent fuel economy trend from ${min.toFixed(1)} to ${max.toFixed(1)} miles per gallon"><path d="M15 15V145H285" stroke="#cbd6df" stroke-width="2" fill="none"/><polyline points="${pts}" fill="none" stroke="#9e3b1b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>${vals.map((x,i)=>`<circle cx="${(15+i*270/Math.max(1,vals.length-1)).toFixed(1)}" cy="${(145-120*(x.mpg-lo)/(hi-lo)).toFixed(1)}" r="4" fill="#9e3b1b"/>`).join('')}<text x="18" y="12" font-size="11" fill="#5d6972">${max.toFixed(1)} MPG</text><text x="18" y="163" font-size="11" fill="#5d6972">${min.toFixed(1)} MPG</text></svg>`}
-function renderGraphs(){const a=v(),el=$('graphsBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');return}const t=expenseSummary(a),arr=[['Service',t.service],['Fuel',t.fuel],['Other',t.extra]],max=Math.max(1,...arr.map(x=>x[1])),mpgs=mpgSeries(a);const oilRem=Number(a.service_interval)-(Number(a.mileage)-Number(a.last_service_mileage));el.innerHTML=`<div class="card"><h3 style="margin-top:0">Recorded spending by category</h3><div class="chart-bars">${arr.map(([name,c])=>`<div class="chart-col"><div>${usd(c)}</div><div class="chart-bar" style="height:${Math.max(2,Math.round(c/max*130))}px"></div><div class="muted">${name}</div></div>`).join('')}</div></div><div class="card"><h3 style="margin-top:0">Fuel economy trend</h3>${mpgChart(mpgs)}${mpgs.length?`<p class="small muted">Most recent calculated MPG: <strong>${mpgs[mpgs.length-1].mpg.toFixed(2)}</strong> (${mpgs.length} valid full-tank cycle${mpgs.length===1?'':'s'} recorded)</p>`:''}</div><div class="card"><h3 style="margin-top:0">Explainable health snapshot</h3><p><strong>Oil service:</strong> ${oilRem<=0?'Due now or overdue by '+num(-oilRem)+' miles':num(oilRem)+' miles remaining until the next scheduled oil service'}.</p><p><strong>Last oil-service mileage:</strong> ${num(a.last_service_mileage)}. <strong>Interval:</strong> ${num(a.service_interval)} miles.</p><div class="note info">These are mileage-based tracking indicators, not mechanical diagnostics. Follow the vehicle manufacturer’s maintenance guidance.</div></div>`;el.innerHTML+=additionalGraphCards(a);}
 
-const receiptFiles={fuel:null,service:null};
+/* BETA2_RESALE_FEEDBACK_BEGIN */
+const FEEDBACK_KEY='milesage-beta-feedback-v1';
+function feedbackRecords(){try{const a=JSON.parse(localStorage.getItem(FEEDBACK_KEY)||'[]');return Array.isArray(a)?a:[]}catch(_){return []}}
+function saveFeedbackRecords(a){localStorage.setItem(FEEDBACK_KEY,JSON.stringify(a.slice(-50)))}
+function resaleRecords(a){return Array.isArray(a.resale_valuations)?a.resale_valuations:[]}
+function resaleValueChart(a){
+ const data=resaleRecords(a).filter(x=>Number.isSafeInteger(x.value_cents)&&Number.isSafeInteger(x.mileage)).slice().sort((x,y)=>x.date.localeCompare(y.date)||x.mileage-y.mileage);
+ if(!data.length)return '<p class="small muted">No resale valuations yet. Add an estimate from KBB or another source to start your history. Mileage changes alone do not establish market value.</p>';
+ const max=Math.max(...data.map(x=>x.value_cents),1),min=Math.min(...data.map(x=>x.value_cents),0);
+ const points=data.map((x,i)=>[10+(i*280/Math.max(1,data.length-1)),130-((x.value_cents-min)/(max-min||1))*110]);
+ const poly=points.map(p=>p.join(',')).join(' ');
+ return '<svg role="img" aria-label="Recorded resale value estimates by date" viewBox="0 0 310 160" style="width:100%;height:auto;background:#f7fafc;border-radius:10px"><polyline fill="none" stroke="#9e3b1b" stroke-width="3" points="'+poly+'"/>'+points.map(p=>'<circle cx="'+p[0]+'" cy="'+p[1]+'" r="4" fill="#9e3b1b"/>').join('')+'</svg>'+
+ '<div class="small muted">Recorded snapshots (oldest to newest): '+data.map(x=>esc(x.date)+' · '+num(x.mileage)+' mi · '+usd(x.value_cents)).join(' | ')+'</div>';
+}
+function resaleCard(a){
+ const rows=resaleRecords(a).slice().sort((x,y)=>String(y.date).localeCompare(String(x.date)));
+ const last=rows[0];
+ return '<div class="card" id="resaleTracker"><h3 style="margin-top:0">Resale value & odometer</h3><p><strong>Current mileage:</strong> '+num(a.mileage)+' mi</p>'+
+ (last?'<p><strong>Latest recorded estimate:</strong> '+usd(last.value_cents)+' ('+esc(last.source)+', '+esc(last.date)+', '+num(last.mileage)+' mi)</p>':'<p class="small muted">No valuation recorded yet.</p>')+
+ resaleValueChart(a)+
+ '<p class="small muted">These are manually entered estimates, not live KBB values or guaranteed sale prices. Use a current valuation for your exact trim, condition, ZIP and mileage. Your odometer updates automatically, but past estimates never change.</p>'+
+ '<p><a href="https://www.kbb.com/whats-my-car-worth/" target="_blank" rel="noopener noreferrer">Look up a valuation at Kelley Blue Book</a></p>'+
+ '<form id="resaleForm"><div class="grid2"><div><label class="field" for="resaleDate">Valuation date</label><input id="resaleDate" type="date" required value="'+localDate()+'"></div><div><label class="field" for="resaleMileage">Odometer at valuation</label><input id="resaleMileage" type="number" min="0" step="1" required value="'+Number(a.mileage)+'"></div></div>'+
+ '<div class="grid2"><div><label class="field" for="resaleAmount">Estimated value ($)</label><input id="resaleAmount" inputmode="decimal" required placeholder="25000.00"></div><div><label class="field" for="resaleSource">Valuation source</label><select id="resaleSource"><option value="KBB">Kelley Blue Book</option><option value="Dealer quote">Dealer quote</option><option value="Other">Other documented source</option></select></div></div>'+
+ '<label class="field" for="resaleKind">Value type</label><select id="resaleKind"><option>Trade-in</option><option>Private-party</option><option>Instant cash offer</option><option>Other estimate</option></select>'+
+ '<button type="submit" class="btn secondary">Record valuation snapshot</button></form>'+
+ '<div class="small muted" style="margin-top:12px">Each valuation is tied to this vehicle and included in Full mobile backup.</div></div>';
+}
+function wireResaleCard(a){
+ const form=$('resaleForm');if(!form)return;
+ form.onsubmit=e=>{e.preventDefault();try{
+ const dt=$('resaleDate').value;if(!validDate(dt))throw Error('Select a valid valuation date.');
+ const miles=whole($('resaleMileage').value,'Valuation odometer',0);
+ const cents=costCents($('resaleAmount').value);
+ if(cents<=0)throw Error('Enter a positive estimate.');
+ if(!confirm('Record '+usd(cents)+' at '+num(miles)+' miles as a '+$('resaleKind').value+' estimate? This is a manually entered value, not a live KBB quote.'))return;
+ a.resale_valuations=resaleRecords(a);
+ a.resale_valuations.push({date:dt,mileage:miles,value_cents:cents,source:$('resaleSource').value,kind:$('resaleKind').value});
+ save();renderGraphs();message('Resale valuation recorded.');
+ }catch(err){alert(err.message)}};
+}
+function feedbackPanel(){
+ return '<div class="card" id="betaFeedbackCard"><h3 style="margin-top:0">Beta tester feedback</h3>'+
+ '<p class="small muted">Report bugs, suggestions or confusing screens. Reports stay on this phone until you explicitly share or export them. No vehicle records, VIN, receipt photos or PDFs are attached automatically.</p>'+
+ '<form id="betaFeedbackForm"><label class="field" for="betaFeedbackCategory">Type of feedback</label><select id="betaFeedbackCategory"><option>Bug</option><option>Suggestion</option><option>Usability</option><option>Other</option></select>'+
+ '<label class="field" for="betaFeedbackArea">App area</label><select id="betaFeedbackArea"><option>Home</option><option>Service</option><option>Fuel</option><option>Expenses</option><option>Graphs</option><option>Backup & restore</option><option>Other</option></select>'+
+ '<label class="field" for="betaFeedbackDetail">What happened? What did you expect?</label><textarea id="betaFeedbackDetail" rows="4" maxlength="3000" required placeholder="Describe the steps, what you expected, and what happened instead."></textarea>'+
+ '<label class="field" for="betaFeedbackSeverity">Impact</label><select id="betaFeedbackSeverity"><option>Minor</option><option>Moderate</option><option>Blocking</option></select>'+
+ '<button type="submit" class="btn">Save feedback report</button></form>'+
+ '<p id="betaFeedbackStatus" role="status" class="small muted">No report sent automatically.</p>'+
+ '<div class="button-row"><button id="betaFeedbackShare" class="btn secondary" type="button">Share saved feedback</button><button id="betaFeedbackExport" class="btn secondary" type="button">Export feedback JSON</button></div>'+
+ '<div id="betaFeedbackHistory" class="small muted"></div></div>';
+}
+function wireFeedbackPanel(){
+ const form=$('betaFeedbackForm');if(!form)return;
+ const history=$('betaFeedbackHistory'),status=$('betaFeedbackStatus');
+ const refresh=()=>{const items=feedbackRecords();history.textContent=items.length+' report(s) saved locally. Sharing is optional.';};
+ refresh();
+ form.onsubmit=e=>{e.preventDefault();try{
+ const detail=$('betaFeedbackDetail').value.trim();
+ if(detail.length<8)throw Error('Please describe the problem in at least eight characters.');
+ const items=feedbackRecords();
+ items.push({id:'feedback-'+Date.now(),created_at:new Date().toISOString(),app_version:'1.4.5-beta2',category:$('betaFeedbackCategory').value,area:$('betaFeedbackArea').value,impact:$('betaFeedbackSeverity').value,detail});
+ saveFeedbackRecords(items);form.reset();status.textContent='Saved on this phone. Use Share saved feedback to send it to the developer.';refresh();
+ }catch(err){alert(err.message)}};
+ $('betaFeedbackExport').onclick=()=>download(filename('MileSage-beta-feedback'),{format:'MileSage-Feedback-v1',reports:feedbackRecords()});
+ $('betaFeedbackShare').onclick=async()=>{
+ const items=feedbackRecords();
+ if(!items.length){status.textContent='Save a feedback report first.';return;}
+ const text='MileSage Beta Feedback\n\n'+items.map(x=>x.created_at+' | '+x.category+' | '+x.area+' | '+x.impact+'\n'+x.detail).join('\n\n---\n\n');
+ try{
+ if(navigator.share){await navigator.share({title:'MileSage beta feedback',text});status.textContent='Share sheet opened. Select your messaging or email app to send.';}
+ else if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(text);status.textContent='Copied feedback. Paste it into a message to the developer.';}
+ else{status.textContent='Use Export feedback JSON and share the downloaded file.';}
+ }catch(err){if(err.name!=='AbortError')status.textContent='Sharing unavailable. Export feedback JSON instead.';}
+ };
+}
+/* BETA2_RESALE_FEEDBACK_END */
+
+function renderGraphs(){const a=v(),el=$('graphsBody');if(!a){el.innerHTML=empty('Add or import a vehicle first.');$('betaFeedbackBody').innerHTML=feedbackPanel();wireFeedbackPanel();return}const t=expenseSummary(a),arr=[['Service',t.service],['Fuel',t.fuel],['Other',t.extra]],max=Math.max(1,...arr.map(x=>x[1])),mpgs=mpgSeries(a);const oilRem=Number(a.service_interval)-(Number(a.mileage)-Number(a.last_service_mileage));el.innerHTML=`<div class="card"><h3 style="margin-top:0">Recorded spending by category</h3><div class="chart-bars">${arr.map(([name,c])=>`<div class="chart-col"><div>${usd(c)}</div><div class="chart-bar" style="height:${Math.max(2,Math.round(c/max*130))}px"></div><div class="muted">${name}</div></div>`).join('')}</div></div><div class="card"><h3 style="margin-top:0">Fuel economy trend</h3>${mpgChart(mpgs)}${mpgs.length?`<p class="small muted">Most recent calculated MPG: <strong>${mpgs[mpgs.length-1].mpg.toFixed(2)}</strong> (${mpgs.length} valid full-tank cycle${mpgs.length===1?'':'s'} recorded)</p>`:''}</div><div class="card"><h3 style="margin-top:0">Explainable health snapshot</h3><p><strong>Oil service:</strong> ${oilRem<=0?'Due now or overdue by '+num(-oilRem)+' miles':num(oilRem)+' miles remaining until the next scheduled oil service'}.</p><p><strong>Last oil-service mileage:</strong> ${num(a.last_service_mileage)}. <strong>Interval:</strong> ${num(a.service_interval)} miles.</p><div class="note info">These are mileage-based tracking indicators, not mechanical diagnostics. Follow the vehicle manufacturer’s maintenance guidance.</div></div>`;el.innerHTML+=additionalGraphCards(a)+resaleCard(a);wireResaleCard(a);$('betaFeedbackBody').innerHTML=feedbackPanel();wireFeedbackPanel();}
+
+const receiptFiles={fuel:null,service:null,expense:null};
 let photoDir=null;
 async function choosePhotoDir(){
  if(!window.showDirectoryPicker){
@@ -842,13 +1726,16 @@ function photoHistory(r,kind,index){
  '<div class="button-row"><button class="btn secondary" type="button" data-photo-save="'+kind+':'+index+'">Save to MileSage/Photos</button>'+
  '<button class="btn secondary" type="button" data-photo-download="'+kind+':'+index+'">Download photo</button></div></details>';
 }
+function historyPhotoRecords(vehicle,kind){
+ return kind==='expense'?vehicle?.mobile_expenses:vehicle?.[kind+'_history'];
+}
 function wirePhotoHistory(kind){
- const root=$(kind==='fuel'?'fuelBody':'serviceBody');
+ const root=$(kind==='fuel'?'fuelBody':kind==='expense'?'expensesBody':'serviceBody');
  root.querySelectorAll('[data-photo-download]').forEach(b=>b.onclick=()=>{
-  const i=Number(b.dataset.photoDownload.split(':')[1]);downloadPhonePhoto(v()[kind+'_history'][i].receipt_photo);
+  const i=Number(b.dataset.photoDownload.split(':')[1]),record=historyPhotoRecords(v(),kind)?.[i];if(record?.receipt_photo)downloadPhonePhoto(record.receipt_photo);
  });
  root.querySelectorAll('[data-photo-save]').forEach(b=>b.onclick=async()=>{
-  const i=Number(b.dataset.photoSave.split(':')[1]),vehicle=v(),p=vehicle?.[kind+'_history']?.[i]?.receipt_photo;
+  const i=Number(b.dataset.photoSave.split(':')[1]),vehicle=v(),p=historyPhotoRecords(vehicle,kind)?.[i]?.receipt_photo;
   if(!p)return;
   if(!photoDir&&!(await choosePhotoDir()))return;
   try{await writePhonePhoto(p);p.folder_saved=true;localStorage.setItem(KEY,JSON.stringify({vehicles,current}));renderAll();message('Receipt photo copied into MileSage/Photos.');}
@@ -857,27 +1744,74 @@ function wirePhotoHistory(kind){
 }
 async function storeReceipt(vehicle,kind,record,mutate){
  const file=receiptFiles[kind];
- if(file)record.receipt_photo={data_url:await photoData(file),name:'MileSage-'+record.date+'-'+String(vehicle.year+'-'+vehicle.name).replace(/[^a-z0-9-]+/gi,'-').slice(0,45)+'-'+kind+'-'+Date.now()+'-'+Math.floor(Math.random()*1000000)+'.jpg',folder_saved:false};
+ let photoOmitted=false;
+ if(file){
+  try{
+   record.receipt_photo={
+    data_url:await photoData(file),
+    name:'MileSage-'+record.date+'-'+String(vehicle.year+'-'+vehicle.name).replace(/[^a-z0-9-]+/gi,'-').slice(0,45)+'-'+kind+'-'+Date.now()+'-'+Math.floor(Math.random()*1000000)+'.jpg',
+    folder_saved:false
+   };
+  }catch(error){
+   if(!confirm('The receipt photo could not be prepared: '+error.message+'\nSave the '+kind+' entry WITHOUT the photo? The original is still in your phone gallery.'))
+    throw Error('Entry NOT saved: selected photo could not be prepared.');
+   photoOmitted=true;
+  }
+ }
  if(v()!==vehicle)throw Error('Vehicle selection changed. Review the entry.');
- const original=JSON.stringify({vehicles,current});
- try{mutate();localStorage.setItem(KEY,JSON.stringify({vehicles,current}));hasStorage=true;updateBanner();}
- catch(e){const restore=JSON.parse(original);vehicles=normalize(restore.vehicles);current=restore.current;throw Error('Entry NOT saved: phone storage failed. '+e.message);}
- let note='';
+ // Preserve the same vehicle object on failure so the open form can be retried.
+ const before=JSON.parse(JSON.stringify(vehicle));
+ let savedWithoutPhoto=false;
+ try{
+  mutate();
+  try{
+   localStorage.setItem(KEY,JSON.stringify({vehicles,current}));
+  }catch(error){
+   if(!record.receipt_photo||!confirm(
+    'Phone storage could not save this '+kind+' entry WITH its photo.\nSave the '+kind+
+    ' details WITHOUT a receipt photo? The original remains in your gallery.'))
+    throw error;
+   const selectedPhoto=record.receipt_photo;
+   delete record.receipt_photo;
+   try{
+    localStorage.setItem(KEY,JSON.stringify({vehicles,current}));
+    savedWithoutPhoto=true;
+   }catch(retryError){
+    record.receipt_photo=selectedPhoto;
+    throw retryError;
+   }
+  }
+  hasStorage=true;updateBanner();
+ }catch(error){
+  for(const key of Object.keys(vehicle))
+   if(!Object.prototype.hasOwnProperty.call(before,key))delete vehicle[key];
+  Object.assign(vehicle,before);
+  throw Error('Entry NOT saved. Phone storage failed: '+error.message);
+ }
+ let note=photoOmitted||savedWithoutPhoto?
+  'Entry saved WITHOUT a receipt photo. Your original receipt remains in the phone gallery.':'';
  if(record.receipt_photo){
   if(photoDir){
-   try{await writePhonePhoto(record.receipt_photo);record.receipt_photo.folder_saved=true;localStorage.setItem(KEY,JSON.stringify({vehicles,current}));note='Photo copied to MileSage/Photos.';}
-   catch(e){note='Photo attached in MileSage, but folder copy failed: '+e.message+'. Use Save to MileSage/Photos in history.';}
-  }else note='Photo attached to the record and Full mobile backup. To copy it into a phone folder, select the folder in Data & backup, then tap Save to MileSage/Photos in history.';
+   try{
+    await writePhonePhoto(record.receipt_photo);
+    record.receipt_photo.folder_saved=true;
+    localStorage.setItem(KEY,JSON.stringify({vehicles,current}));
+    note='Photo copied to MileSage/Photos.';
+   }catch(error){
+    note='Entry saved and receipt attached, but photo folder copy failed: '+error.message+
+     '. Use Save to MileSage/Photos from history.';
+   }
+  }else note='Photo attached to the entry and Full mobile backup. To copy it into a phone folder, select the folder in Data & backup, then tap Save to MileSage/Photos in history.';
  }
- renderAll();message(kind==='fuel'?'Fuel entry saved.':'Service entry saved.');
+ renderAll();
+ message(kind==='fuel'?'Fuel entry saved.':kind==='expense'?'Other expense saved.':'Service entry saved.');
  if(note)alert(note);
 }
-
-function renderAll(){renderHome();renderService();renderFuel();renderExpenses();renderGraphs();updateBanner();}
+function renderAll(){renderCarHistory();renderHome();renderService();renderFuel();renderExpenses();renderGraphs();updateBanner();}
 function switchTab(id){tab=id;document.querySelectorAll('.section').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('.tab').forEach(x=>{x.classList.toggle('active',x.dataset.tab===id);x.setAttribute('aria-current',x.dataset.tab===id?'page':'false')});window.scrollTo({top:0,behavior:'instant'})}
 function filename(prefix){return `${prefix}-${localDate()}.json`}
 function download(name,data){const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);message('Backup prepared. Check Downloads on your phone.');}
-function pythonExport(){return vehicles.map(({mobile_expenses,mobile_mileage_log,...obj})=>({...obj,service_history:(obj.service_history||[]).map(({receipt_photo,...r})=>r),fuel_history:(obj.fuel_history||[]).map(({receipt_photo,...r})=>r)}))}
+function pythonExport(){return vehicles.map(obj=>({...obj,service_history:(obj.service_history||[]).map(({receipt_photo,...r})=>r),fuel_history:(obj.fuel_history||[]).map(({receipt_photo,...r})=>r)}))}
 /* RESTORE_GUARDS_BEGIN */
 function vehicleID(a){return a.vin?'vin:'+String(a.vin).toUpperCase():'name:'+String(a.year)+'|'+String(a.name).trim().toLowerCase();}
 function isBlankSeed(recs){
@@ -894,6 +1828,11 @@ function destructiveDiffs(existing,incoming){
  for(const local of existing){
   const next=src.get(vehicleID(local));
   if(!next){problems.push(local.name+': vehicle missing in import');continue;}
+  const oldHistory=normalizeCarHistory(local.car_history),newHistory=normalizeCarHistory(next.car_history);
+  if(oldHistory.events.some(event=>!newHistory.events.some(item=>JSON.stringify(item)===JSON.stringify(event))))
+   problems.push(local.name+': Car History events would be lost');
+  if(oldHistory.last_review_date&&!newHistory.last_review_date)
+   problems.push(local.name+': Car History review would be cleared');
   if(Number(next.mileage)<Number(local.mileage))
    problems.push(local.name+': mileage '+local.mileage+' → '+next.mileage);
   for(const key of ['driver_front','driver_rear','passenger_front','passenger_rear']){
@@ -936,6 +1875,10 @@ function mergeRecovery(existing,backups){
       backup.fluid_checks?.[kind]?.last_full_mileage!=null)
      item.fluid_checks[kind]=JSON.parse(JSON.stringify(backup.fluid_checks[kind]));
   }
+  const oldHistory=normalizeCarHistory(backup.car_history);
+  const localHistory=normalizeCarHistory(item.car_history);
+  if(!localHistory.events.length&&!localHistory.last_review_date&&!localHistory.review_notes)
+   item.car_history=oldHistory;
   // Never modify service_interval or tire_rotation_interval during recovery.
   return item;
  });
@@ -974,6 +1917,7 @@ function commitImport(newVehicles,newCurrent,reason){
  vehicles=newVehicles;current=newCurrent;hasStorage=true;
  syncStatus='Phone records preserved locally; GitHub cannot overwrite them automatically.';
  updateBanner();renderAll();switchTab('home');
+ renderSavedBackups();
  message(reason+' Local undo snapshot saved.');
  return true;
 }
@@ -1032,24 +1976,78 @@ async function recoverFromGitHubBackup(){
  }catch(e){alert('Recovery could not complete: '+e.message)}
  finally{btn.disabled=false;btn.textContent='Recover from saved GitHub backup';}
 }
-function undoImport(){
- const history=readSnapshots();
- if(!history.length){alert('No pre-import snapshot exists in this version. Check phone Downloads for an earlier full mobile backup.');return;}
- const latest=history[0];
- if(!confirm('Restore phone data from the snapshot created '+latest.created_at+
-     '?\nThis replaces the current phone data. Export a full backup of the current version first.'))return;
- if(!preservePreImport())return;
- try{
-  const restored=normalize(latest.vehicles);
-  localStorage.setItem(KEY,JSON.stringify({vehicles:restored,current:latest.current}));
-  vehicles=restored;current=Math.max(0,Math.min(latest.current,vehicles.length-1));
-  // Remove the original snapshot once used, retaining the new undo snapshot.
-  const next=readSnapshots().filter(x=>x.created_at!==latest.created_at);
-  localStorage.setItem(RECOVERY_KEY,JSON.stringify(next.slice(0,3)));
-  syncStatus='Previous local snapshot restored. GitHub has not overwritten it.';
-  renderAll();switchTab('home');message('Previous local snapshot restored.');
- }catch(e){alert('Could not restore snapshot: '+e.message);}
+/* REUSABLE_BACKUP_LIBRARY_BEGIN */
+// Restoring a snapshot never consumes it. Android Downloads JSON backups also
+// remain on the device and can be selected again through the file picker.
+function renderSavedBackups(){
+ const root=$('savedLocalSnapshots');
+ if(!root)return;
+ const list=readSnapshots().filter(x=>x&&Array.isArray(x.vehicles));
+ if(!list.length){
+  root.innerHTML='<p class="small muted">No local recovery snapshots in this installation yet. To restore a downloaded backup, use Browse saved JSON files.</p>';
+ }else{
+  root.innerHTML=list.map((s,i)=>{
+   const date=new Date(s.created_at);
+   const when=Number.isFinite(date.getTime())
+     ?date.toLocaleString('en-US',{dateStyle:'medium',timeStyle:'short'}):'Date unknown';
+   const count=s.vehicles.length;
+   return '<div class="button-row" style="align-items:center;margin:8px 0">'+
+     '<span class="small" style="flex:2;min-width:150px"><strong>'+esc(when)+'</strong> · '+
+     count+' vehicle'+(count===1?'':'s')+'</span>'+
+     '<button type="button" class="btn secondary" data-restore-snapshot="'+i+'">Review & restore</button>'+
+     '</div>';
+  }).join('');
+  root.querySelectorAll('[data-restore-snapshot]').forEach(button=>{
+   button.onclick=()=>restoreSavedSnapshot(Number(button.dataset.restoreSnapshot));
+  });
+ }
 }
+function openBackupFilePicker(){
+ $('jsonImportStatus').textContent='Select a saved .json file in Android Files > Downloads > MileSage. The file remains available for future restorations.';
+ $('jsonFile').value='';
+ $('jsonFile').click();
+}
+function restoreSavedSnapshot(index){
+ const history=readSnapshots().filter(x=>x&&Array.isArray(x.vehicles));
+ if(!Number.isInteger(index)||index<0||index>=history.length){
+  alert('That snapshot is no longer available. Refresh the list and choose again.');return false;
+ }
+ const saved=history[index];
+ const date=String(saved.created_at||'unknown');
+ if(!confirm('RESTORE SAVED SNAPSHOT from '+date+'?\n\nThis is reusable; it will not be deleted after restoring. You will next review any missing vehicles or records.'))return false;
+ try{
+  // Keep the same two confirmation screens and pre-import undo safeguard as
+  // importing a downloaded JSON file.
+  const accepted=replace({format:'MileSage-Mobile-v1',
+   vehicles:saved.vehicles,current:saved.current});
+  if(accepted){
+   // The automatic pre-import safeguard retains only three slots. Protect
+   // the exact snapshot just restored, even if it was the oldest of three.
+   const recent=readSnapshots();
+   if(!recent.some(x=>x.created_at===saved.created_at)){
+    if(recent.length>=3)recent[recent.length-1]=saved;
+    else recent.push(saved);
+    try{localStorage.setItem(RECOVERY_KEY,JSON.stringify(recent.slice(0,3)));}
+    catch(e){alert('Restored successfully, but could not retain this local snapshot. Keep a Full mobile JSON backup in Downloads.');}
+   }
+  }
+  renderSavedBackups();
+  if(accepted)message('Saved snapshot restored. You can choose it again later.');
+  return accepted;
+ }catch(error){
+  alert('Could not restore saved snapshot: '+error.message);
+  return false;
+ }
+}
+function showSavedBackupLibrary(){
+ const section=$('savedBackupLibrary');
+ section.hidden=!section.hidden;
+ if(!section.hidden){
+  renderSavedBackups();
+  $('savedBackupStatus').textContent='Choose a local snapshot or browse downloaded files. Previous restores do not delete your saved JSON files.';
+ }
+}
+/* REUSABLE_BACKUP_LIBRARY_END */
 async function autoRefreshGitHub(){
  if(checkingGitHub||document.hidden)return;
  checkingGitHub=true;
@@ -1219,19 +2217,159 @@ function init(){
  $('vinInput').oninput=()=>{decodedVIN=null;$('vinConfirmForm').hidden=true;$('vinLookupStatus').textContent='';};
  $('githubImport').onclick=githubImport;
  $('githubBackupRecovery').onclick=recoverFromGitHubBackup;
- $('undoImport').onclick=undoImport;
- $('fileImportButton').onclick=()=>$('jsonFile').click();
- $('jsonFile').onchange=async e=>{try{
-  const f=e.target.files?.[0];if(!f)return;
-  if(f.size>15000000)throw Error('File is too large.');
-  replace(JSON.parse(await f.text()));
- }catch(error){alert('Could not import JSON: '+error.message)}
- finally{e.target.value=''}};
+ $('undoImport').onclick=showSavedBackupLibrary;
+ $('browseSavedJson').onclick=openBackupFilePicker;
+ $('fileImportButton').onclick=openBackupFilePicker;
+ $('jsonFile').onchange=async e=>{
+  const status=$('jsonImportStatus');
+  let timer;
+  try{
+   const f=e.target.files?.[0];
+   if(!f){status.textContent='No file returned. Your records are unchanged.';return;}
+   if(f.size>15000000)throw Error('File is too large (maximum 15 MB).');
+   status.textContent='Reading '+f.name+'…';
+   const reading=typeof f.text==='function'?f.text():new Promise((resolve,reject)=>{
+    const reader=new FileReader();reader.onload=()=>resolve(reader.result);
+    reader.onerror=()=>reject(Error('Cannot read this file. Download a local copy to Downloads and try again.'));
+    reader.readAsText(f);
+   });
+   const text=await Promise.race([reading,new Promise((_,reject)=>{
+    timer=setTimeout(()=>reject(Error('The selected file did not finish downloading. Use a local copy from Downloads.')),20000);
+   })]);
+   status.textContent='File read. Validating records and awaiting your confirmation…';
+   const applied=replace(JSON.parse(text));
+   status.textContent=applied?'Backup imported successfully.':'Import not applied. Your saved records are unchanged.';
+  }catch(error){
+   status.textContent='Import failed: '+error.message+' Your saved records are unchanged.';
+   alert('Could not import JSON: '+error.message);
+  }finally{clearTimeout(timer);e.target.value='';}
+ };
  $('choosePhotoDir').onclick=choosePhotoDir;
  $('exportPython').onclick=()=>download('vehicles.json',pythonExport());
  $('exportFull').onclick=()=>download(filename('MileSage-mobile-full-backup'),
    {format:'MileSage-Mobile-v1',saved_at:new Date().toISOString(),vehicles,current});
 }
+/* CAR_HISTORY_BEGIN */
+// Embedded in both standalone mobile HTML entrypoints; no network dependency.
+const HISTORY_SOURCES=['CARFAX Car Care','CARFAX Vehicle History Report','Shop / dealership','Other'];
+const HISTORY_TYPES=['Accident / damage','Title / registration','Ownership','Odometer','Service','Recall','Other'];
+function carHistoryDate(s){
+ if(typeof s!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(s))return false;
+ const d=new Date(s+'T12:00:00Z');
+ return Number.isFinite(d.getTime())&&d.toISOString().slice(0,10)===s;
+}
+function nextHistoryReview(s){
+ if(!carHistoryDate(s))return null;
+ const year=Number(s.slice(0,4))+1,month=Number(s.slice(5,7));
+ const day=Math.min(Number(s.slice(8)),new Date(Date.UTC(year,month,0)).getUTCDate());
+ return String(year).padStart(4,'0')+'-'+String(month).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+}
+function normalizeCarHistory(raw){
+ const h=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
+ const events=(Array.isArray(h.events)?h.events:[])
+ .filter(x=>x&&typeof x==='object'&&!Array.isArray(x)&&carHistoryDate(x.date))
+ .map(x=>{
+   const n=x.mileage===null||x.mileage===undefined||x.mileage===''?null:Number(x.mileage);
+   return {date:x.date,category:String(x.category||'Other').slice(0,80),
+     description:String(x.description||'').slice(0,1000),
+     source:String(x.source||'Other').slice(0,100),
+     mileage:n!==null&&Number.isSafeInteger(n)&&n>=0&&n<=900000000?n:null,
+     recorded_by:'user'};
+ });
+ return {last_review_date:carHistoryDate(h.last_review_date)?h.last_review_date:null,
+   review_source:String(h.review_source||'').slice(0,100),
+   review_notes:String(h.review_notes||'').slice(0,2000),events};
+}
+function carHistoryDue(a){
+ const next=nextHistoryReview(normalizeCarHistory(a.car_history).last_review_date);
+ return !next||next<=localDate();
+}
+function carHistoryOpts(values,selected){
+ return values.map(x=>'<option value="'+esc(x)+'"'+(selected===x?' selected':'')+'>'+esc(x)+'</option>').join('');
+}
+function saveCarHistory(a,history,notice){
+ const index=vehicles.indexOf(a);
+ if(index<0){alert('Vehicle selection changed. Select the correct vehicle and try again.');return false;}
+ const changed=vehicles.map((item,i)=>i===index?{...item,car_history:normalizeCarHistory(history)}:item);
+ try{localStorage.setItem(KEY,JSON.stringify({vehicles:changed,current}));}
+ catch(e){hasStorage=false;alert('Could not save Car History. Your current vehicle records were not changed. Export a backup.');updateBanner();return false;}
+ vehicles=changed;hasStorage=true;renderCarHistory();renderHome();updateBanner();message(notice);
+ return true;
+}
+function renderCarHistory(){
+ const a=v(),el=$('carHistoryBody');
+ if(!a){el.innerHTML=empty('Add or import a vehicle first.');return;}
+ const h=normalizeCarHistory(a.car_history),next=nextHistoryReview(h.last_review_date);
+ const due=!next||next<=localDate();
+ const rows=h.events.map((event,index)=>({event,index}))
+  .sort((x,y)=>y.event.date.localeCompare(x.event.date));
+ const timeline=rows.slice(0,100).map(({event:r,index})=>
+  '<div class="record"><div><h4>'+esc(r.category)+' · '+esc(r.description)+'</h4><small>'+
+  esc(r.date)+' · '+esc(r.source)+(r.mileage==null?'':' · '+num(r.mileage)+' reported mi')+
+  ' · User-entered</small></div><button class="btn outline" type="button" data-history-delete="'+index+'">Delete</button></div>'
+ ).join('');
+ el.innerHTML=
+ '<div class="card feature-card"><h3 style="margin-top:0">Car History · '+esc(a.year)+' '+esc(a.name)+'</h3>'+
+ (a.vin?'<p class="small muted">VIN: '+esc(a.vin)+'</p>':'<p class="small muted">VIN not recorded; manual history is still available.</p>')+
+ '<div class="note '+(due?'':'info')+'"><strong>'+(due?'Annual review due':'Annual review up to date')+'</strong>'+
+ '<div class="small">Last reviewed: '+esc(h.last_review_date||'Never')+' · Next: '+esc(next||'Review now')+'</div></div>'+
+ '<p class="small muted">Use your own CARFAX Car Care account to review reported history. MileSage has no automatic CARFAX connection. Reported mileage here never changes your live odometer, service or fuel logs.</p>'+
+ '<a class="btn secondary" style="display:inline-block;text-decoration:none" href="https://www.carfax.com/Service" target="_blank" rel="noopener noreferrer">Open CARFAX Car Care</a>'+
+ '<form id="carHistoryReviewForm"><h4>Confirm annual history review</h4>'+
+ '<label class="field" for="carReviewDate">Date reviewed</label><input type="date" id="carReviewDate" value="'+localDate()+'" required>'+
+ '<label class="field" for="carReviewSource">Source reviewed</label><select id="carReviewSource">'+carHistoryOpts(HISTORY_SOURCES,h.review_source||HISTORY_SOURCES[0])+'</select>'+
+ '<label class="field" for="carReviewNotes">Notes (optional)</label><textarea id="carReviewNotes" maxlength="2000">'+esc(h.review_notes)+'</textarea>'+
+ '<button class="btn full" type="submit">Mark history reviewed</button></form>'+
+ '<p class="small muted">The next reminder is one calendar year later, only after you confirm a review. This does not buy or download a CARFAX report.</p></div>'+
+ '<div class="card"><h3 style="margin-top:0">Add reported history event</h3>'+
+ '<p class="small muted">Enter findings from CARFAX or another source. This timeline is separate from MileSage maintenance and expenses.</p>'+
+ '<form id="carEventForm"><label class="field" for="carEventDate">Event date</label><input type="date" id="carEventDate" value="'+localDate()+'" required>'+
+ '<label class="field" for="carEventType">Event type</label><select id="carEventType">'+carHistoryOpts(HISTORY_TYPES,HISTORY_TYPES[0])+'</select>'+
+ '<label class="field" for="carEventSource">Reported by</label><select id="carEventSource">'+carHistoryOpts(HISTORY_SOURCES,HISTORY_SOURCES[0])+'</select>'+
+ '<label class="field" for="carEventMiles">Reported mileage (optional)</label><input id="carEventMiles" type="number" min="0" max="900000000" step="1" inputmode="numeric" placeholder="Leave blank if unknown">'+
+ '<label class="field" for="carEventDescription">Description</label><textarea id="carEventDescription" maxlength="1000" required></textarea>'+
+ '<button class="btn full" type="submit">Save history event</button></form></div>'+
+ '<div class="card"><h3 style="margin-top:0">Reported history timeline ('+num(h.events.length)+')</h3>'+
+ (timeline||empty('No history events recorded yet.'))+
+ (rows.length>100?'<p class="small muted">Showing latest 100; all events remain in the backup.</p>':'')+'</div>';
+ $('carHistoryReviewForm').onsubmit=e=>{
+  e.preventDefault();
+  try{
+   const day=$('carReviewDate').value,source=$('carReviewSource').value;
+   if(!validDate(day))throw Error('Enter a valid review date, not in the future.');
+   if(!HISTORY_SOURCES.includes(source))throw Error('Choose a valid source.');
+   const nextHistory=normalizeCarHistory(a.car_history);
+   nextHistory.last_review_date=day;nextHistory.review_source=source;
+   nextHistory.review_notes=$('carReviewNotes').value.trim().slice(0,2000);
+   saveCarHistory(a,nextHistory,'History review recorded for '+a.name+'.');
+  }catch(error){alert(error.message);}
+ };
+ $('carEventForm').onsubmit=e=>{
+  e.preventDefault();
+  try{
+   const day=$('carEventDate').value,source=$('carEventSource').value,
+    category=$('carEventType').value,description=$('carEventDescription').value.trim(),
+    rawMileage=$('carEventMiles').value.trim();
+   if(!validDate(day))throw Error('Enter a valid event date, not in the future.');
+   if(!HISTORY_SOURCES.includes(source)||!HISTORY_TYPES.includes(category))throw Error('Choose a valid source and event type.');
+   if(!description)throw Error('Describe the reported event.');
+   const mileage=rawMileage===''?null:whole(rawMileage,'Reported mileage',0);
+   if(mileage!==null&&mileage>900000000)throw Error('Reported mileage is too large.');
+   const nextHistory=normalizeCarHistory(a.car_history);
+   nextHistory.events.push({date:day,category,source,description:description.slice(0,1000),mileage,recorded_by:'user'});
+   saveCarHistory(a,nextHistory,'History event saved for '+a.name+'.');
+  }catch(error){alert(error.message);}
+ };
+ el.querySelectorAll('[data-history-delete]').forEach(button=>button.onclick=()=>{
+  const index=Number(button.dataset.historyDelete);
+  if(!Number.isInteger(index)||index<0||index>=h.events.length)return;
+  if(!confirm('Delete this history event for '+a.name+'?'))return;
+  const nextHistory=normalizeCarHistory(a.car_history);
+  nextHistory.events.splice(index,1);
+  saveCarHistory(a,nextHistory,'History event deleted.');
+ });
+}
+/* CAR_HISTORY_END */
 init();
 autoRefreshGitHub();
 setInterval(autoRefreshGitHub,120000);

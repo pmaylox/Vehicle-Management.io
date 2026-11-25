@@ -1,4 +1,7 @@
 from pathlib import Path
+import base64
+from io import BytesIO
+import re
 from PIL import Image, ImageOps, ImageTk
 import tkinter as tk
 from tkinter import ttk
@@ -6,11 +9,11 @@ from tkinter import ttk
 
 class OverviewPanel(ttk.Frame):
    
-    def set_photo(self, filename):
+    def set_photo(self, filename, mobile_photo=""):
         self.vehicle_photo.configure(image="", text="")
         self.photo_image = None
 
-        if not filename:
+        if not filename and not mobile_photo:
             self.vehicle_photo.configure(
                 text="Add a photo in Edit Vehicle"
             )
@@ -21,7 +24,14 @@ class OverviewPanel(ttk.Frame):
             if not path.is_absolute():
                 path = Path(__file__).resolve().parent / path
 
-            with Image.open(path) as source:
+            if filename and path.is_file():
+                photo_source = path
+            elif (len(mobile_photo) <= 1_400_000 and
+                  re.fullmatch(r"data:image/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}", mobile_photo)):
+                photo_source = BytesIO(base64.b64decode(mobile_photo.split(",", 1)[1], validate=True))
+            else:
+                raise ValueError("No usable vehicle photo")
+            with Image.open(photo_source) as source:
                 photo = ImageOps.exif_transpose(source).convert("RGBA")
                 photo.thumbnail((360, 200), Image.Resampling.LANCZOS)
 
@@ -176,9 +186,21 @@ class OverviewPanel(ttk.Frame):
         # Newly selected vehicles should open with their title fully visible.
         self.heading.trace_add("write", self.reset_scroll)
         self.canvas.bind("<Map>", self.reset_scroll)
+        self._scroll_job = None
+        self.bind("<Destroy>", self._cancel_scroll)
+
+    def _cancel_scroll(self, event):
+        if event.widget is self and self._scroll_job is not None:
+            self.after_cancel(self._scroll_job)
+            self._scroll_job = None
 
     def reset_scroll(self, *args):
-        self.after_idle(lambda: self.canvas.yview_moveto(0))
+        if getattr(self, "_scroll_job", None) is not None:
+            self.after_cancel(self._scroll_job)
+        def scroll():
+            self._scroll_job = None
+            self.canvas.yview_moveto(0)
+        self._scroll_job = self.after_idle(scroll)
 
     def make_card(self, parent):
         card = ttk.Frame(

@@ -1,0 +1,40 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'io.reddirtcode.milesage'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'io.reddirtcode.milesage.alpha1410fueltest'
+        minSdk 26
+        targetSdk 35
+        versionCode 151
+        versionName '1.4.10-interface-test'
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+// ML Kit pulls legacy jdk7/jdk8 split libraries alongside Kotlin stdlib 1.8.22.
+// Their implementations are already included in modern kotlin-stdlib.
+configurations.configureEach {
+    exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'
+    exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
+}
+
+dependencies {
+    implementation 'androidx.webkit:webkit:1.12.1'
+    implementation 'androidx.core:core:1.15.0'
+    implementation 'com.google.android.gms:play-services-mlkit-document-scanner:16.0.0'
+    // Bundled on-device Latin OCR: no JavaScript worker or model download.
+    implementation 'com.google.mlkit:text-recognition:16.0.1'
+}
