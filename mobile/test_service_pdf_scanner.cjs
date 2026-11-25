@@ -46,7 +46,7 @@ assert.ok(build.includes('com.google.mlkit:text-recognition:16.0.1'),
  'Offline Android receipt OCR library must remain bundled');
 assert.ok(java.includes('@JavascriptInterface public void recognizeReceipt(String requestId, String base64)'),
  'Native on-device OCR must remain connected to the receipt photo UI');
-assert.ok(build.includes("applicationId 'io.reddirtcode.milesage.alpha1410fueltest'"),
+assert.ok(build.includes("applicationId 'io.reddirtcode.milesage.alpha1410interface'"),
  'Alpha 1.4.6 Expense PDF test must install separately from previous MileSage alpha test apps');
 assert.ok(!build.includes("applicationId 'io.reddirtcode.milesage.alpha137repair'"),
  'Never reuse the prior Repair Test identity with a different debug signing certificate');

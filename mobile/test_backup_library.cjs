@@ -67,5 +67,5 @@ for(const page of pages){
  assert.ok(reuseIndex>=0);
 }
 const gradle=fs.readFileSync('android/app/build.gradle','utf8');
-assert.match(gradle,/applicationId 'io\.reddirtcode\.milesage\.alpha1410fueltest'/);
+assert.match(gradle,/applicationId 'io\.reddirtcode\.milesage\.alpha1410interface'/);
 console.log('PASS: backup picker reusable, saved snapshots visible and oldest snapshot retained after restore.');
