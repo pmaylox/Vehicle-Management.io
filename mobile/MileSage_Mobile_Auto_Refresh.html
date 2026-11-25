@@ -710,7 +710,7 @@ function parseFuelReceiptText(raw,today){
 // invented from total/quantity arithmetic; arithmetic ONLY validates OCR candidates.
 function parseFuelScanV2(raw,today){
  const source=String(raw||'').replace(/\u00a0/g,' ').replace(/\r/g,'');
- const lines=source.split('\n').map(x=>x.replace(/\s*([.,])\s*(?=\d)/g,'$1')
+ const lines=source.split('\n').map(x=>x.replace(/(\d)\s+([.,])\s*(?=\d)/g,'$1$2').replace(/\s*([.,])\s*(?=\d)/g,'$1')
   .replace(/\bGALL0NS?\b/gi,'GALLONS').replace(/\bFUEL\s*5ALE\b/gi,'FUEL SALE')
   .replace(/\bPR[1I]CE\b/gi,'PRICE').replace(/\s+/g,' ').trim()).filter(Boolean);
  const shared=parseServiceReceiptText(source,today);
@@ -782,6 +782,22 @@ function parseFuelScanV2(raw,today){
  }
  if(labelsQ.length===1)found.gallons=labelsQ[0].amount.toFixed(3);
  if(labelsT.length===1)found.total=labelsT[0].amount.toFixed(2);
+ // Gallery OCR can split TOTAL and its amount, or read "53 .34".
+ // Accept explicit final-total/payment rows only, never subtotal alone.
+ if(found.total===null&&!found.conflict&&labelsT.length===0){
+  const finalLabel=/\b(?:GRAND\s+TOTAL|TOTAL(?:\s+(?:PAID|DUE|SALE|AMOUNT))?|AMOUNT\s+PAID|CREDIT|DEBIT|USD)\b/i;
+  const reject=/\b(?:SUB\s*TOTAL|TAX|CHANGE|DISCOUNT|SAVINGS|BALANCE|AUTH|CARD|REF|ACCOUNT)\b/i;
+  const candidates=new Set();
+  for(let i=0;i<lines.length;i++){
+   const line=lines[i], label=finalLabel.exec(line);
+   if(!label||reject.test(line))continue;
+   let tail=line.slice(label.index+label[0].length).trim();
+   if(!tail||/^[:$ ]+$/.test(tail))tail=lines[i+1]||'';
+   const m=tail.match(/^\s*[:$]?\s*(\d{1,5})\s*[.,]\s*(\d{2})(?!\d)\s*$/);
+   if(m&&Number(m[1]+'.'+m[2])>0)candidates.add(Number(m[1]+'.'+m[2]).toFixed(2));
+  }
+  if(candidates.size===1)found.total=[...candidates][0];
+ }
  return found;
 }
 /* FUEL_SCANNER_V2_END */
