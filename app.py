@@ -428,7 +428,7 @@ def main():
 
     cost_chart = DashboardChart(
         graphs_content,
-        "Fuel cost per mile ($) â€” full-tank intervals",
+        "Fuel cost per mile ($) — full-tank intervals",
         kind="line",
         decimals=3
     )
@@ -565,8 +565,8 @@ def main():
             vehicle_heading.set("No vehicle selected")
             mileage_heading.set("")
             overview.specifications.set("No vehicle selected")
-            overview.oil.set("Oil change: â€”")
-            overview.tires.set("Tire rotation: â€”")
+            overview.oil.set("Oil change: —")
+            overview.tires.set("Tire rotation: —")
             overview.battery.set("No vehicle selected")
             overview.pressures.set("No vehicle selected")
             overview.service.set("No vehicle selected")
@@ -597,7 +597,7 @@ def main():
         overview.set_photo(vehicle.photo_path, vehicle.mobile_photo)
         vehicle_heading.set(f"{vehicle.year} {vehicle.name}")
         mileage_heading.set(
-            f"Odometer Â· {format_mileage(vehicle.mileage)}"
+            f"Odometer · {format_mileage(vehicle.mileage)}"
         )
         overview.specifications.set(profile_summary(vehicle))
         # ===== SPENDING DATA =====
@@ -631,9 +631,9 @@ def main():
         spending_chart.set_data(spending_points)
         cost_chart.set_data(cost_per_mile_points(vehicle.fuel_history)[-6:])
         graph_status.set(
-            f"{vehicle.year} {vehicle.name} â€¢ "
-            f"{spending_kind.get()} spending â€¢ "
-            f"Latest 6 recorded months â€¢ "
+            f"{vehicle.year} {vehicle.name} • "
+            f"{spending_kind.get()} spending • "
+            f"Latest 6 recorded months • "
             f"{missing_costs} records with unknown cost excluded"
         )
 
@@ -903,7 +903,7 @@ def main():
             return
         vehicle = visible_vehicles[selection[0]]
         dialog = tk.Toplevel(window)
-        dialog.title("Tire Pressure â€” Starting PSI and Air Added")
+        dialog.title("Tire Pressure — Starting PSI and Air Added")
         dialog.resizable(False, False)
         dialog.transient(window)
         form = ttk.Frame(dialog, padding=20)
@@ -1613,7 +1613,7 @@ def main():
                 f"Mileage: {service_mileage:,}\n"
                 f"Service: {description}\n"
                 f"Cost ($): {cost_text}\n"
-                + (f"Battery installed: {battery['installed']} â€” {battery_term_text(battery['months'])} ({battery['term']})\n" if battery else "")
+                + (f"Battery installed: {battery['installed']} — {battery_term_text(battery['months'])} ({battery['term']})\n" if battery else "")
                 + f"\nReset oil: {'Yes' if oil_var.get() else 'No'}\n"
                 f"Reset tires: {'Yes' if tire_var.get() else 'No'}\n\n"
                 "Save this service?",
@@ -1840,7 +1840,7 @@ def main():
                 "Confirm service changes",
                 f"Service: {description}\n"
                 f"Cost ($): {cost_text}\n"
-                + (f"Battery installed: {battery['installed']} â€” {battery_term_text(battery['months'])} ({battery['term']})\n" if battery else "")
+                + (f"Battery installed: {battery['installed']} — {battery_term_text(battery['months'])} ({battery['term']})\n" if battery else "")
                 + "\nSave these changes?",
                 parent=dialog
             )
@@ -2683,7 +2683,7 @@ def main():
 
     ttk.Label(
         container,
-        text="Vehicle Manager â€” mileage updates save automatically",
+        text="MileSage 1.4.10 interface test · mileage updates save automatically",
         foreground="#666666"
     ).pack(anchor="w", pady=(12, 0))
 
