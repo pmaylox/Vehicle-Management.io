@@ -663,7 +663,7 @@
             "source": "NHTSA vPIC",
             "decoded_at": "2026-11-15T02:45:05+00:00"
         },
-        "photo_path": "",
+        "photo_path": "C:/Users/pmart/Python Project/images/mytacoma.jpg",
         "vin": null,
         "year": 2026,
         "mileage": 4580,

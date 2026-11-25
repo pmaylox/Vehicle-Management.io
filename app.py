@@ -264,6 +264,8 @@ def main():
     notebook = ttk.Notebook(details_panel)
     notebook.pack(fill="both", expand=True)
 
+    dashboard_tab = ttk.Frame(notebook,padding=15)
+    notebook.add(dashboard_tab, text="Dashboard")
     overview_tab = ttk.Frame(notebook, padding=15)
     service_tab = ttk.Frame(notebook, padding=10)
     fuel_tab = ttk.Frame(notebook, padding=10)
@@ -286,7 +288,7 @@ def main():
             )
 
     for title, tab in (
-        ("Dashboard", overview_tab),
+        ("Dashboard", dashboard_tab),
         ("Maintenance", service_tab),
         ("Fuel Economy", fuel_tab),
         ("Graphs", graphs_tab),
